@@ -1295,8 +1295,12 @@ const world3=(function(){
     if(!(typeof pc.time==='string'&&/^\d{2}:\d{2}$/.test(pc.time))) return 'periodCalc.time must be HH:MM';
     if(!(typeof pc.tz==='string'&&pc.tz)) return 'periodCalc.tz is needed';
     return null; }
+  // docs/world-format.md 1 (ruling 301): the version of the world file itself. Only the versions this engine can compute are loaded; a new field or a changed meaning in a world file
+  // means a new version here (and nowhere else), so an engine that does not know it refuses the file instead of reading it wrongly.
+  const WORLD_VERSIONS=['1','3.0.0-seq4b','3.1.0-eventspec4'];
   function check(W){ const P=[], bad=(path,why)=>P.push(path+': '+why);
     if(!W||typeof W!=='object') return ['world: not an object'];
+    if(!WORLD_VERSIONS.includes(W.version)) bad('version','the engine does not know the world file version '+JSON.stringify(W.version)+' (it loads '+WORLD_VERSIONS.map(v=>JSON.stringify(v)).join(', ')+')');
     if(W.format!==3) bad('format','must be 3 (got '+JSON.stringify(W.format)+')');
     if(W.layer!=='world') bad('layer','must be \'world\''); if(!W.id) bad('id','missing');
     if(!isDate(W.start)||!isDate(W.end)||W.start>W.end) bad('start/end','two dates, start <= end'); if(!has(YEAR,W.calendar)) bad('calendar','weekdays or days');
@@ -1314,7 +1318,11 @@ const world3=(function(){
       if(!(typeof q.pull==='number'&&q.pull>=0&&q.pull<1)) bad(pth+'.pull','0 <= pull < 1');
       if(!Array.isArray(q.cuts)||q.cuts.length!==3||!(q.cuts[0]<q.cuts[1]&&q.cuts[1]<q.cuts[2])) bad(pth+'.cuts','3 increasing cuts');
       if(!Array.isArray(q.segNames)||q.segNames.length!==4) bad(pth+'.segNames','4 names'); if(!Array.isArray(q.segDesc)||q.segDesc.length!==4) bad(pth+'.segDesc','4 lines');
-      src(pth+'.src',q.src); src(pth+'.startSrc',q.startSrc); }
+      src(pth+'.src',q.src); src(pth+'.startSrc',q.startSrc);
+      // ruling 271 (candidate field name, docs/world-math.md 12): rolling: {days, tz} turns the public reading of this attribute into the sum of the announced changes (dRead) made public in the last days days
+      if(has(q,'rolling')){ const r=q.rolling, pr=pth+'.rolling'; let tzOK=false; if(r&&typeof r==='object'&&typeof r.tz==='string') try{ new Intl.DateTimeFormat('en-CA',{timeZone:r.tz}); tzOK=true; }catch(e){}
+        if(!r||typeof r!=='object'||Array.isArray(r)||!Number.isInteger(r.days)||r.days<1||!tzOK) bad(pr,'{days: an integer >= 1, tz: a time zone name such as America/New_York}');
+        else if(!(Array.isArray(W.events)?W.events:[]).some(e=>e&&Array.isArray(e.outcomes)&&e.outcomes.some(o=>o&&Array.isArray(o.effects)&&o.effects.some(x=>x&&x.attr===a&&has(x,'dRead'))))) bad(pr,'written, but no event writes a dRead on '+a+': the rolling reading would always be 0'); } }
     for(const s of states){ const q=CL[s]||AT[s], pth=(has(CL,s)?'clocks.':'attrs.')+s;
       if(has(q,'self')&&typeof q.self!=='number') bad(pth+'.self','a number');
       if(q.self){ const mx=W.assume&&W.assume.self_max; if(!mx||typeof mx.value!=='number') bad('assume.self_max','needed when a state has self'); else if(Math.abs(q.self)>mx.value) bad(pth+'.self','|self| '+q.self+' > assume.self_max '+mx.value); }
@@ -1347,6 +1355,21 @@ const world3=(function(){
       for(const r of f.firedRefs) if(r.key!==null){ const ev=(W.events||[]).find(e=>e&&e.id===r.id&&e.kind==='random'), os=ev&&Array.isArray(ev.outcomes)?ev.outcomes:[]; if(!ev) continue;   // spec 4.5
         if(os.length<2) bad(path,'fired('+r.id+'.'+r.key+'): '+r.id+' has one outcome only; fired(id.key) is for a multi-outcome random event (write fired('+r.id+'))');
         else if(!os.some(o=>o&&o.key===r.key)) bad(path,'fired('+r.id+'.'+r.key+'): '+r.id+' has no outcome with the key '+r.key); } };
+    // docs/world-format.md 5.8 and 6 (rulings 308, 311, 312): the funding window is {start, end, src} or null. Each end is 'YYYY-MM-DD', 'knownAt' or null (left out = null); the old from
+    // field and 'occursAt' are errors; an end that is not null needs a source (one key of sources for both ends, or {start, end} with a key for each end that is written).
+    // layer-ok: 1 window is the name of a funding field of the world file (docs/world-format.md 5.8), not a browser window
+    const fundWindowCheck=(pw,w)=>{ if(w===undefined||w===null) return;
+      if(typeof w!=='object'||Array.isArray(w)){ bad(pw,'an object {start, end, src} or null'); return; }
+      if(has(w,'from')) bad(pw+'.from','the old field from is gone: write start and end (ruling 308)');
+      for(const k of Object.keys(w)) if(!['start','end','src','from'].includes(k)) bad(pw+'.'+k,'not a field here (start, end, src)');
+      const written=[]; for(const k of ['start','end']){ const v=has(w,k)?w[k]:null; if(v===null) continue;
+        if(v==='occursAt') bad(pw+'.'+k,"'occursAt' is not a value any more: the engine does not read the occurrence time of an event for the funding period (ruling 308)");
+        else if(v==='knownAt'||isDate(v)) written.push(k); else bad(pw+'.'+k,"a date YYYY-MM-DD, 'knownAt' or null (got "+JSON.stringify(v)+')'); }
+      if(!written.length) return; const s=w.src;
+      if(s===undefined||s===null) bad(pw+'.src','needed when start or end is not null: a key of sources, or {start, end} with a key for each end that is written (ruling 312)');
+      else if(typeof s==='string') src(pw+'.src',s);
+      else if(typeof s==='object'&&!Array.isArray(s)){ for(const k of written){ if(typeof s[k]==='string') src(pw+'.src.'+k,s[k]); else bad(pw+'.src.'+k,'a key of sources for the '+k+', which is written'); } }
+      else bad(pw+'.src','a key of sources or {start, end}'); };
     // docs/world-format.md 5.8, spec-w4a-conditional 4.1 and 4.2: the outcome fields key, branch, sev, w and the conditions cond. Every message names the field.
     // Nothing is filled in and nothing is cut: a missing or wrong field is an error.
     const MEMO=W.memory&&typeof W.memory==='object'&&!Array.isArray(W.memory)?W.memory:{}, KEYRE=/^[A-Za-z_]\w*$/, CM=W.assume&&W.assume.cond_max&&typeof W.assume.cond_max.value==='number'&&W.assume.cond_max.value>0?W.assume.cond_max.value:null;
@@ -1358,7 +1381,8 @@ const world3=(function(){
         if(has(o,'branch')&&!(typeof o.branch==='string'&&o.branch.trim()!=='')) bad(po+'.branch','a non-empty string');
         else if(!has(o,'branch')&&(schedC||multiRnd)) bad(po+'.branch',multiRnd?'every outcome of a multi-outcome random event needs a branch (docs/world-format.md 5.8)':'an event with an L2 or L3 condition needs a branch on every outcome');
         if(has(o,'sev')){ if(!(Number.isInteger(o.sev)&&o.sev>=0)) bad(po+'.sev','an integer >= 0'); else { const b=classKeyOf(o,j), s=sevs.get(b)||new Set(); if(s.has(o.sev)) bad(po+'.sev','used twice in class '+JSON.stringify(b)); s.add(o.sev); sevs.set(b,s); } }
-        if(has(o,'funding')&&!(o.funding&&typeof o.funding==='object'&&!Array.isArray(o.funding))) bad(po+'.funding','an object (the funding fields; the engine does not read them)');
+        if(has(o,'funding')&&!(o.funding&&typeof o.funding==='object'&&!Array.isArray(o.funding))) bad(po+'.funding','an object (the funding fields; the engine does not use them to compute a probability or a state, it only turns them into the public shape in publicView)');
+        else if(has(o,'funding')) fundWindowCheck(po+'.funding.window',o.funding.window);   // rulings 308, 311, 312; layer-ok: 1 window is the name of a funding field of the world file (docs/world-format.md 5.8), not a browser window
         if(rnd&&(multiRnd||has(o,'w'))&&!(typeof o.w==='number'&&o.w>0)) bad(po+'.w','a weight > 0'+(multiRnd?' (a multi-outcome random event needs it)':'')); });
       if(multiRnd&&!has(e,'max')) bad(pth+'.max','a multi-outcome random event writes max explicitly (ruling 244)');
       // ruling 293: the weights of an event with two outcomes or more add up to 1 within 0.005 (the engine still normalises). Only when every w is a valid number: a bad or missing w is reported above, once.
@@ -1457,7 +1481,7 @@ const world3=(function(){
           if(has(x,'dRead')&&x.attr===undefined) bad(px+'.dRead','only on an attribute effect {attr, dRead}');
           if(x.attr!==undefined){ if(!has(AT,x.attr)) bad(px+'.attr','no attr '+x.attr);
             else if(has(x,'dRead')){ const m=AT[x.attr].map;   // spec-w4a-conditional 7, docs/world-format.md 5.8: {attr, dRead} only in a scheduled event; the attribute has a two-point map with two different readings; no d on the same effect; one per outcome; a finite number
-              if(e.kind!=='scheduled') bad(px+'.dRead','only a scheduled event (a data release) writes the change of a reading; this event is '+e.kind);
+              // ruling 315: a scheduled event, or a random-event outcome whose effect is a public change of a state's reading, may write dRead
               if(!(Array.isArray(m)&&m.length===2&&m.every(q=>Array.isArray(q)&&q.length===2&&q.every(v=>typeof v==='number'&&isFinite(v)))&&m[0][0]!==m[1][0]&&m[0][1]!==m[1][1])) bad(px+'.dRead','attrs.'+x.attr+'.map must be two points [attribute value, reading] with two different attribute values and two different readings (dRead is converted through it)');
               if(has(x,'d')) bad(px+'.d','not together with dRead on one effect (the change is written once, either as d or as dRead)');
               if(!(typeof x.dRead==='number'&&isFinite(x.dRead))) bad(px+'.dRead','a finite number (the change of the reading, in the unit of the reading)');
@@ -1801,20 +1825,18 @@ const world3=(function(){
   // The state is clipped to 0-100 and may not move at all; the announcement is not clipped (docs/world-public-interface.md 2.4 item 2). No dRead: all three are null.
   const announcedOf=(W,o)=>{ for(const x of (o.effects||[])) if(x&&x.attr!==undefined&&has(x,'dRead')){ const q=W.attrs[x.attr]; return {announcedDelta:x.dRead,quantityId:x.attr,unit:q.unit===undefined?null:q.unit}; }
     return {announcedDelta:null,quantityId:null,unit:null}; };
-  const plusDays=(t,n)=>new Date(Date.parse(t.slice(0,16)+':00Z')+n*86400000).toISOString().slice(0,16)+'Z';
   // spec 12 funding: the funding fields of the outcome that happened, in the public shape {subject, terms[{name, value, unit}], window{start, end}|null, release{releaseId, revision}}.
   // A term is listed by its name; its value is the one the file writes for it (never a market reading, never 0 for "not known": null); its unit is the unit the file writes (an amount
-  // carries the currency in that unit, docs/world-format.md 5.8; the engine adds none). The window starts at the instant that from names: knownAt = the instant of this release,
-  // occursAt = the scheduled instant of a scheduled event (a random event has none: null); the end is the start plus days, null when either is not known. The file's release
-  // (the condition that lifts the limit) is not given.
+  // carries the currency in that unit, docs/world-format.md 5.8; the engine adds none). The window (rulings 308, 311): each end is the date the file writes, or for 'knownAt' the UTC date of
+  // this release (the first ten characters of knownAt), or null; both ends null give no window. The occurrence time of the event is never read and no end is worked out from a length.
+  // The file's release (the condition that lifts the limit) is not given.
   function fundingOf(W,it,o){ const f=o.funding; if(!f||typeof f!=='object') return null;
     // layer-ok: 1 window is the name of a funding field of the world file (docs/world-format.md 5.8), not a browser window
-    const w=f.window&&typeof f.window==='object'?f.window:null; let start=null;
-    if(w&&w.from==='knownAt') start=it.K; else if(w&&w.from==='occursAt'&&it.kind==='s'&&it.e.occursAt&&it.e.occursAt[it.r.inst]) start=it.e.occursAt[it.r.inst];
+    const w=f.window&&typeof f.window==='object'?f.window:null, endOf=v=>v==='knownAt'?(typeof it.K==='string'?String(it.K).slice(0,10):null):(isDate(v)?v:null), s=w?endOf(w.start):null, e=w?endOf(w.end):null;
     return {subject:f.subject&&typeof f.subject.who==='string'?f.subject.who:null,
       terms:(Array.isArray(f.terms)?f.terms:[]).map(t=>({name:t.quantityId,value:has(t,'value')?t.value:null,unit:t.unit===undefined?null:t.unit})),
       // layer-ok: 1 window is the name of a field of the public funding shape (docs/world-public-interface.md 2.4 item 3), not a browser window
-      window:w?{start,end:start!==null&&typeof w.days==='number'&&isFinite(w.days)?plusDays(start,w.days):null}:null,
+      window:s===null&&e===null?null:{start:s,end:e},
       release:{releaseId:relIdOf(it),revision:1}}; }
   function publicView(W,knobs,records,asOf){ ensure(W); if(!ISO_MIN.test(String(asOf))) throw new Error('publicView: asOf must be YYYY-MM-DDTHH:MMZ (UTC)');
     const cal=calendar(W);
@@ -1826,7 +1848,14 @@ const world3=(function(){
     const lagSet=new Set();   // releases of the lagged kind: a key repeated in this view is revision 2, 3, ... (ruling 218)
     const lagRelease=(i,key,rg,K,assume,R,d)=>{ const r={releaseId:i+'/'+key,revision:1,kind:'reading',observedPeriod:{from:rg.from,to:rg.to,tz:rg.tz===undefined?dayTz:rg.tz},tz:'UTC',knownAt:K,receivedAt:null,knownAtAssumption:assume,
         origin:'sourceRelease',method:null,model:null,event:null,observations:[{quantityId:i,unit:qOf(W,i).unit===undefined?null:qOf(W,i).unit,before:null,after:d>=0?shownOf(W,i,R.snaps[d]):null}]}; lagSet.add(r); return r; };
-    const obs=(ids,S)=>ids.map(i=>({quantityId:i,unit:qOf(W,i).unit===undefined?null:qOf(W,i).unit,before:null,after:shownOf(W,i,S)})), dayTz=W.dayTz===undefined?null:W.dayTz;
+    // ruling 271 (docs/world-math.md 12): an attribute with rolling {days, tz} is shown as R(t), not as the converted world state. R(t) = the sum of the dRead of the outcomes that happened, over the
+    // releases that are public by tau (K <= tau) whose public day (K as a date in tz) is in (t - days, t], t = tau as a date in tz. Nothing is issued when an old term falls out of the window.
+    const dayFmt={}, localDay=(iso,tz)=>(dayFmt[tz]||(dayFmt[tz]=new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}))).format(new Date(Date.parse(iso.slice(0,16)+':00Z')));
+    const rollingOf=(i,tau)=>{ const rl=W.attrs[i].rolling, t0=Date.parse(localDay(tau,rl.tz)+'T00:00:00Z'); let sum=0;
+      for(const x of items){ if(x.kind==='relax'||x.K===null||x.K>tau) continue;
+        for(const f of x.e.outcomes[x.r.out].effects||[]) if(f&&f.attr===i&&has(f,'dRead')){ const age=(t0-Date.parse(localDay(x.K,rl.tz)+'T00:00:00Z'))/86400000; if(age>=0&&age<rl.days) sum+=f.dRead; } }
+      return sum; };
+    const obs=(ids,S,tau)=>ids.map(i=>({quantityId:i,unit:qOf(W,i).unit===undefined?null:qOf(W,i).unit,before:null,after:tau!==undefined&&has(W.attrs,i)&&has(W.attrs[i],'rolling')?rollingOf(i,tau):shownOf(W,i,S)})), dayTz=W.dayTz===undefined?null:W.dayTz;
     // the substituted state S_sub of an item (docs/world-math.md 11.3) from its public replay R: a state that is never public rests, a lagged one is read at the day it is public, the rest is the replay.
     // The states that the event depends on (dep) are listed in inputs when it is given.
     const subState=(R,it,dep,inputs)=>{ const Ssub=copy(R.S);
@@ -1858,7 +1887,7 @@ const world3=(function(){
       const oc=it.kind==='relax'?null:e.outcomes[it.r.out], an=oc?announcedOf(W,oc):{announcedDelta:null,quantityId:null,unit:null};
       out.push({releaseId:relIdOf(it),revision:1,kind:'event',observedPeriod:{from:it.date,to:it.date,tz:dayTz},tz:'UTC',knownAt:it.K,receivedAt:null,
         knownAtAssumption:it.assume,origin:'sourceRelease',method:null,model:null,
-        event:{name:it.name,outcome:it.kind==='relax'?W.clocks[it.c].levels[it.r.to]:e.outcomes[it.r.out].name,expect:e&&e.expect!==undefined?e.expect:null,pSrc,p,pNote,outcomeKey:oc&&has(oc,'publicKey')?oc.publicKey:null,announcedDelta:an.announcedDelta,quantityId:an.quantityId,unit:an.unit,funding:oc?fundingOf(W,it,oc):null,outlook:outlookOf(it,idx)},observations:obs(discl,at(it.K))}); });
+        event:{name:it.name,outcome:it.kind==='relax'?W.clocks[it.c].levels[it.r.to]:e.outcomes[it.r.out].name,expect:e&&e.expect!==undefined?e.expect:null,pSrc,p,pNote,outcomeKey:oc&&has(oc,'publicKey')?oc.publicKey:null,announcedDelta:an.announcedDelta,quantityId:an.quantityId,unit:an.unit,funding:oc?fundingOf(W,it,oc):null,outlook:outlookOf(it,idx)},observations:obs(discl,at(it.K),it.K)}); });
     for(const i of states){ const lr=qOf(W,i).lagRelease; if(!lr||lr.assume===undefined) continue;   // ruling 218: byPeriod, written by the time tool, one release per period from assumeFrom on
       const A=W.knownAtAssume[lr.assume], bp=A&&A.byPeriod; if(!bp||typeof bp!=='object') throw NEED_TOOL('byPeriod of knownAtAssume '+lr.assume);
       for(const key of Object.keys(bp).sort()){ const pe=bp[key]; if(key<lr.assumeFrom||pe.at>asOf) continue;
@@ -1867,7 +1896,7 @@ const world3=(function(){
     for(const i of states){ const q=qOf(W,i); if(!q.daily||!q.daily.closeAt) continue;
       for(const d of Object.keys(q.daily.closeAt).sort()){ const k=q.daily.closeAt[d]; if(k>asOf) continue;
         out.push({releaseId:i+'/'+d,revision:1,kind:'reading',observedPeriod:{from:d,to:d,tz:dayTz},tz:'UTC',knownAt:k,receivedAt:null,knownAtAssumption:null,
-          origin:'modelEstimate',method:'publicReplayClose',model:{engine:V3,world:W.id+'@'+W.version,inputsCutoff:k},event:null,observations:obs([i],at(k))}); } }
+          origin:'modelEstimate',method:'publicReplayClose',model:{engine:V3,world:W.id+'@'+W.version,inputsCutoff:k},event:null,observations:obs([i],at(k),k)}); } }
     out.sort((a,b)=>a.knownAt<b.knownAt?-1:a.knownAt>b.knownAt?1:a.releaseId<b.releaseId?-1:a.releaseId>b.releaseId?1:a.revision-b.revision);
     const seen={}; for(const r of out) if(lagSet.has(r)){ seen[r.releaseId]=(seen[r.releaseId]||0)+1; r.revision=seen[r.releaseId]; }
     const last={}; for(const r of out) for(const o of r.observations){ o.before=has(last,o.quantityId)?last[o.quantityId]:null; last[o.quantityId]=o.after; }
