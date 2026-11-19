@@ -140,7 +140,7 @@ tr.stg td{background:var(--desk2);font:500 11.5px var(--serif);letter-spacing:.3
 .scrollbox{max-height:420px;overflow:auto;border:1px solid var(--rule);border-radius:4px} .scrollbox th{position:sticky;top:0;background:var(--desk)} .scrollbox td:first-child,.scrollbox th:first-child{padding-left:10px}
 .code{margin-top:18px;font-size:13px;color:var(--dim)} .code summary{cursor:pointer;color:var(--txt)} .codebox{overflow-wrap:anywhere;word-break:break-all;font-size:12px;border:1px dashed var(--rule);padding:8px 10px;border-radius:4px}
 .bottom{display:none}
-.about{max-width:1500px;margin:0 auto;padding:0 22px 60px;color:var(--dim);font-size:13px} .about ol{margin:6px 0 0;padding-left:20px} .about b{color:var(--txt)}
+.about{max-width:1500px;margin:0 auto;padding:0 22px 60px;color:var(--dim);font-size:13px} .about ol{margin:6px 0 0;padding-left:20px} .about b{color:var(--txt)} .about summary{cursor:pointer;color:var(--txt)}
 @media (prefers-reduced-motion:reduce){ :root{--t-roll:0s} .stamp,.ck.chg,.sheet.swap{animation:none} .opt,.fam{transition:none} }
 @media (max-width:1180px){ .grid{grid-template-columns:minmax(0,1fr) 320px} .rail.world{grid-column:1/-1;order:3} .world .cks{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0 12px} }
 @media (max-width:760px){
@@ -187,22 +187,20 @@ tr.stg td{background:var(--desk2);font:500 11.5px var(--serif);letter-spacing:.3
 <div class="toast" id="toast"></div>
 
 <section class="about">
-  <b>怎麼看這一頁</b>
+  <details><summary>說明與資料來源</summary>
   <ol>
-    <li>最上面那張圖從左到右是：實際的日 K、這一局已經走出來的日 K、「現在」那條線，線的右邊是從這裡往下擲的結果。深色帶是中間一半的路徑（25–75%），淺色帶是八成（10–90%），虛線是中位數；最右邊是年底落點的比例。每走一步，現在往右移，後面重算。</li>
-    <li>圖可以拖曳、縮放、看十字線讀數；日／週／月 K 與指標用圖上面那排開關；圖下面那條短橫槓可以拖拉調整圖的高度，按兩下還原。預設紅漲綠跌，「紅綠反轉」一次全部對調。點右邊一類落點，圖上疊出那一類的區間和幾條抽樣路徑。</li>
-    <li>「此刻」做決定：擲骰，或直接點一個結果。「這一局」看走過的每一步，走到年底變成報告。「所有可能」把落點攤開，也在那裡換假設。</li>
-    <li>未來的區間是從現在往下擲 300 局（起點 1000 局）裡抽出幾十條路徑、取每週收盤算的；抽樣少，邊緣會跳動。</li>
-    <li>落點的類別和價格目前綁得不緊：落在「下行」的路徑有一部分年底股價仍高於起點。這是模型目前的限制。</li>
-    <li>成交量、利率與信用利差目前沒有讀數，不畫。</li>
+    <li>圖從左到右：實際的日 K、這一局走出來的日 K、「現在」那條線，線的右邊是從這裡往下擲的結果。深色帶是中間一半的路徑，淺色帶是八成，虛線是中位數。</li>
+    <li>圖可以拖曳、縮放；圖下面那條短橫槓可以拖拉調整高度。點右邊一類落點，圖上只留那一類。</li>
+    <li>可以擲骰，也可以直接點一個結果。</li>
   </ol>
-  <p style="margin-top:14px">圖表：TradingView Lightweight Charts™，Copyright (c) 2026 TradingView, Inc. <a href="https://www.tradingview.com/" style="color:var(--lamp)">https://www.tradingview.com/</a>（Apache-2.0）。指標計算：technicalindicators（MIT）。</p>
 <footer>
   <p>來源：<a href="https://www.federalreserve.gov/publications/files/financial-stability-report-20261113.pdf">Fed 金融穩定報告 2026/11</a> · <a href="https://news.kalshi.com/p/government-shutdown-odds-december-2026-43-percent">Kalshi</a> · <a href="https://www.sec.gov/Archives/edgar/data/0001045810/000104581026000088/q3fy27pr.htm">NVIDIA Q3 FY27</a> · <a href="https://www.moodys.com/web/en/us/insights/credit-risk/outlooks/2027-global-credit-outlook-credit-will-weaken-as-higher-rates-and-energy-costs-offset-the-ai-tailwind.html">Moody's 2027 Outlook</a> · <a href="https://www.mnimarkets.com/articles/mni-federal-reserve-sets-2027-fomc-meeting-schedule-1757093400287">FOMC 2027 時程</a> · <a href="https://www.bloomberg.com/news/articles/2026-11-17/bofa-survey-shows-investors-cut-tech-exposure-by-most-since-2006">BofA FMS 2026/11</a> · <a href="https://site.warrington.ufl.edu/ritter/files/IPO-Statistics.pdf">Ritter IPO 統計</a> · <a href="https://chinaglobalsouth.com/2026/11/16/2026-apec-summit-shenzhen-china/">APEC 深圳</a> · <a href="https://www.usagold.com/daily-precious-metals-market-report-november-12-2026/">USAGOLD 11/12</a> · <a href="https://www.inquirer.com/news/nation-world/russia-ukraine-peace-talks-abu-dhabi-putin-zelesnky-kushner-trump-20261110.html">俄烏阿布達比會談</a> · <a href="https://www.cw.com.tw/article/5142808">天下：九合一選舉</a> · <a href="https://www.404media.co/character-ais-bankruptcy-documents-show-the-economics-of-ai-dont-work/">404 Media</a></p>
   <p>市場讀數：<a href="https://www.cnbc.com/2026/11/16/stock-market-today-live-updates.html">CNBC 11/17</a> · <a href="https://indexes.nasdaqomx.com/Index/Overview/SOX">Nasdaq SOX</a> · <a href="https://news.cnyes.com/news/id/6665163">鉅亨網 11/17</a> · <a href="https://finance.ettoday.net/news/3273642">ETtoday 11/17</a> · <a href="https://www.moneyweekly.com.tw/ArticleData/Info/Article/262916">理財周刊</a> · <a href="https://www.cbc.gov.tw/app.asp?xdUrl=appKeyIndicatorsLp.asp&ctNode=645">中央銀行匯率</a> · <a href="https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve&field_tdr_date_value=2026">美國財政部殖利率</a> · <a href="https://quackonomist.substack.com/p/credit-spreads-fell-borrowing-costs">信用利差 11/12</a> · <a href="https://www.yieldtheory.app/research/hyperscaler-capex-2027-forecast">2027 資本支出共識</a> · <a href="https://www.babypips.com/news/daily-financial-forex-market-recap-2026-11-17">Babypips 11/17</a></p>
 <p>歷史日線：Yahoo Finance（2000/1 至 2026/11/18，經使用者電腦下載）。</p>
 <p>版面參考：<a href="https://source.opennews.org/articles/nyts-512-paths-white-house/">NYT 512 Paths</a>（分叉樹）· <a href="https://cmegroup.com/tools-information/quikstrike/cme-fedwatch-tool-user-guide.html">CME FedWatch</a>（日期 × 結果機率表）· <a href="https://projects.fivethirtyeight.com/2020-election-forecast">FiveThirtyEight</a>（模擬路徑與機率變化）。本頁由 Anthropic 的模型製作；Anthropic 掛牌一項只依歷史基準率設定。</p>
 </footer>
+  </details>
+  <p style="margin-top:14px">圖表：TradingView Lightweight Charts™，Copyright (c) 2026 TradingView, Inc. <a href="https://www.tradingview.com/" style="color:var(--lamp)">https://www.tradingview.com/</a>（Apache-2.0）。指標計算：technicalindicators（MIT）。</p>
 </section>
 <script>
 /*!
@@ -4328,11 +4326,11 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
   }
   function bank() {
     var f = fc(), fam = f.fam || [0, 0, 0, 0], by = [[], [], [], []]; lands(f).forEach(function (l) { if (l.fam != null) by[l.fam].push(l.name); });
-    $('#bank').innerHTML = '<h2>年底落在哪</h2>' + FAM.map(function (n, k) { return '<button class="fam" data-fam="' + k + '" aria-pressed="' + (!!hl && hl.fam === k) + '" style="border-color:' + FC[k] + ';flex-grow:' + Math.max(.04, fam[k]).toFixed(3) + '"><b>' + n + '</b><span>' + Math.round(fam[k] * 100) + '%</span><em>' + by[k].slice(0, 3).map(esc).join('、') + '</em></button>'; }).join('') + '<p class="limit">落點類別和價格目前綁得不緊，是模型的限制。</p>';
+    $('#bank').innerHTML = '<h2>年底落在哪</h2>' + FAM.map(function (n, k) { return '<button class="fam" data-fam="' + k + '" aria-pressed="' + (!!hl && hl.fam === k) + '" style="border-color:' + FC[k] + ';flex-grow:' + Math.max(.04, fam[k]).toFixed(3) + '"><b>' + n + '</b><span>' + Math.round(fam[k] * 100) + '%</span><em>' + by[k].slice(0, 3).map(esc).join('、') + '</em></button>'; }).join('');
   }
   function tape() {
     var n = LOG.length, t = LOG.slice(-3).map(function (s) { return '<span><span class="n">' + md(s.date) + '</span>　<b>' + esc(s.ev) + '：' + esc(s.out) + '</b></span>'; });
-    $('#tape').innerHTML = n ? (n > 3 ? '<span>… 前 ' + (n - 3) + ' 則</span>' : '') + t.join('') : '<span>還沒有走任何一步。走過的事件會標在圖的時間軸上。</span>';
+    $('#tape').innerHTML = n ? (n > 3 ? '<span>… 前 ' + (n - 3) + ' 則</span>' : '') + t.join('') : '';
   }
 
   // ---------- lower grid ----------
@@ -4369,6 +4367,7 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
     var bar = on.map(function (o) { return '<i style="width:' + o.p * 100 + '%"></i>'; }).join('');
     var ticks = '<span>0</span>' + on.slice(0, -1).map(function (o) { cum += o.p * 100; return '<span style="position:absolute;left:' + cum + '%;transform:translateX(-50%)">' + Math.round(cum) + '</span>'; }).join('') + '<span>100</span>';
     var mods = e.options.filter(function (o) { return o.mods.length; }).map(function (o) { return '<p>' + esc(o.name) + '：' + o.mods.map(function (m) { return esc(m.name) + ' ' + esc(m.x); }).join('、') + '</p>'; }).join('');
+    var why = (e.grade.indexOf('判斷') === 0 || !e.grade ? '' : '<p>有資料：' + esc(e.grade) + '。' + esc(e.psrc || '') + '</p>') + (e.expect ? '<p>預期：' + esc(e.expect) + '</p>' : '') + (mods ? '<p>目前的處境讓機率變了：</p>' + mods : '');
     return '<article class="sheet" id="sheet">' + (revealed ? '<div class="stamp">' + esc(r.out) + '<small>' + (r.dice ? '擲出 ' + r.dice : '自己選的') + '</small></div>' : '<div class="seal" id="seal">待決</div>') +
       '<div class="dateline">' + e.types.map(function (t) { return '<span class="cat">' + esc(t) + '</span>'; }).join('') + '<span>' + e.date.replace(/-/g, '/') + '</span><span>第 ' + (LOG.length + (revealed ? 0 : 1)) + ' 則</span><span>' + esc(A2.STAGES[e.stage]) + '</span></div>' +
       '<h3>' + esc(e.name) + '</h3>' + (e.note ? '<p class="lede">' + esc(e.note) + '</p>' : '') +
@@ -4377,7 +4376,7 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
         return '<button class="opt' + (o.rest ? ' rest' : '') + (revealed ? (j === r.j ? ' won' : ' lost') : o.off ? ' lost' : '') + '" data-opt="' + j + '"' + (o.off && !revealed ? ' disabled' : '') + ' title="點這一列：直接選這個結果"><span class="k">' + (j + 1) + '</span><span class="t">' + esc(o.name) + '</span><span class="p">' + (o.off ? '—' : Math.round(o.p * 100) + '%') + '</span><span class="c"><span>' + (o.delta.length ? o.delta.map(function (d) { return esc(d).replace(/→(.+)$/, ' → <b>$1</b>'); }).join('；') : '世界現況不變') + '</span>' + chips(o) + '</span></button>';
       }).join('') +
       '<div class="act">' + (revealed ? '<button class="next" data-next="1"><kbd>Enter</kbd>下一則</button>' : '<button class="roll" data-roll="1"><kbd>空白鍵</kbd>擲骰</button>') + (LOG.length ? '<button class="ghost" data-back="1"><kbd>←</kbd>退一步</button>' : '') + '<span class="ffs"><button class="ghost" data-ff="stage">擲完這一季</button><button class="ghost" data-ff="end">一路擲到年底</button></span></div>' +
-      '<details class="why"><summary>這幾個機率怎麼來的</summary>' + (e.grade.indexOf('判斷') === 0 || !e.grade ? '' : '<p>有資料：' + esc(e.grade) + '。' + esc(e.psrc || '') + '</p>') + (e.expect ? '<p>預期：' + esc(e.expect) + '</p>' : '') + (mods ? '<p>目前的處境讓機率變了：</p>' + mods : '<p>目前沒有處境在調整這一則的機率。</p>') + '</details></article>';
+      (why ? '<details class="why"><summary>這幾個機率怎麼來的</summary>' + why + '</details>' : '') + '</article>';
   }
   function market(k) {
     if (k == null) k = 1;
@@ -4388,21 +4387,21 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
     if (pick) { var list = pq ? A2.search(pq).slice(0, 30).map(function (x) { return x.id; }) : EX.filter(function (x) { return x[1] === pgrp; }).map(function (x) { return x[0]; }), lq = Q(list); list = list.filter(function (id) { return lq[id]; });
       pk = '<div class="picker"><div class="chips">' + GRP.map(function (g) { return '<button class="chip" data-grp="' + g[0] + '" aria-pressed="' + (!pq && pgrp === g[0]) + '">' + g[1] + '</button>'; }).join('') + '<input id="pq" placeholder="搜尋名稱或代號" value="' + esc(pq) + '" aria-label="搜尋標的"></div><table>' +
         list.map(function (id) { var on = pins.indexOf(id) >= 0, x = lq[id]; return '<tr><td><button class="pin" data-pin="' + esc(id) + '" aria-pressed="' + on + '" title="' + (on ? '從焦點拿掉' : '釘到焦點') + '">' + (on ? '★' : '☆') + '</button>' + esc(x.name) + '</td><td class="r n">' + fx(x.v) + '</td><td class="r n ' + (LOG.length ? (x.chg >= 0 ? 'up' : 'dn') : 'mu') + '">' + (LOG.length ? sg(x.chg * 100) : '—') + '</td></tr>'; }).join('') + '</table>' +
-        '<p class="note">' + (list.length ? '' : '沒有符合的標的。') + '個股用搜尋找；按 ☆ 釘到焦點，圖就能換過去。</p></div>'; }
-    return '<aside class="rail"><h2>焦點標的<span>點一列，上面的圖跟著換</span></h2><table><tr><th></th><th class="r">價位</th><th class="r">這一步</th><th class="r">從起點</th></tr>' + body + '</table>' +
+        (list.length ? '' : '<p class="note">沒有符合的標的。</p>') + '</div>'; }
+    return '<aside class="rail"><h2>焦點標的</h2><table><tr><th></th><th class="r">價位</th><th class="r">這一步</th><th class="r">從起點</th></tr>' + body + '</table>' +
       '<button class="chip add" data-pick="1" style="margin-top:10px">' + (pick ? '收起' : '＋ 其他標的') + '</button>' + pk + '</aside>';
   }
   function evTable(R) {
     var rows = '';
     R.stages.forEach(function (st) { if (!st.rows.length) return; rows += '<tr class="stg"><td colspan="' + (4 + R.cols.length) + '">' + esc(st.name) + '</td></tr>';
       st.rows.forEach(function (s) { rows += '<tr><td class="n">' + md(s.date) + '</td><td><b>' + esc(s.ev) + '</b>：' + esc(s.out) + '</td><td class="r n">' + esc(pct(s.p)) + '</td><td class="r n mu">' + (s.dice != null ? s.dice : s.how === 'chosen' ? '自選' : '—') + '</td>' + (s.imp ? s.imp.map(function (d) { return '<td class="r n ' + (Math.abs(d) < .05 ? 'mu' : d >= 0 ? 'up' : 'dn') + '">' + (d >= 0 ? '+' : '−') + Math.abs(d).toFixed(1) + '</td>'; }).join('') : R.cols.map(function () { return '<td class="r n mu">〃</td>'; }).join('')) + '</tr>'; }); });
-    return '<div class="scrollbox"><table style="min-width:760px"><tr><th>日期</th><th>事件：結果</th><th class="r">機率</th><th class="r">擲出</th>' + R.cols.map(function (c) { return '<th class="r">' + esc(c) + '</th>'; }).join('') + '</tr>' + rows + '</table></div><p class="note">右邊三欄是這個事件到目前為止對那個標的的累計影響（對數 %）；同一個事件決定過不只一次時，只寫在第一列。</p>';
+    return '<div class="scrollbox"><table style="min-width:760px"><tr><th>日期</th><th>事件：結果</th><th class="r">機率</th><th class="r">擲出</th>' + R.cols.map(function (c) { return '<th class="r" title="這個事件對這個標的的累計影響（對數 %）">' + esc(c) + '</th>'; }).join('') + '</tr>' + rows + '</table></div>';
   }
   function codeBox(R) { return '<details class="code"><summary>種子與進度碼：存下這一局，或載入別的一局</summary><p>種子 <span class="n">' + seed + '</span>' + (R ? '　整條路徑的機率 <span class="n">10^' + R.l10.toFixed(1) + '</span>' : '') + '</p><p class="n codebox">' + esc(G.code()) + '</p><p><input id="codein" placeholder="把進度碼貼在這裡" aria-label="進度碼" style="width:min(100%,520px)"> <button class="chip" data-load="1">載入</button> <button class="chip" data-new="1">開新的一局</button></p></details>'; }
   function paneRun() {
     var n = LOG.length; if (!n) return '<section class="pane"><p class="mu">還沒有走任何一步。回「此刻」擲第一則。</p>' + codeBox(null) + '</section>';
     var R = G.report();
-    if (!done()) return '<section class="pane"><div class="rail"><h2>這一局走過的 ' + n + ' 步</h2></div>' + evTable(R) + '<p class="note">走到年底之後，這裡會變成這一局的報告：結局、各階段的價位、漲跌是哪些來源加起來的。</p>' + codeBox(R) + '</section>';
+    if (!done()) return '<section class="pane"><div class="rail"><h2>這一局走過的 ' + n + ' 步</h2></div>' + evTable(R) + codeBox(R) + '</section>';
     var E = G.ending(), L = G.ledger(sel), q = Q([sel])[sel], top = L.top.slice(0, 10), rest = L.total - top.reduce(function (z, x) { return z + x.v; }, 0), nrest = Math.max(0, L.drivers.length - top.length);
     var kv = function (a, b) { return '<div><span>' + a + '</span><b>' + b + '</b></div>'; }, mx = Math.max.apply(null, top.map(function (x) { return Math.abs(x.v); }).concat([Math.abs(rest), 1e-9]));
     var lrow = function (label, val, cls) { return '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td>' + label + '</td><td class="lbar"><i class="' + (val >= 0 ? 'p' : 'm') + '" style="width:' + (48 * Math.abs(val) / mx) + '%"></i></td><td class="r n ' + (val >= 0 ? 'up' : 'dn') + '">' + (val >= 0 ? '+' : '−') + Math.abs(val).toFixed(2) + '</td></tr>'; };
@@ -4413,8 +4412,8 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
       '<div class="rgrid"><div><div class="rail"><h2>各階段結束時<span>對起始收盤的累計漲跌</span></h2></div><table><tr><th>階段</th><th>到哪一天</th><th class="r">事件</th>' + pk.map(function (k) { return '<th class="r">' + esc(px[0].px.filter(function (y) { return y.k === k; })[0].name) + '</th>'; }).join('') + '</tr>' +
         px.map(function (st) { return '<tr><td>' + esc(st.name) + '</td><td class="n">' + st.date.replace(/-/g, '/') + '</td><td class="r n">' + st.rows.length + '</td>' + pk.map(function (k) { var x = st.px.filter(function (y) { return y.k === k; })[0]; return '<td class="r n ' + (x.chg >= 0 ? 'up' : 'dn') + '">' + sg(x.chg * 100) + '</td>'; }).join('') + '</tr>'; }).join('') + '</table>' +
         '<div class="rail" style="margin-top:18px"><h2>年底和起點相比，變了的狀態</h2></div><div class="chg">' + (R.clocks.filter(function (c) { return !story(c.name); }).map(function (c) { return '<span>' + esc(c.name) + '　' + esc(c.from) + ' → <b>' + esc(c.to) + '</b></span>'; }).join('') || '<span class="mu">沒有</span>') + '</div></div>' +
-      '<div><div class="rail"><h2>' + esc(q ? q.name : sel) + '這一年的漲跌從哪裡來<span>上面那排標的可以換</span></h2></div><table class="led"><tr><th>來源</th><th></th><th class="r">對數 %</th></tr>' + top.map(function (x) { return lrow(esc(x.label), x.v); }).join('') + (nrest ? lrow('其他 ' + nrest + ' 項', rest, 'mu') : '') + lrow('<b>合計（' + L.days + ' 個交易日）</b>', L.total, 'tot') + '</table>' +
-        '<p class="note">合計換成漲跌幅是 ' + sg((Math.exp(L.total / 100) - 1) * 100) + (q ? '；年底對起始收盤是 ' + sg(q.chg * 100) : '') + '。</p></div></div>' +
+      '<div><div class="rail"><h2>' + esc(q ? q.name : sel) + '這一年的漲跌從哪裡來</h2></div><table class="led"><tr><th>來源</th><th></th><th class="r">對數 %</th></tr>' + top.map(function (x) { return lrow(esc(x.label), x.v); }).join('') + (nrest ? lrow('其他 ' + nrest + ' 項', rest, 'mu') : '') + lrow('<b>合計（' + L.days + ' 個交易日）</b>', L.total, 'tot') + '</table>' +
+        '</div></div>' +
       '<div class="rail" style="margin-top:22px"><h2>這一局走過的 ' + n + ' 步</h2></div>' + evTable(R) + codeBox(R) + '</section>';
   }
   var packsOn = function () { return A2.WF.packs.filter(function (p) { return knobs[p.knob]; }); };
@@ -4422,21 +4421,17 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
     var f = fc(), t = f.tiers || null, L = lands(f), max = Math.max.apply(null, L.map(function (l) { return l.n; })), on = packsOn();
     var df = on.length && !LOG.length ? A2.diff(f, A2.overview({ knobs: {}, N: 1000, seed: 1 })) : null, rv = hl && hl.land ? A2.reverse(f, hl.land, 6) : null;
     var dtxt = function (id) { var x = df && df.byId[id]; if (!x || x.noise) return ''; var pts = x.d * 100; return '<span class="n ' + (pts >= 0 ? 'up' : 'dn') + '" title="和沒開特殊劇本相比，差幾個百分點">' + (pts >= 0 ? '+' : '−') + Math.abs(pts).toFixed(1) + '</span>'; };
-    return '<section class="pane"><div class="rail"><h2>從' + (LOG.length ? '現在' : '起點') + '往下擲 ' + f.N + ' 局，年底落在哪<span>點一個落點，圖上只亮落在那裡的路徑</span></h2></div>' +
+    return '<section class="pane"><div class="rail"><h2>從' + (LOG.length ? '現在' : '起點') + '往下擲 ' + f.N + ' 局，年底落在哪</h2></div>' +
       (t ? '<div class="tiers">' + TIER.map(function (x, j) { return '<div class="tier"><b>' + x[0] + '</b><span>' + Math.round(t[j] * 100) + '%</span><p>' + x[1] + '</p></div>'; }).join('') + '</div>' : '') +
       '<div class="lands">' + L.map(function (l) { return '<button class="land" data-land="' + esc(l.id) + '" aria-pressed="' + (!!hl && hl.land === l.id) + '" title="' + esc(l.d || '') + '"><i style="background:' + (FC[l.fam] || MUTE) + '"></i><span>' + esc(l.name) + '</span><span class="n">' + (100 * l.n / f.N).toFixed(1) + '%' + (df ? '　' + dtxt(l.id) : '') + '</span><span class="bar"><u style="width:' + (100 * l.n / max) + '%;background:' + (FC[l.fam] || MUTE) + '"></u></span></button>'; }).join('') + '</div>' +
-      (df ? '<p class="note">百分比旁邊的數字：和沒開特殊劇本相比差幾個百分點；差距在抽樣誤差以內的不標。</p>' : '') +
       (rv ? '<div class="rail" style="margin-top:14px"><h2>落到這裡的路徑，常見這些結果</h2></div>' + (rv.length ? '<ol class="chain">' + rv.map(function (c) { return '<li><b>' + esc(c.ev) + '</b>：' + esc(c.out) + '　<span class="n">' + Math.round(c.share * 100) + '% 的路徑有，是平常的 ' + c.lift.toFixed(1) + ' 倍</span></li>'; }).join('') + '</ol>' : '<p class="note">沒有特別突出的。</p>') : '') +
-      '<p class="note">換假設（特殊劇本）：按頁首的「假設」。</p></section>';
+      '</section>';
   }
   // the special scripts open in place under the header button (same chips as before); the frequency choice has its place here and waits for the engine
   var popOpen = false;
   function packPop() {
-    var el = $('#packpop'), btn = $('#assume'), P = A2.WF.packs; btn.setAttribute('aria-expanded', popOpen); el.hidden = !popOpen; if (!popOpen) return;
-    el.innerHTML = '<h2>換假設：特殊劇本</h2>' +
-      (P.length ? '<div class="packs">' + P.map(function (p) { return '<button class="chip" data-pack="' + esc(p.knob) + '" aria-pressed="' + !!knobs[p.knob] + '">' + esc(p.name) + '</button>'; }).join('') + '</div>' : '<p class="note">這一版的世界還沒有接上劇本的開關；接上之後會出現在這裡。</p>') +
-      '<div class="packs">頻率：' + ['罕見', '偶發', '頻繁'].map(function (x) { return '<button class="chip" disabled>' + x + '</button>'; }).join('') + '</div>' +
-      '<p class="note">頻率的選擇還沒有接上。' + (P.length ? '換假設會讓這一局從頭開始。' : '') + '</p>';
+    var el = $('#packpop'), btn = $('#assume'), P = A2.WF.packs; btn.hidden = !P.length; if (!P.length) popOpen = false; btn.setAttribute('aria-expanded', popOpen); el.hidden = !popOpen; if (!popOpen) return;
+    el.innerHTML = '<h2>特殊劇本</h2><div class="packs">' + P.map(function (p) { return '<button class="chip" data-pack="' + esc(p.knob) + '" aria-pressed="' + !!knobs[p.knob] + '">' + esc(p.name) + '</button>'; }).join('') + '</div>';
     var r = btn.getBoundingClientRect(), w = el.offsetWidth; el.style.top = Math.round(r.bottom + 6) + 'px'; el.style.left = Math.round(Math.max(8, Math.min(r.left, window.innerWidth - w - 8))) + 'px';
   }
   function render(prevState) {
