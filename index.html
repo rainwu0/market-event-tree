@@ -16,7 +16,7 @@
   --serif:"Noto Serif TC","Source Han Serif TC","Songti TC","PMingLiU",serif;
   --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei","Hiragino Sans","Yu Gothic","Noto Sans JP","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif; /* Chinese first; then system fonts for the kana and hangul in Japanese and Korean instrument names */
   --mono:"IBM Plex Mono","Cascadia Mono",Consolas,monospace;
-  --t-roll:.9s;
+  --t-roll:.32s;
 }
 *{box-sizing:border-box} html,body{margin:0}
 body{background:var(--desk);color:var(--txt);font:15px/1.6 var(--sans)}
@@ -1602,8 +1602,8 @@ const world3=(function(){
   const V3='3.0.0-a1', YEAR={weekdays:250,days:365}, own=Object.prototype.hasOwnProperty, has=(o,k)=>o!==null&&typeof o==='object'&&own.call(o,k);
   const clip=(x,a,b)=>Math.min(b,Math.max(a,x)), logistic=z=>1/(1+Math.exp(-z)), logit=p=>Math.log(p/(1-p));
   const isDate=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&!isNaN(Date.parse(s+'T00:00:00Z'));
-  const XC=new Map();
-  function cond(src,allowPeak){ const key=(allowPeak?'1':'0')+String(src); let f=XC.get(key); if(f) return f;
+  const XC=new Map(), XCP=[new Map(),new Map()];   // XCP: the same compiled conditions by (allowPeak, src) without building a key string per call (speed, 收尾 E)
+  function cond(src,allowPeak){ const M=XCP[allowPeak?1:0]; let f=M.get(src); if(f) return f; const key=(allowPeak?'1':'0')+String(src); f=XC.get(key); if(f){ M.set(src,f); return f; }
     const s=String(src), toks=[], re=/\s*(\d+(?:\.\d+)?|[A-Za-z_]\w*|==|!=|>=|<=|&&|\|\||[<>!().])/y;
     while(re.lastIndex<s.length){ const i=re.lastIndex, m=re.exec(s); if(!m){ if(/^\s*$/.test(s.slice(i))) break; throw new Error('bad expression: '+s); } toks.push(m[1]); }
     let p=0; const names=new Set(), peaks=new Set(), fireds=new Set(), firedRefs=new Map(), peek=()=>toks[p], next=()=>toks[p++], bad=why=>{ throw new Error('bad expression: '+s+(why?' ('+why+')':'')); };
@@ -1617,15 +1617,18 @@ const world3=(function(){
       return op==='=='?v=>a(v)===b(v)?1:0:op==='!='?v=>a(v)!==b(v)?1:0:op==='>='?v=>a(v)>=b(v)?1:0:op==='<='?v=>a(v)<=b(v)?1:0:op==='>'?v=>a(v)>b(v)?1:0:v=>a(v)<b(v)?1:0; }
     function and(){ let g=cmp(); while(peek()==='&&'){ next(); const a=g, b=cmp(); g=v=>a(v)&&b(v)?1:0; } return g; }
     function or(){ let g=and(); while(peek()==='||'){ next(); const a=g, b=and(); g=v=>a(v)||b(v)?1:0; } return g; }
-    const g=or(); if(p!==toks.length) bad(); f=v=>!!g(v); f.names=Array.from(names); f.peaks=Array.from(peaks); f.fireds=Array.from(fireds); f.firedRefs=Array.from(firedRefs.values()); XC.set(key,f); return f; }
+    const g=or(); if(p!==toks.length) bad(); f=v=>!!g(v); f.names=Array.from(names); f.peaks=Array.from(peaks); f.fireds=Array.from(fireds); f.firedRefs=Array.from(firedRefs.values()); XC.set(key,f); M.set(src,f); return f; }
   // fired(id): a landing (theta undefined) counts every firing; an event if (ruling 186) counts only firings published no later than theta,
   // the time the reading item takes effect (ruling 188: <=; occursAt, else the day's startAt - candidate; theta null: nothing counts).
   const pubCount=(S,id,theta)=>{ if(!theta) return 0; let n=0; for(const k of ((S.firedAt||{})[id]||[])) if(k!==null&&k<=theta) n++; return n; };
   // fired(id.key) (spec 4.5): the same rule over firedOut[id] = [[key, K], ...]; a landing counts every firing of that key, published or not
   const pubCountOut=(S,id,key,theta)=>{ if(!theta) return 0; let n=0; for(const [kk,K] of ((S.firedOut||{})[id]||[])) if(kk===key&&K!==null&&K<=theta) n++; return n; };
   const allCountOut=(S,id,key)=>{ let n=0; for(const [kk] of ((S.firedOut||{})[id]||[])) if(kk===key) n++; return n; };
-  const firedRead=(S,ref,theta)=>{ const d=ref.indexOf('.'); if(d<0) return theta===undefined?(S.fired[ref]||0):pubCount(S,ref,theta); const id=ref.slice(0,d), key=ref.slice(d+1); return theta===undefined?allCountOut(S,id,key):pubCountOut(S,id,key,theta); };
-  const reader=(W,S,theta)=>n=>n.slice(0,5)==='peak:'?S.peak[n.slice(5)]:n.slice(0,6)==='fired:'?firedRead(S,n.slice(6),theta):has(W.clocks,n)?S.clocks[n]:has(W.attrs,n)?S.attrs[n]:S.flags[n]?1:0;
+  const FR=new Map(), frOf=ref=>{ let x=FR.get(ref); if(!x){ const d=ref.indexOf('.'); x=d<0?{id:ref,key:null}:{id:ref.slice(0,d),key:ref.slice(d+1)}; FR.set(ref,x); } return x; };   // a fired() reference split once
+  const firedRead=(S,ref,theta)=>{ const r=frOf(ref); if(r.key===null) return theta===undefined?(S.fired[r.id]||0):pubCount(S,r.id,theta); return theta===undefined?allCountOut(S,r.id,r.key):pubCountOut(S,r.id,r.key,theta); };
+  // a name read: 'peak:<clock>', 'fired:<ref>', a clock, an attribute or a flag; the kind of each name is found once per world (speed, 收尾 E), the values are read from S each time
+  const RK=new WeakMap(); let RKW=null, RKM=null; const kindOf=(W,n)=>{ if(W!==RKW){ RKW=W; RKM=RK.get(W); if(!RKM){ RKM=new Map(); RK.set(W,RKM); } } const m=RKM; let k=m.get(n); if(k===undefined){ k=n.slice(0,5)==='peak:'?[1,n.slice(5)]:n.slice(0,6)==='fired:'?[2,n.slice(6)]:has(W.clocks,n)?[3,n]:has(W.attrs,n)?[4,n]:[5,n]; m.set(n,k); } return k; };
+  const reader=(W,S,theta)=>n=>{ const k=kindOf(W,n), x=k[1]; switch(k[0]){ case 1: return S.peak[x]; case 2: return firedRead(S,x,theta); case 3: return S.clocks[x]; case 4: return S.attrs[x]; default: return S.flags[x]?1:0; } };
   const levelsN=(W,c)=>W.clocks[c].levels.length;
   const OLD={clock:['segs'],event:['mtth','drives','when','pack','trigger','basis'],outcome:['mods','trig','rest'],
     effect:['if','up','map','add','win','fac','group','firm','halt','link'],knob:['special_boost'],meta:['regular_scale']};
@@ -2991,6 +2994,8 @@ function play(o){ const seed=o.seed|0, knobs=Object.assign({},o.knobs||{}), stop
     // landing shares from the current state: the engine's many({from: state}) goes on from here N times (decided steps stay, the rest by probability);
     // the same batch is kept, so a row opened with openPath() is one of the runs counted in it
     forecast:N=>fcache&&fcache.N===capN(N)?fcache:(fcache=overviewFrom(C.state(),C.rec,knobs,(Math.imul(seed,100003)+1)|0,N,'game',seed)),
+    // the same batch a slice at a time, up to 200 runs (the first N of them are forecast(N)'s): job.step(ms) until it returns true, then job.result()
+    forecastJob:N=>batchJob(C.state(),C.rec,knobs,(Math.imul(seed,100003)+1)|0,N,'game',seed),
     ending:()=>{ const l=C.landing(); if(!l) return null; const p=P(), v=p.view(), ex=IS3?{chain:C.rec.filter(r=>!RXN(r)&&evById[r.ev].outcomes[r.out].effects.some(x=>x.clock!==undefined||x.flag!==undefined)).map(r=>({date:DATES[r.day],name:recEv(r),outcome:recOut(r),p:r.p}))}:eng.explain(W,p.P), yr={}; for(const [k,name,id] of WF.core){ const q=v.quote(id); yr[k]={name,chg:q.sinceAnchor,lastTradeDate:q.lastTradeDate,date:q.date,status:q.status}; }
       const sid=WF.core[0][2], ss=v.series(sid), st=pathStats([ss.anchor.close].concat(ss.rows.filter(r=>r.status==='open').map(r=>r.close)));   // ruling 84: the S&P 500 on this path, start price then every traded close
       return {id:l.id,name:l.name,lv:l.lv,fam:l.fam,d:l.d,blurb:l.blurb||'',chain:ex.chain.map(c=>({date:c.date,ev:c.name,out:c.outcome,p:c.p})),year:yr,spx:{name:WF.core[0][1],end:st.end,dd:st.dd}}; },
@@ -3053,8 +3058,20 @@ function load(code,stop){ const p=String(code).trim().split('.');
 // DEFN3 is the default N and the most one batch runs; the batch reports the N it really ran (N below)
 const DEFN3=30, capN=N=>IS3?Math.min(N,DEFN3):N;
 function overviewFrom(S,recs,knobs,base,N,from,gameSeed){ N=capN(N); let R;
-  if(IS3){ const runs=[]; for(let i=0;i<N;i++){ const rs=(Math.imul(base,100003)+i+1)|0, f=finish3(S,knobs,rs); runs.push({seed:rs,landing:f.landing,outs:f.outs,sig:f.sig}); } R={N,runs,knobs}; }
+  if(IS3){ const runs=[]; for(let i=0;i<N;i++) runs.push(run3(S,knobs,base,i)); R={N,runs,knobs}; }
   else R=eng.many(W,{from:S,seed:base,N,knobs});
+  return sumUp(R,S,recs,knobs,base,N,from,gameSeed); }
+// run i of a world3 batch from S with base seed base (the one-go batch and the job below run the same ones)
+const run3=(S,knobs,base,i)=>{ const rs=(Math.imul(base,100003)+i+1)|0, f=finish3(S,knobs,rs); return {seed:rs,landing:f.landing,outs:f.outs,sig:f.sig}; };
+// world3: the batch a slice at a time, for a page that keeps working while it counts (up to MAXN3 runs). step(ms) runs paths for about ms milliseconds and says
+// whether the batch is done; result() is then what overviewFrom gives for the same N; progress() = runs done / N
+const MAXN3=200;
+function batchJob(S,recs,knobs,base,N,from,gameSeed){ N=Math.max(1,Math.min(N|0||DEFN3,IS3?MAXN3:N|0)); const runs=[]; let res=null;
+  return {N,progress:()=>runs.length/N,done:()=>!!res,
+    step:ms=>{ if(res) return true; const t0=Date.now(); do{ if(IS3) runs.push(run3(S,knobs,base,runs.length)); else { res=overviewFrom(S,recs,knobs,base,N,from,gameSeed); return true; } }while(runs.length<N&&Date.now()-t0<(ms||30));
+      if(runs.length>=N) res=sumUp({N,runs,knobs},S,recs,knobs,base,N,from,gameSeed); return !!res; },
+    result:()=>res}; }
+function sumUp(R,S,recs,knobs,base,N,from,gameSeed){
   const cnt={}; for(const r of R.runs) cnt[r.landing]=(cnt[r.landing]||0)+1;
   const ids=Object.keys(landingById), rows=ids.map(id=>{ const l=landingById[id], n=cnt[id]||0; return {id,name:l.name,fam:l.fam,lv:l.lv,d:l.d,blurb:l.blurb||'',n,p:n/N}; });
   if(cnt.null) rows.push({id:null,name:'沒有落點',fam:null,lv:null,d:'',blurb:'',n:cnt.null,p:cnt.null/N});
@@ -3114,7 +3131,9 @@ function reportOf(G,C,pv,upto,knobs,seed,v){ const done=!C.pending(), L=C.landin
   return {done,landing:L?{id:L.id,name:L.name,lv:L.lv,fam:L.fam}:null,seed,code:G.code(),n:dec.length,cnt,l10,low:dec.filter(r=>r.p<0.25).length,
     startShare:row?{p:row.p,N:ov.N,seed:ov.seed}:null,ending:done?G.ending():null,cols:cols.map(c=>c.name),stages,clocks,cutoff:CUTOFF,date:upto>0?DATES[upto-1]:CUTOFF}; }
 const test={slotDay,catOf,STOPCATS,volPathOf,pdates:PDATES,baseOf,splitOf,walker:IS3?walker3:walker,pathStats,pricePath,injectOf,simulate:(seed,knobs)=>eng.simulate(W,{seed,knobs,light:true}),scriptState:(seed,knobs,rec)=>eng.simulate(W,{seed,knobs,light:true,script:rec}).state,probs:(ev,S,knobs)=>eng.probs(W,evById[ev],S,knobs).p};
-return {WF,STAGES,T,dates:{first:DATES[0],last:DATES[T-1],end:W.end,cutoff:CUTOFF,year:Y1},search:q=>MK.search(q),gaps:GAPS,gradeText,extraNote:EXTRA_NOTE,play,load,overview,diff,reverse,openPath,test,landings:WF.landings,version:eng.version,worldFile:WF.file,format:FMT,nEvents:W.events.length,nLandings:Object.keys(landingById).length,
+// overview as a job (from today with these knobs, base seed seed): up to 200 runs worked out a slice at a time; not cached
+const overviewJob=o=>{ const knobs=Object.assign({},o.knobs||{}), seed=o.seed===undefined?1:o.seed|0; return batchJob(IS3?w3.start(W,knobs,w3.keyDraw(seed)):eng.start(W,knobs,seed),[],knobs,seed,o.N||(IS3?DEFN3:1000),'start',seed); };
+return {overviewJob,WF,STAGES,T,dates:{first:DATES[0],last:DATES[T-1],end:W.end,cutoff:CUTOFF,year:Y1},search:q=>MK.search(q),gaps:GAPS,gradeText,extraNote:EXTRA_NOTE,play,load,overview,diff,reverse,openPath,test,landings:WF.landings,version:eng.version,worldFile:WF.file,format:FMT,nEvents:W.events.length,nLandings:Object.keys(landingById).length,
   world3:{formal:FX?FX.evs.slice():null,on:IS3,defN:IS3?DEFN3:null,priceMapRows:PRICE_ROWS.n,priceMapMapped:PRICE_ROWS.mapped,driftCalib:CALIB.on,driftScheduled:CALIB.sched.size,driftDaily:!!CALIB.daily}};
 })();
 // ---------- ending sequences: drawn on a canvas, about eleven seconds, skippable. Abstract by design: maps, lights and instruments, no people.
@@ -3268,12 +3287,20 @@ const PAGE_SOURCES=[{"t": "Correlates of War，Militarized Interstate Disputes�
     return pendC = { note: q.blurb || (typeof EVNOTE !== 'undefined' && EVNOTE[q.ev]) || '', date: q.date, stage: q.stage, name: q.label || q.name, types: q.types, grade: q.gradeName || '', psrc: q.psrc, expect: q.expect,
       options: q.options.map(function (o) { return { tags: o.tags || [], sev: o.sev, name: o.label || o.name, raw: o.name, p: o.cp, delta: (o.delta || []).filter(function (d) { return !story(d); }), price: o.price, off: !!o.off, rest: !!o.rest, mods: o.mods || [] }; }) }; }
   // landing shares from here: the start uses the adapter's overview (1000 runs), later steps its forecast (300 runs); both are kept by the adapter
-  // The forecast takes seconds and blocks the page while it runs, so a step never waits for it: fc() answers from what is already worked out, or
-  // returns null and works it out once the page has been still for a moment (after the dice and price animations); the shares shown meanwhile are the last ones, dimmed.
-  var fcC = null, fcLast = null, fcT = null, FC_WAIT = 1400;
-  var fc = function (force) { var k = LOG.length + '|' + seed + '|' + JSON.stringify(knobs); if (fcC && fcC.k === k) return fcC.f;
-    if (!force) { clearTimeout(fcT); fcT = setTimeout(function () { fcT = null; if (busy) { fc(); return; } fc(true); bank(); river(); if (focal === 'all') redraw(); }, FC_WAIT); return null; }
-    clearTimeout(fcT); fcT = null; var f = LOG.length ? G.forecast(300) : A2.overview({ knobs: knobs, N: 1000, seed: 1 }); fcC = { k: k, f: f }; fcLast = f; return f; };
+  // The forecast: FCN runs from here, asked of the adapter a slice at a time (budgetMs) so that the page never stops for it. fc() answers from what is
+  // already worked out, or returns null and starts working once the page has been still for a moment (after the dice); the shares shown meanwhile are the
+  // last ones, dimmed, and they fill in as the slices come back. An adapter that takes no budget runs its whole batch in one go, as before; it reports the
+  // number of runs it really did (N), and `target` when more are to come.
+  var FCN = 240, SLICE = 30, fcC = null, fcLast = null, fcT = null, FC_WAIT = 700;
+  var fcKey = function () { return LOG.length + '|' + seed + '|' + JSON.stringify(knobs); };
+  var fcAsk = function () { return LOG.length ? G.forecast(FCN, { budgetMs: SLICE }) : A2.overview({ knobs: knobs, N: FCN, seed: 1, budgetMs: SLICE }); };
+  var fcMore = function (f) { return !!f && typeof f.target === 'number' && f.N < f.target; };
+  function fcStep(k) { fcT = null; if (k !== fcKey()) { fcT = setTimeout(function () { fcStep(fcKey()); }, FC_WAIT); return; }   // the run moved on while this waited: start over for where it is now
+    if (busy) { fcT = setTimeout(function () { fcStep(k); }, 120); return; }
+    var f = fcAsk(); fcC = { k: k, f: f }; fcLast = f; bank(); if (fcMore(f)) { fcT = setTimeout(function () { fcStep(k); }, 0); return; } river(); if (focal === 'all') redraw(); }
+  var fc = function (force) { var k = fcKey(); if (fcC && fcC.k === k && (!force || !fcMore(fcC.f))) return fcC.f;
+    if (!force) { if (!fcT) fcT = setTimeout(function () { fcStep(k); }, FC_WAIT); return fcC && fcC.k === k ? fcC.f : null; }
+    clearTimeout(fcT); fcT = null; var f = fcAsk(), n = 0; while (fcMore(f) && n++ < 400) f = fcAsk(); fcC = { k: k, f: f }; fcLast = f; return f; };
   var lands = function (f) { return f.rows.filter(function (r) { return r.n > 0; }); };
   // weekly closes of one instrument on a sample of the runs counted in a forecast (in proportion to the landings), worked out a few at a time
   var fanC = new Map(), fanJob = 0, PER = 40;
@@ -3356,7 +3383,7 @@ const PAGE_SOURCES=[{"t": "Correlates of War，Militarized Interstate Disputes�
     bars = H.map(mb); var last = bars.length ? bars[bars.length - 1].time : '', nh = bars.length; cname = ch.name;
     ch.proj.forEach(function (b) { if (b.d > last) { bars.push(mb(b)); last = b.d; } });
     if (!bars.length) { var q1 = Q([sel])[sel], v1 = q1 ? q1.v : 0; last = A2.dates.cutoff; bars = [{ time: last, open: v1, high: v1, low: v1, close: v1 }]; }
-    var now = last, curv = bars[bars.length - 1].close, nd = bars.length, f0 = isDone ? null : fc(), F = isDone ? { dates: [], paths: [], left: [] } : f0 ? fan(f0, sel) : { dates: [], paths: [], left: [0] }, idx = []; cdec = dec(curv); fanBusy = F.left.length > 0;
+    var now = last, curv = bars[bars.length - 1].close, nd = bars.length, f0 = isDone ? null : fc(), F = isDone ? { dates: [], paths: [], left: [] } : f0 && !fcMore(f0) ? fan(f0, sel) : { dates: [], paths: [], left: [0] }, idx = []; cdec = dec(curv); fanBusy = F.left.length > 0;
     var key = function (d) { if (unit === 'm') return d.slice(0, 7); var x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() - (x.getUTCDay() + 6) % 7); return x.toISOString().slice(0, 10); };
     if (unit !== 'd') { var agg = []; bars.forEach(function (b) { var k = key(b.time), a = agg[agg.length - 1]; if (a && a.k === k) { a.time = b.time; a.high = Math.max(a.high, b.high); a.low = Math.min(a.low, b.low); a.close = b.close; } else agg.push({ k: k, time: b.time, open: b.open, high: b.high, low: b.low, close: b.close }); }); bars = agg; }
     // the time axis is one slot per item. The future slots depend only on the calendar and the bar period (every weekday, every Friday, every month end),
@@ -3411,7 +3438,7 @@ const PAGE_SOURCES=[{"t": "Correlates of War，Militarized Interstate Disputes�
       '<button class="chip add" data-pick="1">＋ 其他標的</button><span class="rnow">' + esc(m.name) + '<b class="n">' + fx(m.v) + '</b><span class="n ' + (m.chg >= 0 ? 'up' : 'dn') + '">' + (LOG.length ? sg(m.chg * 100) + ' 從起點' : '起始收盤') + '</span></span>';
   }
   function bank() {
-    var cur = fc(), f = cur || fcLast; $('#bank').classList.toggle('stale', !cur); if (!f) { $('#bank').innerHTML = '<h2>年底落在哪</h2>'; return; }
+    var cur = fc(), f = cur || fcLast; $('#bank').classList.toggle('stale', !cur || fcMore(cur)); if (!f) { $('#bank').innerHTML = '<h2>年底落在哪</h2>'; return; }
     var fam = f.fam || [0, 0, 0, 0], by = [[], [], [], []]; lands(f).forEach(function (l) { if (l.fam != null) by[l.fam].push(l.name); });
     // The ring beside the name: how much of the cycle still holds. While the run goes on its length is the share of runs from here that end the year
     // in the upper two classes, and it turns red when that share is low; at year end it closes in the landing's colour, or is left broken.
@@ -3591,6 +3618,7 @@ const PAGE_SOURCES=[{"t": "Correlates of War，Militarized Interstate Disputes�
   // ---------- actions ----------
   // after an outcome is shown the page goes on to the next event by itself in three seconds; any step the reader takes first cancels the wait
   var AUTO = 3000, autoT = null, stopAuto = function () { clearTimeout(autoT); autoT = null; };
+  var twN = 0;
   async function decide(j) {   // j === undefined: the dice decide; otherwise the reader picks outcome j
     if (busy || revealed || G.done() || focal !== 'now') return; var e = pend(); if (j !== undefined && (!e.options[j] || e.options[j].off)) return; busy = true;
     lastQ = Q(vis()); prevSt = G.state();
@@ -3599,13 +3627,14 @@ const PAGE_SOURCES=[{"t": "Correlates of War，Militarized Interstate Disputes�
     if (j === undefined && k >= 0) out = e.options[k].name; else if (j !== undefined) out = e.options[j].name;
     e.rolled = { out: out, dice: j === undefined ? L.dice : null, j: j !== undefined ? j : k }; shown = e;
     if (e.rolled.dice) { var mk = $('#mark'); mk.classList.add('on'); mk.getBoundingClientRect(); mk.style.left = (e.rolled.dice - .5) + '%';
-      await tween(900, function (x) { $('#markn').textContent = Math.max(1, Math.round(e.rolled.dice * x)); }); await wait(220); }
+      await tween(320, function (x) { $('#markn').textContent = Math.max(1, Math.round(e.rolled.dice * x)); }); await wait(60); }
     revealed = true; render(prevSt); river();
     stopAuto(); autoT = setTimeout(function wake() { autoT = null; if (!revealed || focal !== 'now') return; if (busy) { autoT = setTimeout(wake, 200); return; } next(); }, AUTO);
     var nb = document.querySelector('[data-next]'); if (nb) nb.classList.add('auto');
     var rail = $('#grid').querySelector('.rail:last-of-type');
-    await tween(900, function (x) { var tmp = document.createElement('div'); tmp.innerHTML = market(x, true); var a = rail && rail.querySelector('table'); if (a) a.innerHTML = tmp.querySelector('table').innerHTML; });
     busy = false; var nx = document.querySelector('[data-next]'); if (nx) nx.focus({ preventScroll: true });
+    // the prices roll from the old figures to the new ones for a moment, as decoration: it holds nothing up and stops if the sheet has moved on
+    var tw = ++twN; tween(700, function (x) { if (tw !== twN || !revealed || !rail.isConnected) return; var tmp = document.createElement('div'); tmp.innerHTML = market(x, true); var a = rail.querySelector('table'); if (a) a.innerHTML = tmp.querySelector('table').innerHTML; });
   }
   function playEnd() { var E = G.ending(), k = typeof CGK !== 'undefined' && CGK[E.id]; if (!k || typeof playCG === 'undefined') { toast('這個落點沒有演出。'); return; } var q = Q(['spx', 'sox', 'twii']); playCG(k, { title: E.name, stats: ['spx', 'sox', 'twii'].map(function (x) { return q[x].name + ' ' + sg(q[x].chg * 100, 0); }).join('　·　') }); }
   function arrive() { if (atHome) return; if (done() && !cgShown) { cgShown = true; if (!document.hidden && !reduce) playEnd(); } }
