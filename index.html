@@ -129,6 +129,7 @@ tr.mk small{color:var(--dim);font-size:11.5px;margin-left:8px}
 .land .bar{grid-column:2/-1;height:4px;background:var(--c5);border-radius:2px;overflow:hidden} .land .bar u{display:block;height:100%}
 .pop{position:fixed;z-index:8;width:min(440px,calc(100vw - 16px));background:var(--desk2);border:1px solid var(--rule);border-radius:6px;padding:14px 16px 12px;box-shadow:0 14px 34px rgba(0,0,0,.55)} .pop h2{margin:0 0 4px;font-size:14px;color:var(--txt)} .pop .packs{margin-top:10px} .pop .note{margin:10px 0 0} .pop .chip:disabled{opacity:.45;cursor:default} .assume[aria-expanded=true]{border-color:var(--lamp);color:var(--txt)}
 .next.auto{position:relative;overflow:hidden} .next.auto::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:currentColor;opacity:.65;transform-origin:left;animation:autonext var(--auto,3s) linear forwards} @keyframes autonext{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.since{border-bottom:1px solid var(--prule);margin:0 0 14px;padding:0 120px 10px 0;font:13.5px/1.55 var(--serif);color:var(--ink2)} .since>b{font:700 12px var(--sans);letter-spacing:.2em;color:var(--ink2)} .since ul{list-style:none;margin:4px 0 0;padding:0} .since li{display:grid;grid-template-columns:48px 1fr;gap:8px} .since li.rand{color:var(--ink)} .since li.rand b{font-weight:700} .since li b{font-weight:500} .since li.more{display:block;font-size:12px}
 .packs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:18px 0 0;font-size:13px;color:var(--dim)}
 .ffs{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
 .endrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:8px 14px;border-top:1px solid var(--prule);border-bottom:1px solid var(--prule);padding:12px 0;margin:4px 0 12px}
@@ -172,6 +173,7 @@ tr.stg td{background:var(--desk2);font:500 11.5px var(--serif);letter-spacing:.3
 <header class="top">
   <h1 id="namemark"><svg class="ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="bg" cx="18" cy="18" r="14"/><circle class="fg" id="ringfg" cx="18" cy="18" r="14" stroke-dasharray="88 88"/></svg><span>超級循環</span></h1>
   <div class="focal" role="group" aria-label="看多遠"><button data-focal="now">此刻</button><button data-focal="run">這一局</button><button data-focal="all">所有可能</button></div>
+  <button class="assume" id="stopbtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="stoppop">停在：全部 ▾</button>
   <button class="assume" id="assume" aria-haspopup="dialog" aria-expanded="false" aria-controls="packpop">假設：沒有開特殊劇本 ▾</button>
   <span class="asof">資料到 <span class="n" id="asof"></span></span>
 </header>
@@ -189,6 +191,7 @@ tr.stg td{background:var(--desk2);font:500 11.5px var(--serif);letter-spacing:.3
 
 <main class="grid" id="grid"></main>
 <div class="bottom"><button id="bback">退一步</button><button class="pri" id="bmain">擲骰</button><button id="bmore">看全部可能</button></div>
+<div class="pop" id="stoppop" role="dialog" aria-label="停下來讓我選的事件" hidden></div>
 <div class="pop" id="packpop" role="dialog" aria-label="換假設：特殊劇本" hidden></div>
 <div class="toast" id="toast"></div>
 
@@ -1195,7 +1198,9 @@ function create(data){
           else if(x.group) groupShock(u,gi[x.group],v,src,null);
           else if(x.firm){ (firmEv[x.firm]=firmEv[x.firm]||[]).push({day:u,v,src}); const sid=lkOn?sidN++:undefined, h=hubs[x.firm], f=firms[x.firm]; if(h&&h.slope_jump&&f.group!==undefined) groupShock(u,gi[f.group],h.slope_jump*v,src,x.firm,sid); if(lkOn) linkOut(x.firm,u,v,src,sid); } } } };
     const apply=(e,oc,t)=>applyState(W,e,oc,S,t,sink);
-    const volAttr=W.attrs.vol?'vol':null;
+    // ruling 340: o.volPath = per price day, the vol reading's distance from its rest (points) from another world (world3 through the adapter); given, it sets the daily
+    // volatility multiplier by the same formula, VOL_BASE^(distance/100), in place of this world's own vol attribute
+    const volAttr=W.attrs.vol?'vol':null, volP=o.volPath&&o.volPath.length?o.volPath:null;
     // ruling 320 (interim price map for a world-3 path): o.inject = [{day, ev, out, mult, src}] puts the price effects (fac, firm, group) of outcome `out` of this
     // world's event `ev`, each d times mult, into the price sink on day `day`, labelled src; the state effects of that outcome are not applied
     // ruling 334 (3): an entry may carry its own price effects, x.effects = [{fac|firm|group, d, win}], in place of ev and out (the adapter's daily drift compensation)
@@ -1215,7 +1220,7 @@ function create(data){
         if(script?script.has(e.id+'|'+t):u<h){ fired[e.id]=(fired[e.id]||0)+1; rec.push({ev:e.id,inst:fired[e.id]-1,day:t,out:0,p:h,mods}); apply(e,e.outcomes[0],t); } }
       for(const x of injBy.get(t)||[]) for(const y of x.oc.effects) if(y.fac||y.firm||y.group) sink.price(Object.assign({},y,{d:y.d*x.m}),t,x.src);
       for(const a in W.attrs){ const q=W.attrs[a]; attrs[a]+=(q.rest-attrs[a])*q.pull; }
-      if(volAttr) volm[t]=Math.pow(VOL_BASE,(attrs.vol-W.attrs.vol.rest)/100); }
+      if(volP) volm[t]=Math.pow(VOL_BASE,(+volP[Math.min(t,volP.length-1)]||0)/100); else if(volAttr) volm[t]=Math.pow(VOL_BASE,(attrs.vol-W.attrs.vol.rest)/100); }
     let tier='within'; for(const c in locked) if(W.clocks[c].tier==='order') tier='order'; else if(tier==='within') tier='system';
     const land=landingOf(W,S); if(land) tier=land.tier;   // a world with a landing table grades a run by its landing
     const P={seed,cfg:C.cfg,T,dates:C.dates,rec,state:{clocks,attrs,flags},locked,tier,landing:land?{id:land.id,name:land.name,tier:land.tier}:null,halts,noisy,_C:C,_o:{}}; if(light) return P;
@@ -1969,7 +1974,7 @@ const world3=(function(){
   function pendingLite(W,S,knobs,ports){ const cal=calendar(W), K=knobsOf3(W,knobs); return fmt(W,cal,S,scan(W,cal,K,S,ports,true)); }
   function step(W,S,knobs,input,ports){ const cal=calendar(W), K=knobsOf3(W,knobs), R=copy(S), it=scan(W,cal,K,R,ports,true);
     if(it.kind==='end') return {state:R,record:{type:'pathEnd'}};
-    if(it.kind==='d'){ for(const a in W.attrs){ const q=W.attrs[a]; R.attrs[a]+=(q.rest-R.attrs[a])*q.pull; } const t=R.day; R.day++; R.cursor=0; return {state:R,record:{type:'dayEnd',day:t}}; }
+    if(it.kind==='d'){ for(const a in W.attrs){ const q=W.attrs[a]; R.attrs[a]+=(q.rest-R.attrs[a])*q.pull; } const t=R.day; R.day++; R.cursor=0; return {state:R,record:{type:'dayEnd',day:t,attrs:Object.assign({},R.attrs)}}; }   // ruling 340: the attributes at the day's end
     const ch=it.choices; let out, u;
     if(input&&input.out!==undefined){ out=input.out; u='chosen'; if(!ch.some(c=>c.j===out)) throw new Error('step: '+it.e.id+' has no outcome '+out); }
     else if(input&&typeof input.u==='number'&&input.u>=0&&input.u<1){ u=input.u; let acc=0; out=ch[ch.length-1].j; for(const c of ch){ acc+=c.p; if(u<acc){ out=c.j; break; } } }
@@ -1985,9 +1990,18 @@ const world3=(function(){
   // the caller gives the draws: a function draw(key), or a seed for the reference keyDraw; the engine never picks a seed itself
   const drawOf=(draw,who)=>{ if(typeof draw==='function') return draw; if(typeof draw==='number'&&isFinite(draw)) return keyDraw(draw); throw new Error(who+': give draw(key) or a seed (the engine does not pick its own)'); };
   // to the next scheduled decision (or the path end), drawing the random items and passing the day ends
-  function advance(W,S,knobs,draw,ports){ const d=drawOf(draw,'advance'), records=[]; let st=S;
-    for(;;){ const pr=portsAt(ports,st.day), P=pendingLite(W,st,knobs,pr); if(P.type==='pathEnd'||(P.type==='decide'&&(P.kind==='scheduled'||P.scenarioDay!==undefined||P.requiredBy!==undefined))) return {state:st,records,pending:pending(W,st,knobs,pr)};   // ruling 327: a scenario start (and the event it requires) is the player's decision too
-      const r=step(W,st,knobs,P.type==='decide'?{u:d('world|'+P.key)}:undefined,pr); st=r.state; records.push(r.record); } }
+  // ruling 337: with stop(P, out) given, every item is drawn with u = draw('world|'+P.key, P) exactly as run() draws it; an item whose draw gives an outcome
+  // (out >= 0: it happens) is returned as the pending decision when stop(P, out) is true, with u and drawn = out on it; otherwise it is stepped with that u.
+  // An item that does not happen is never a decision. So stopping changes nothing unless the caller then takes another outcome.
+  // draw gets the item as its second argument (a caller may switch seeds at a position on the path: P.day, P.at)
+  const outOfU=(ch,u)=>{ let acc=0; for(const c of ch){ acc+=c.p; if(u<acc) return c.j; } return ch[ch.length-1].j; };   // step()'s own reading of u
+  function advance(W,S,knobs,draw,ports,stop){ const d=drawOf(draw,'advance'), records=[]; let st=S;
+    for(;;){ const pr=portsAt(ports,st.day), P=pendingLite(W,st,knobs,pr);
+      if(typeof stop!=='function'){ if(P.type==='pathEnd'||(P.type==='decide'&&(P.kind==='scheduled'||P.scenarioDay!==undefined||P.requiredBy!==undefined))) return {state:st,records,pending:pending(W,st,knobs,pr)};   // ruling 327: a scenario start (and the event it requires) is the player's decision too
+        const r=step(W,st,knobs,P.type==='decide'?{u:d('world|'+P.key,P)}:undefined,pr); st=r.state; records.push(r.record); continue; }
+      if(P.type==='pathEnd') return {state:st,records,pending:pending(W,st,knobs,pr)};
+      let u; if(P.type==='decide'){ u=d('world|'+P.key,P); const out=outOfU(P.choices,u); if(out>=0&&stop(P,out)){ const Q=pending(W,st,knobs,pr); Q.u=u; Q.drawn=out; return {state:st,records,pending:Q}; } }
+      const r=step(W,st,knobs,P.type==='decide'?{u}:undefined,pr); st=r.state; records.push(r.record); } }
   // the whole path; o.trace keeps every record, o.daily the state after each day end, o.ports = {port: value} or a function of the day
   function run(W,knobs,draw,o){ o=o||{}; const d=drawOf(draw,'run'); let S=start(W,knobs,d); const records=[], trace=o.trace?[]:null, daily=o.daily?[]:null;
     for(;;){ const pr=portsAt(o.ports,S.day), P=pendingLite(W,S,knobs,pr); if(P.type==='pathEnd') break;
@@ -4115,34 +4129,43 @@ function walker(seed,knobs){ let S=eng.start(W,knobs,seed), q=null; const rec=[]
     stateAt:k=>before[k],   // the state when decision k was taken
     landing:()=>{ if(q) return null; const l=eng.landingOf(W,S); return l?landingById[l.id]:null; }}; }
 
-// ---------- world3 walker (docs/world-format.md 9.3, 9.6): the same shape as walker() on the world layer E2.world3.
-// advance() rolls the random events and the recoveries with draw(key) = u01(drawSeed, 'world|'+ev+'|'+day) and stops at the next scheduled event; those
-// records enter rec with auto:true, sched:false. choose() takes the scheduled decision (sched:true). Only the scheduled outs are the player's path:
-// the same seed and the same scheduled outs give every random event and recovery again (draws are keyed by event and day).
-// fork = {prefix, seed, after}: a path opened from a landing share: the first `after` scheduled decisions (and the random events up to the
-// next one) are drawn with the seed `prefix` of the game it was opened from, everything later with the seed `seed` of the run that was counted.
-function walker3(seed,knobs,fork){ let S=w3.start(W,knobs,k=>u01(fork&&fork.after>0?fork.prefix:fork?fork.seed:seed,k)), q=null, decided=0, ds=fork&&fork.after>0?fork.prefix:fork?fork.seed:seed; const rec=[], before=[];
-  const dseed=()=>fork?(decided>=fork.after?fork.seed:fork.prefix):seed;
-  function settle(){ const S0=S, a=w3.advance(W,S,knobs,k=>u01(ds,k));
-    for(const r of a.records){ if(r.type!=='decide'||r.out<0) continue; before.push(S0); rec.push(Object.assign({},r,{auto:true,sched:false,ch:null})); }
+// ---------- world3 walker (docs/world-format.md 9.3, 9.6; ruling 337): one path on E2.world3 with the engine's own draws, keyDraw(seed), the keys run()
+// uses, so a path nobody changes is run(W, knobs, seed). advance() walks to the next item that happens and that stop(P, out, n) wants as a decision
+// (n = the number of records before it); the items it does not stop at enter rec with auto:true, sched:false. choose() takes a stop decision (sched:true):
+// u 'chosen' takes outcome j; any other u rolls it with the pending's own draw (the outcome advance would have taken; 'fork' marks a roll of an opened path).
+// fork = {day, at, seed, prefix}: a path opened from a landing share: the items before position (day, at) are drawn with the seed `prefix` of the game
+// it was opened from, the rest with the seed `seed` of the counted run (finish3 from the game's state at that position).
+// ruling 337: the stop categories of a world3 decision (the page's filter): node (a scheduled event with node:true), routine (scheduled, 12 or more dates),
+// scheduled (the other scheduled events), scenario (a scenario start), required (the event a scenario start requires), random, relax (a state's recovery)
+const STOPCATS=['node','routine','scheduled','scenario','required','random','relax'], STOPDEF=['node','routine','scheduled','scenario','required'];
+const CATCH={node:'n',routine:'o',scheduled:'s',scenario:'c',required:'q',random:'a',relax:'x'};
+const catOf=P=>{ if(P.kind==='relax') return 'relax'; if(P.scenarioDay!==undefined&&P.scenarioDay!==null) return 'scenario'; if(P.requiredBy!==undefined&&P.requiredBy!==null) return 'required';
+  const e=evById[P.ev]; if(e&&e.kind==='scheduled') return e.node?'node':(e.dates||[]).length>=12?'routine':'scheduled'; return 'random'; };
+function walker3(seed,knobs,fork,stopIn){ const dA=w3.keyDraw(fork?fork.prefix:seed), dB=fork?w3.keyDraw(fork.seed):dA;
+  const draw=fork?(k,P)=>(P&&(P.day>fork.day||(P.day===fork.day&&P.at>=fork.at))?dB:dA)(k):dA;
+  let S=w3.start(W,knobs,dA), q=null, stopF=stopIn||(()=>false); const rec=[], before=[], vol=[];   // vol[day] = the vol attribute at the end of world day `day` (ruling 340)
+  function settle(){ const S0=S; let n=rec.length; const a=w3.advance(W,S,knobs,draw,undefined,(P,out)=>{ const x=!!stopF(P,out,n); if(!x) n++; return x; });
+    for(const r of a.records){ if(r.type==='dayEnd'&&r.attrs) vol[r.day]=r.attrs.vol; if(r.type!=='decide'||r.out<0) continue; before.push(S0); rec.push(Object.assign({},r,{auto:true,sched:false,ch:null})); }
     S=a.state; q=a.pending.type==='decide'?a.pending:null;
     // the page, the dice, preview, choose and the run code index a decision by outcome (j); the engine may order the choices otherwise (a scenarioStart
     // event lists its none outcome last), so put them in outcome order here, 'nothing today' (j -1) last
     if(q) q=Object.assign({},q,{choices:q.choices.slice().sort((x,y)=>(x.j<0)-(y.j<0)||x.j-y.j)}); }
   settle();
   return {rec,state:()=>S,
-    pending:()=>q,   // the engine's pending item {type:'decide', ev, inst, day, date, knownAt, choices:[{j,name,key,branch,sev,p,base,shift,why,tags,effects}], ...} or null at the path end
-    choose:(j,u,auto)=>{ before.push(S); const ch=q.choices, r=w3.step(W,S,knobs,{out:j}); S=r.state; decided++;
-      rec.push({ev:r.record.ev,inst:r.record.inst,day:r.record.day,out:j,key:r.record.key,p:r.record.p,u,auto:!!auto,sched:true,ch}); settle(); ds=dseed(); },
+    pending:()=>q,   // the engine's pending item {type:'decide', ev, inst, day, at, date, knownAt, u, drawn, choices:[{j,name,key,branch,sev,p,base,shift,why,tags,effects}], ...} or null at the path end
+    choose:(j,u,auto)=>{ before.push(S); const ch=q.choices, roll=u!=='chosen', r=w3.step(W,S,knobs,roll?{u:q.u}:{out:j});
+      if(roll&&r.record.out!==j) throw new Error('walker3: the roll gives '+r.record.out+', not '+j); S=r.state;
+      rec.push(Object.assign({},r.record,{u:roll?(u==='fork'?'fork':q.u):'chosen',auto:!!auto,sched:true,ch})); settle(); },
     preview:j=>w3.step(W,S,knobs,{out:j}).state,
-    back:k=>{ S=before[k]; before.length=k; rec.length=k; decided=rec.filter(r=>r.sched).length; ds=dseed(); settle(); },
+    back:k=>{ S=before[k]; before.length=k; rec.length=k; vol.length=Math.min(vol.length,S.day); settle(); },
+    vol:()=>vol,
+    setStop:f=>{ stopF=f||(()=>false); },
     stateAt:k=>before[k],
     landing:()=>{ if(q) return null; const l=w3.landing(W,S); return l?landingById[l.id]:null; }}; }
-// from a state to the path end by draws (the same keys the page uses): the landing id, the outs of the scheduled decisions, what fired (event and outcome key)
-function finish3(S,knobs,seed){ const draw=k=>u01(seed,k), outs=[], sig=[]; const note=r=>{ if(r.type==='decide'&&r.out>=0&&r.kind!=='relax') sig.push(r.ev+'='+(r.key===undefined?r.out:r.key)); };
-  for(;;){ const a=w3.advance(W,S,knobs,draw); S=a.state; a.records.forEach(note); if(a.pending.type!=='decide') break;
-    const r=w3.step(W,S,knobs,{u:draw('world|'+a.pending.key)}); S=r.state; outs.push(r.record.out); note(r.record); }
-  const l=w3.landing(W,S); return {landing:l?l.id:null,outs,sig}; }
+// from a state to the path end by the engine's draws of seed (run() from there): the landing id and what fired (event and outcome key)
+function finish3(S,knobs,seed){ const sig=[], a=w3.advance(W,S,knobs,w3.keyDraw(seed),undefined,()=>false);
+  for(const r of a.records) if(r.type==='decide'&&r.out>=0&&r.kind!=='relax') sig.push(r.ev+'='+(r.key===undefined?r.out:r.key));
+  const l=w3.landing(W,a.state); return {landing:l?l.id:null,outs:[],sig}; }
 // how the world3 reasons read: the engine's own parts of the log-odds (docs/world-format.md 9.3; spec-w4a-conditional 11), grouped, not recomputed
 function explainView3(e,ch){ const part=(w,k)=>w.filter(x=>x.kind===k);
   const rows=ch.filter(c=>c.j>=0).map(c=>{ const w=c.why||[], oc=e.outcomes[c.j]; return {name:oc?WF.out.name(oc):c.name,rawName:c.name,key:c.key===undefined?null:c.key,branch:c.branch===undefined?null:c.branch,sev:c.sev===undefined?null:c.sev,base:c.base,shift:c.shift,x:fmtShift(c.shift),
@@ -4213,7 +4236,11 @@ function injectOf(rec){ const out=[]; for(const r of rec){ if(RXN(r)) continue; 
     if(row) out.push({day,ev:row.ev,out:row.out,mult:row.mult,src,availableAt:k});
     if(comp) for(const c of comp) out.push({day,ev:c.ev,out:c.out,mult:c.mult,src,availableAt:k}); } return out; }   // comp: rule (a) of ruling 334 (3), same src and day
 const driftOf=()=>{ const out=[]; if(CALIB.daily) for(let t=0;t<CALIB.days;t++) out.push({day:t,effects:CALIB.daily,mult:1,src:'w3drift'}); return out; };   // rule (b)
-function pricePath(seed,knobs,rec,opt){ const inj=IS3?injectOf(rec).concat(opt&&opt.drift===false?[]:driftOf()):null, P=IS3?eng.simulate(W2,{seed,knobs:{},script:[],inject:inj}):eng.simulate(W,{seed,knobs,script:rec}), V=new Map();
+// ruling 340: the world3 vol reading the market has seen by each price day (the end of the last world day before it; the start value before the first), as its
+// distance from rest, for the price engine's daily volatility; days the path has not reached keep the last value. null when the world has no vol attribute
+function volPathOf(vol){ const q=W.attrs&&W.attrs.vol; if(!q) return null; const out=new Float64Array(PDATES.length); let k=-1;
+  for(let i=0;i<PDATES.length;i++){ while(k+1<vol.length&&vol[k+1]!==undefined&&DATES[k+1]<PDATES[i]) k++; out[i]=(k>=0?vol[k]:q.start)-q.rest; } return out; }
+function pricePath(seed,knobs,rec,opt){ const inj=IS3?injectOf(rec).concat(opt&&opt.drift===false?[]:driftOf()):null, P=IS3?eng.simulate(W2,{seed,knobs:{},script:[],inject:inj,volPath:opt&&opt.volPath||undefined}):eng.simulate(W,{seed,knobs,script:rec}), V=new Map();
   if(IS3){ const seen=new Set(); for(const x of inj){ if(!x.availableAt||seen.has(x.src)) continue; seen.add(x.src); AVAIL.set(x.src,x.availableAt); P.rec.push({ev:x.src,inst:0,day:x.day,out:0,p:1}); } }   // the market side shifts by P.rec (one row per injected source)
   const view=(through,prov)=>{ const k=String(through)+'|'+!!prov; if(!V.has(k)) V.set(k,MK.forPath(P,through===undefined?{}:{through,provisional:!!prov})); return V.get(k); };
   return {P,halts:P.halts,view}; }
@@ -4243,14 +4270,21 @@ function quoteRow(v,id){ const q=v.quote(id), a=q.anchor;
 const howOf=r=>r.u==='chosen'?'chosen':r.u==='fork'?'fork':r.auto?'auto':'rolled';
 
 // ---------- play: what the page uses
-function play(o){ const seed=o.seed|0, knobs=Object.assign({},o.knobs||{}), stop=o.stop||null; let C=IS3?walker3(seed,knobs,o.fork):walker(seed,knobs), alert=false, last=null, priced=null, fcache=null;
+function play(o){ const seed=o.seed|0, knobs=Object.assign({},o.knobs||{}), stop=o.stop||null;
+  // world3 (ruling 337): any item that happens can stop as a decision; the rest is rolled on with the engine's draws. stop = the page's set of event types
+  // (WF.ev.types; null = all; a recovery stops only with null), or stopKinds = the categories (STOPCATS) instead; replay3 = [[record index, {out, how}]]
+  const useCats=IS3&&Array.isArray(o.stopKinds); let kinds=new Set(useCats?o.stopKinds:[]);
+  const want=P=>useCats?kinds.has(catOf(P)):P.kind==='relax'?!stop:(!stop||WF.ev.types(evById[P.ev]).some(t=>stop.has(t)));
+  const R3=IS3&&o.replay3?new Map(o.replay3):null, stop3=(P,out,n)=>R3&&R3.size?R3.has(n):want(P);
+  let C=IS3?walker3(seed,knobs,o.fork,stop3):walker(seed,knobs), alert=false, last=null, priced=null, fcache=null;
   const isStop=e=>!stop||WF.ev.types(e).some(t=>stop.has(t));
   const restOf=e=>e.outcomes.findIndex(x=>WF.out.rest(x));
   const pOf=q=>q.choices.map(c=>c.p);
-  const P=()=>priced||(priced=pricePath(seed,knobs,C.rec));
+  const P=()=>priced||(priced=pricePath(seed,knobs,C.rec,IS3?{volPath:volPathOf(C.vol())}:undefined));
   const touched=()=>{ priced=null; fcache=null; };
   // auto steps: a special-script trigger is checked with a seeded draw (fires or not); events whose types the user does not stop at are rolled
-  function advance(){ alert=false; for(let q=C.pending();q;q=C.pending()){ const e=evById[q.ev], p=pOf(q), r=WF.ev.trigger(e)?restOf(e):-1;
+  function advance(){ alert=false; if(IS3){ touched(); return; }   // world3: the walker stops only where stopKinds say
+    for(let q=C.pending();q;q=C.pending()){ const e=evById[q.ev], p=pOf(q), r=WF.ev.trigger(e)?restOf(e):-1;
       const u=u01(seed,keyOf(q));   // the one draw for this event: a trigger fires when u lands past its 'did not happen' share, and the same u then picks what happened
       if(r>=0){ if(u<p[r]){ C.choose(r,u,true); continue; } alert=true; if(isStop(e)) break; C.choose(pick(p,u,-1),u,true); alert=false; continue; }
       if(!isStop(e)){ C.choose(pick(p,u,-1),u,true); continue; } break; } touched(); }
@@ -4265,20 +4299,28 @@ function play(o){ const seed=o.seed|0, knobs=Object.assign({},o.knobs||{}), stop
   // prices shown up to the close of the last decided day; a world3 path shows them up to the close before the pending day (random events in between are rolled by the engine)
   const mkDay=()=>C.pending()?(IS3?C.pending().day:C.rec.length?C.rec[C.rec.length-1].day+1:0):T;
   function act(f){ const m0=marketAt(mkDay()); const L=f()||{}; advance(); last=Object.assign(L,{m0}); }
-  function rollNow(){ const q=C.pending(), u=u01(seed,keyOf(q)), j=pick(pOf(q),u,-1);   // after a trigger fired, u is past the 'did not happen' share, so j is one that happened
+  function rollNow(){ if(IS3){ const q=C.pending(); C.choose(q.drawn,q.u,false); return {j:q.drawn,u:q.u}; }   // world3: the pending's own draw, as run() takes it
+    const q=C.pending(), u=u01(seed,keyOf(q)), j=pick(pOf(q),u,-1);   // after a trigger fired, u is past the 'did not happen' share, so j is one that happened
     C.choose(j,u,false); return {j,u,ev:evById[q.ev]}; }
   if(o.replay) o.replay.forEach((r,n)=>{ const q=C.pending(); if(!q||!(r.out>=0&&r.out<q.choices.length)) throw new Error('bad replay at step '+n); C.choose(r.out,r.fork?'fork':r.auto||r.rolled?u01(seed,keyOf(q)):'chosen',r.auto); });
+  if(R3) while(R3.size){ const n=C.rec.length, x=R3.get(n); if(!C.pending()||!x) throw new Error('bad replay at record '+n); R3.delete(n); C.choose(x.out,x.how==='chosen'?'chosen':x.how,false); }
+  if(IS3&&o.toEnd) while(C.pending()){ const q=C.pending(); C.choose(q.drawn,'fork',true); }   // an opened path: rolled on to its end
   advance();
+  const lastNames=()=>{ const x=C.rec[C.rec.length-1]; return {ev:recEv(x),out:recOut(x)}; };
   const G={seed,knobs,T,
     done:()=>!C.pending(),
-    pending:()=>{ const q=C.pending(); if(!q) return null; const e=evById[q.ev], r=alert?restOf(e):-1;
+    pending:()=>{ const q=C.pending(); if(!q) return null;
+      if(IS3&&q.kind==='relax'){ const c=W.clocks[q.state]; return {ev:q.ev,kind:'relax',cat:'relax',routine:false,node:false,drawn:q.drawn,day:q.day,date:DATES[q.day],stage:stageOfDate(DATES[q.day]),name:c.name+'（自行回復）',rawName:c.name,group:null,types:[],pack:null,alert:false,
+        grade:q.grade,gradeName:WF.gradeName(q.grade),psrc:q.psrc,expect:null,desc:'',blurb:'',scenarioDay:null,pNone:null,occursAt:null,knownAt:null,
+        options:[{j:0,name:lvName(q.state,q.from)+'→'+lvName(q.state,q.to),rawName:null,key:null,branch:null,sev:null,p:1,cp:1,off:false,level:null,w:null,base:null,shift:0,trig:null,rest:false,tags:[],mods:[],delta:delta(C.state(),C.preview(0)),price:[],why:[],table:[],cond:[],clip:[],pp:[]}],cond:null,expl:null}; }
+      const e=evById[q.ev], r=alert?restOf(e):-1, pn=IS3?(q.choices.find(c=>c.j<0)||{p:0}).p:0;   // world3: a random item is shown once it happened, so its options are read against 1 - p(not today)
       // world3: kind is the engine kind (scheduled, random); routine = scheduled with 12 or more dates in the year (monthly releases)
       // world3: one row per outcome with the engine's own fields (key, branch, sev, base, shift, why and its table, cond, clip, pp parts, tags); fields only world2
       // options have get safe values (trig null, rest false, level null, mods from the table shift and the condition items, price [])
-      if(IS3) return {ev:e.id,kind:e.kind,routine:e.kind==='scheduled'&&(e.dates||[]).length>=12,day:q.day,date:DATES[q.day],stage:stageOfDate(DATES[q.day]),name:WF.ev.name(e),rawName:WF.ev.rawName(e),group:WF.ev.group(e),types:WF.ev.types(e).map(WF.typeName),pack:null,alert:false,
+      if(IS3) return {ev:e.id,kind:e.kind,cat:catOf(q),routine:e.kind==='scheduled'&&(e.dates||[]).length>=12,node:!!e.node,drawn:q.drawn===undefined?null:q.drawn,day:q.day,date:DATES[q.day],stage:stageOfDate(DATES[q.day]),name:WF.ev.name(e),rawName:WF.ev.rawName(e),group:WF.ev.group(e),types:WF.ev.types(e).map(WF.typeName),pack:null,alert:false,
         grade:WF.ev.grade(e),gradeName:WF.gradeName(WF.ev.grade(e)),psrc:WF.ev.psrc(e),expect:WF.ev.expect(e),desc:WF.ev.desc(e),blurb:e.blurb||'',scenarioDay:q.scenarioDay===undefined?null:q.scenarioDay,pNone:q.pNone===undefined?null:q.pNone,occursAt:q.occursAt||null,knownAt:q.knownAt||null,
-        options:q.choices.map((c,j)=>{ const w=c.why||[], part=k=>w.filter(x=>x.kind===k), cd=part('cond').filter(x=>x.add), oc=c.j>=0?e.outcomes[c.j]:null; return {j,name:oc?WF.out.name(oc):c.name,rawName:c.name,key:c.key===undefined?null:c.key,branch:c.branch===undefined?null:c.branch,sev:c.sev===undefined?null:c.sev,
-          p:c.p,cp:c.p,off:false,level:null,w:c.base,base:c.base,shift:c.shift,trig:null,rest:false,tags:c.tags||[],
+        options:q.choices.filter(c=>c.j>=0).map((c,j)=>{ const w=c.why||[], part=k=>w.filter(x=>x.kind===k), cd=part('cond').filter(x=>x.add), oc=c.j>=0?e.outcomes[c.j]:null; return {j,name:oc?WF.out.name(oc):c.name,rawName:c.name,key:c.key===undefined?null:c.key,branch:c.branch===undefined?null:c.branch,sev:c.sev===undefined?null:c.sev,
+          p:c.p,cp:c.p/(1-pn),off:false,level:null,w:c.base,base:c.base,shift:c.shift,trig:null,rest:false,tags:c.tags||[],
           mods:(c.shift?[{name:'情勢表',x:fmtShift(c.shift)}]:[]).concat(cd.map(x=>({name:x.mech||('條件 '+(x.read||'')),x:fmtShift(x.add)}))),
           delta:delta(C.state(),C.preview(j)),price:[],why:w,table:part('table'),cond:part('cond'),clip:part('clip'),pp:part('pp')}; }),
         cond:null,expl:explainView3(e,q.choices)};
@@ -4289,8 +4331,11 @@ function play(o){ const seed=o.seed|0, knobs=Object.assign({},o.knobs||{}), stop
           // ruling 97: after a trigger fired, the choice is among what happened, so the button shows p / (1 - pRest); the engine's p stays in p
           cp:r>=0&&j!==r?q.choices[j].p/(1-q.choices[r].p):q.choices[j].p})),
         cond:r>=0?{pRest:q.choices[r].p,denom:1-q.choices[r].p}:null,expl:explainView(e,q.choices,q.wsum)}; },
-    choose:j=>act(()=>{ const e=evById[C.pending().ev]; C.choose(j,'chosen',false); return {ev:WF.ev.name(e),out:WF.out.name(e.outcomes[j])}; }),
-    roll:()=>act(()=>{ const r=rollNow(); return {ev:WF.ev.name(r.ev),out:WF.out.name(r.ev.outcomes[r.j]),dice:Math.floor(r.u*100)+1}; }),
+    choose:j=>act(()=>{ if(IS3){ C.choose(j,'chosen',false); return lastNames(); } const e=evById[C.pending().ev]; C.choose(j,'chosen',false); return {ev:WF.ev.name(e),out:WF.out.name(e.outcomes[j])}; }),
+    roll:()=>act(()=>{ const r=rollNow(); if(IS3) return Object.assign(lastNames(),{dice:Math.floor(r.u*100)+1}); return {ev:WF.ev.name(r.ev),out:WF.out.name(r.ev.outcomes[r.j]),dice:Math.floor(r.u*100)+1}; }),
+    // ruling 337: the stop filter of a world3 play; changing it rolls on past a pending decision whose category is no longer stopped
+    stopKinds:()=>useCats?[...kinds]:null,
+    setStopKinds:a=>{ if(!IS3||!useCats) return; kinds=new Set(a); act(()=>{ while(C.pending()&&!kinds.has(catOf(C.pending()))){ const q=C.pending(); C.choose(q.drawn,q.u,true); } return {}; }); },
     rollStage:()=>{ const g=stageOfDate(DATES[nowDay()]); act(()=>{ let n=0; while(C.pending()&&stageOfDate(DATES[C.pending().day])===g){ rollNow(); advance(); n++; } return {bulk:n}; }); },
     rollEnd:()=>act(()=>{ let n=0; while(C.pending()){ rollNow(); advance(); n++; } return {bulk:n}; }),
     undo:()=>{ let k=C.rec.length-1; while(k>=0&&C.rec[k].auto) k--; if(k<0) return false; C.back(k); advance(); last=null; touched(); return true; },
@@ -4300,7 +4345,7 @@ function play(o){ const seed=o.seed|0, knobs=Object.assign({},o.knobs||{}), stop
     // how: chosen, rolled, auto, fork, or skipped (a special-script trigger that did not fire, taken automatically); cond: for a trigger that fired, the
     // share it fired with and the denominator the outcomes were read against (ruling 97)
     log:()=>C.rec.map((r,i)=>{ if(IS3) return {i,date:DATES[r.day],ev:recEv(r),out:recOut(r),auto:r.auto,p:r.p,rest:false,how:howOf(r),dice:typeof r.u==='number'?Math.floor(r.u*100)+1:null,cond:null,   // world3: auto = rolled by the engine's advance (random event, recovery) or a scheduled event of a type the user does not stop at
-        key:r.key===undefined?null:r.key,kind:RXN(r)?'relax':evById[r.ev].kind,sched:!!r.sched,expl:r.ch?explainView3(evById[r.ev],r.ch):null};
+        key:r.key===undefined?null:r.key,kind:RXN(r)?'relax':evById[r.ev].kind,sched:!!r.sched,expl:r.ch&&!RXN(r)?explainView3(evById[r.ev],r.ch):null};
       const e=evById[r.ev], oc=e.outcomes[r.out], ri=WF.ev.trigger(e)?restOf(e):-1, rest=WF.out.rest(oc);
       return {i,date:DATES[r.day],ev:WF.ev.name(e),out:WF.out.name(oc),auto:r.auto,p:r.p,rest,
         how:ri>=0&&rest&&r.auto?'skipped':howOf(r),dice:typeof r.u==='number'?Math.floor(r.u*100)+1:null,cond:ri>=0&&!rest?{pRest:r.ch[ri].p,denom:1-r.ch[ri].p,cp:r.p/(1-r.ch[ri].p)}:null,expl:explainView(e,r.ch,r.wsum)}; }),
@@ -4348,7 +4393,10 @@ function play(o){ const seed=o.seed|0, knobs=Object.assign({},o.knobs||{}), stop
     // run code: digit = chosen; a-m = rolled automatically (outcome 0-12); n-z = rolled by the user with the dice button (outcome 0-12); upper-case letter =
     // rolled on by the engine when the path was opened (fork). D4 codes (digits and a-m only) still read: their dice rolls read back as chosen.
     // a world3 code lists the scheduled decisions only (the engine's random events and recoveries come back from the seed) and carries the knobs that are not at their default in field 4
-    code:()=>['r2',FMT,WFP,IS3?knobCode(knobs):WF.packs.map(p=>knobs[p.knob]?1:0).join(''),IS3?(o.fork?[o.fork.after,o.fork.seed,o.fork.prefix].join('_'):1):knobs.special_boost||1,seed,C.rec.filter(r=>!IS3||r.sched).map(r=>{ if(r.out>12) throw new Error('run code: outcome index over 12');
+    // world3 (ruling 337) code r3: r3.FMT.WFP.knobs.fork.seed.stopKinds.steps; fork '1' or day_at_seed_prefix; stopKinds one letter each (CATCH);
+    // ('T' = the page's stop types); steps '-'-joined <record index base 36>_<how c chosen, r rolled, f fork><outcome base 36> for the decisions taken at a stop (the rest comes back from the seed)
+    code:()=>IS3?['r3',FMT,WFP,knobCode(knobs),o.fork?[o.fork.day,o.fork.at,o.fork.seed,o.fork.prefix].join('_'):'1',seed,useCats?[...kinds].map(k=>CATCH[k]).join(''):'T',
+      C.rec.map((r,i)=>r.sched?i.toString(36)+'_'+(r.u==='chosen'?'c':r.u==='fork'?'f':'r')+r.out.toString(36):null).filter(x=>x!==null).join('-')].join('.'):['r2',FMT,WFP,IS3?knobCode(knobs):WF.packs.map(p=>knobs[p.knob]?1:0).join(''),IS3?(o.fork?[o.fork.after,o.fork.seed,o.fork.prefix].join('_'):1):knobs.special_boost||1,seed,C.rec.filter(r=>!IS3||r.sched).map(r=>{ if(r.out>12) throw new Error('run code: outcome index over 12');
       return r.u==='fork'?String.fromCharCode(65+r.out):r.auto?String.fromCharCode(97+r.out):typeof r.u==='number'?String.fromCharCode(110+r.out):String(r.out); }).join('')].join('.'),
     report:()=>reportOf(G,C,P(),mkDay(),knobs,seed,viewNow()),
     _core:()=>C };
@@ -4358,10 +4406,16 @@ const WFP=(()=>{ let h=7; for(const e of W.events){ for(let k=0;k<e.id.length;k+
 const knobCode=k=>{ const o={}; for(const n of Object.keys(k).sort()) if(k[n]!==undefined&&W.knobs[n]&&k[n]!==W.knobs[n].def) o[n]=k[n]; return Object.keys(o).length?encodeURIComponent(JSON.stringify(o)).replace(/\./g,'%2E'):''; };
 const knobDecode=s=>s?JSON.parse(decodeURIComponent(s)):{};
 // a run code back into a game; returns {g} or {err}
-function load(code,stop){ const p=String(code).trim().split('.'); if(p.length!==7||p[0]!=='r2') return {err:'格式不對：這不是新引擎的進度碼。'}; if(p[2]!==WFP||+p[1]!==FMT) return {err:'這組進度碼是用不同的世界檔產生的，無法載入。'};
+function load(code,stop){ const p=String(code).trim().split('.');
+  if(IS3){ if(p[0]==='r2') return {err:'這組進度碼是舊版規則（突發事件不停下）產生的，新版無法重現；請開新的一局。'}; if(p.length!==8||p[0]!=='r3') return {err:'格式不對：這不是新引擎的進度碼。'};
+    if(p[2]!==WFP||+p[1]!==FMT) return {err:'這組進度碼是用不同的世界檔產生的，無法載入。'};
+    try{ const knobs=knobDecode(p[3]), f=p[4]==='1'?null:p[4].split('_').map(Number), fork=f?{day:f[0],at:f[1],seed:f[2]|0,prefix:f[3]|0}:undefined, seed=+p[5]|0, back={}; for(const k in CATCH) back[CATCH[k]]=k;
+      const stopKinds=stop!==undefined||p[6]==='T'?undefined:Array.from(p[6],ch=>{ if(!back[ch]) throw new Error('kind'); return back[ch]; }), H={c:'chosen',r:'roll',f:'fork'};   // the page's stop types win over the code's categories
+      const replay3=p[7]?p[7].split('-').map(x=>{ const m=/^([0-9a-z]+)_([crf])([0-9a-z]+)$/.exec(x); if(!m) throw new Error('step'); return [parseInt(m[1],36),{out:parseInt(m[3],36),how:H[m[2]]}]; }):[];
+      return {g:play({seed,knobs,stop,stopKinds,replay3,fork}),knobs,seed,stopKinds}; }catch(e){ return {err:'進度碼內容不合法。'}; } } if(p.length!==7||p[0]!=='r2') return {err:'格式不對：這不是新引擎的進度碼。'}; if(p[2]!==WFP||+p[1]!==FMT) return {err:'這組進度碼是用不同的世界檔產生的，無法載入。'};
   let knobs={}, fork; if(IS3){ try{ knobs=knobDecode(p[3]); }catch(e){ return {err:'進度碼內容不合法。'}; } if(p[4].indexOf('_')>0){ const f=p[4].split('_').map(Number); fork={after:f[0],seed:f[1]|0,prefix:f[2]|0}; } }
   else{ WF.packs.forEach((q,i)=>{ if(p[3][i]==='1') knobs[q.knob]=1; }); if(WF.hasBoost&&+p[4]!==1) knobs.special_boost=+p[4]; } const seed=+p[5]|0;
-  const steps=Array.from(p[6],ch=>/[a-m]/.test(ch)?{out:ch.charCodeAt(0)-97,auto:true}:/[n-z]/.test(ch)?{out:ch.charCodeAt(0)-110,auto:false,rolled:true}:/[A-Z]/.test(ch)?{out:ch.charCodeAt(0)-65,auto:true,fork:true}:{out:+ch,auto:false});
+  const steps=Array.from(p[6]||'',ch=>/[a-m]/.test(ch)?{out:ch.charCodeAt(0)-97,auto:true}:/[n-z]/.test(ch)?{out:ch.charCodeAt(0)-110,auto:false,rolled:true}:/[A-Z]/.test(ch)?{out:ch.charCodeAt(0)-65,auto:true,fork:true}:{out:+ch,auto:false});
   try{ return {g:play({seed,knobs,stop,replay:steps,fork}),knobs,seed}; }catch(e){ return {err:'進度碼內容不合法。'}; } }
 // test hooks for shot-d2.js: the bare stepper, to compare with engine2 simulate()
 // ---------- the whole picture: landing shares from a state (the engine's many({from})), the difference after a change, the reverse look-up, one path per landing
@@ -4377,11 +4431,11 @@ function overviewFrom(S,recs,knobs,base,N,from,gameSeed){ N=capN(N); let R;
   const order=id=>id===null?ids.length:ids.indexOf(id); rows.sort((a,b)=>b.n-a.n||order(a.id)-order(b.id));
   const fam=[0,0,0,0], tiers=[0,0,0]; let hasFam=true; for(const x of rows){ if(!x.n) continue; if(x.fam===null) hasFam=false; else fam[x.fam]+=x.p; if(x.lv!==null) tiers[x.lv]+=x.p; }
   return {N,seed:base,from,date:S.day<T?DATES[S.day]:DATES[T-1],steps:recs.length,knobs:Object.assign({},knobs),fam:hasFam?fam:null,tiers,rows,top:rows.filter(x=>x.n>0),
-    _R:R,_recs:recs.map(r=>({ev:r.ev,inst:r.inst,day:r.day,out:r.out,auto:r.auto,u:r.u,sched:r.sched})),_gameSeed:gameSeed}; }
+    _R:R,_recs:recs.map(r=>({ev:r.ev,inst:r.inst,day:r.day,out:r.out,auto:r.auto,u:r.u,sched:r.sched})),_gameSeed:gameSeed,_fork:IS3?{day:S.day,at:S.cursor||0}:null}; }
 // from today (the start state of these knobs), N runs from base seed `seed`; kept per setting so switching back and forth does not recompute
 const OVC=new Map();
 function overview(o){ const knobs=Object.assign({},o.knobs||{}), N=capN(o.N||(IS3?DEFN3:1000)), seed=o.seed===undefined?1:o.seed|0, key=JSON.stringify([knobs,N,seed]);
-  if(!OVC.has(key)){ if(OVC.size>12) OVC.delete(OVC.keys().next().value); OVC.set(key,overviewFrom(IS3?w3.start(W,knobs,k=>u01(seed,k)):eng.start(W,knobs,seed),[],knobs,seed,N,'start',seed)); } return OVC.get(key); }
+  if(!OVC.has(key)){ if(OVC.size>12) OVC.delete(OVC.keys().next().value); OVC.set(key,overviewFrom(IS3?w3.start(W,knobs,w3.keyDraw(seed)):eng.start(W,knobs,seed),[],knobs,seed,N,'start',seed)); } return OVC.get(key); }
 // change from `before` to `ov`, in share points; noise = within two standard errors of the difference of two independent shares (sampling, not the change)
 function diff(ov,before){ if(!before) return null; const se=(p,n,q,m)=>Math.sqrt(p*(1-p)/n+q*(1-q)/m), one=(p,q)=>{ const d=p-q; return {d,noise:Math.abs(d)<2*se(p,ov.N,q,before.N)}; };
   const pb={}; for(const x of before.rows) pb[x.id]=x.p; const byId={}; for(const x of ov.rows) byId[x.id]=one(x.p,pb[x.id]||0);
@@ -4398,8 +4452,8 @@ function reverse(ov,id,n){ if(!ov.rows.some(x=>x.id===id&&x.n>0)) return [];
 // the run many() counted, checked step by step and by landing), then the play replays it; prices use the play's own seed o.seed. Steps after the decided ones are auto.
 function openPath(ov,id,k,o){ const runs=ov._R.runs.filter(r=>r.landing===id); if(!runs.length) return null; const i=(((k|0)%runs.length)+runs.length)%runs.length, run=runs[i];
   if(IS3){ // world3: the play walks the decided steps with the seed of the game they came from, then the scheduled outs of the counted run with that run's seed (fork)
-    const pre=ov._recs.filter(r=>r.sched), steps=pre.map(r=>({out:r.out,auto:r.auto,fork:r.u==='fork'})).concat(run.outs.map(out=>({out,auto:true,fork:true})));
-    const g=play({seed:o&&o.seed!==undefined?o.seed:run.seed,knobs:ov.knobs,stop:o&&o.stop,replay:steps,fork:{after:pre.length,seed:run.seed,prefix:ov._gameSeed|0}}), L=g.landing();
+    const replay3=ov._recs.map((r,i)=>r.sched?[i,{out:r.out,how:r.u==='chosen'?'chosen':r.u==='fork'?'fork':'roll'}]:null).filter(x=>x);   // ruling 337: the game's decisions, then rolled on to the end (toEnd)
+    const g=play({seed:o&&o.seed!==undefined?o.seed:run.seed,knobs:ov.knobs,stop:o&&o.stop,stopKinds:o&&o.stopKinds,replay3,toEnd:true,fork:{day:ov._fork.day,at:ov._fork.at,seed:run.seed,prefix:ov._gameSeed|0}}), L=g.landing();
     if((L?L.id:null)!==id) throw new Error('openPath: the path does not land on '+id);
     g.opened={id,name:L?L.name:'沒有落點',k:i,count:runs.length,N:ov.N,from:ov.from,steps:ov._recs.length,date:ov.date,ov}; return {g,k:i,count:runs.length}; }
   const P=eng.simulate(W,{seed:run.seed,knobs:ov.knobs,light:true,prefix:{recs:ov._recs.map(r=>({ev:r.ev,inst:r.inst,day:r.day,out:r.out}))}});
@@ -4424,12 +4478,12 @@ function reportOf(G,C,pv,upto,knobs,seed,v){ const done=!C.pending(), L=C.landin
     let tEnd=-1; for(let t=0;t<upto;t++) if(stageOfDate(DATES[t])===g) tEnd=t;
     const pi=tEnd<0?-1:IS3?PDATES.indexOf(DATES[tEnd]):tEnd;   // the row of the price series: matched by date in world3 mode
     return {name,rows,date:tEnd<0?null:DATES[tEnd],px:pi<0?null:WF.core.map(([k,nm,id])=>{ const r=v.series(id).rows[pi]; return {k,name:nm,v:r.close,chg:r.sinceAnchor,lastTradeDate:r.lastTradeDate,status:r.status}; })}; });   // the layer's row at the stage end (sinceAnchor: against the starting close)
-  const S0=IS3?w3.start(W,knobs,k=>u01(seed,k)):eng.start(W,knobs,seed), S=C.state(), clocks=WF.clocks.filter(c=>S.clocks[c.id]!==S0.clocks[c.id]).map(c=>({name:c.name,from:lvName(c.id,S0.clocks[c.id]),to:lvName(c.id,S.clocks[c.id])}));
+  const S0=IS3?w3.start(W,knobs,w3.keyDraw(seed)):eng.start(W,knobs,seed), S=C.state(), clocks=WF.clocks.filter(c=>S.clocks[c.id]!==S0.clocks[c.id]).map(c=>({name:c.name,from:lvName(c.id,S0.clocks[c.id]),to:lvName(c.id,S.clocks[c.id])}));
   const cnt={chosen:0,rolled:0,auto:0,fork:0}; for(const x of lg) cnt[x.how]++;
   const ov=done&&L?overview({knobs,N:1000,seed:1}):null, row=ov?ov.rows.find(x=>x.id===L.id):null;
   return {done,landing:L?{id:L.id,name:L.name,lv:L.lv,fam:L.fam}:null,seed,code:G.code(),n:dec.length,cnt,l10,low:dec.filter(r=>r.p<0.25).length,
     startShare:row?{p:row.p,N:ov.N,seed:ov.seed}:null,ending:done?G.ending():null,cols:cols.map(c=>c.name),stages,clocks,cutoff:CUTOFF,date:upto>0?DATES[upto-1]:CUTOFF}; }
-const test={slotDay,walker:IS3?walker3:walker,pathStats,pricePath,injectOf,simulate:(seed,knobs)=>eng.simulate(W,{seed,knobs,light:true}),scriptState:(seed,knobs,rec)=>eng.simulate(W,{seed,knobs,light:true,script:rec}).state,probs:(ev,S,knobs)=>eng.probs(W,evById[ev],S,knobs).p};
+const test={slotDay,catOf,STOPCATS,volPathOf,pdates:PDATES,walker:IS3?walker3:walker,pathStats,pricePath,injectOf,simulate:(seed,knobs)=>eng.simulate(W,{seed,knobs,light:true}),scriptState:(seed,knobs,rec)=>eng.simulate(W,{seed,knobs,light:true,script:rec}).state,probs:(ev,S,knobs)=>eng.probs(W,evById[ev],S,knobs).p};
 return {WF,STAGES,T,dates:{first:DATES[0],last:DATES[T-1],end:W.end,cutoff:CUTOFF,year:Y1},search:q=>MK.search(q),gaps:GAPS,gradeText,extraNote:EXTRA_NOTE,play,load,overview,diff,reverse,openPath,test,landings:WF.landings,version:eng.version,worldFile:WF.file,format:FMT,nEvents:W.events.length,nLandings:Object.keys(landingById).length,
   world3:{on:IS3,defN:IS3?DEFN3:null,priceMapRows:PRICE_ROWS.n,priceMapMapped:PRICE_ROWS.mapped,driftCalib:CALIB.on,driftScheduled:CALIB.sched.size,driftDaily:!!CALIB.daily}};
 })();
@@ -4554,9 +4608,14 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
   // ---------- the run being played: everything comes from the adapter's game object ----------
   var knobs = {}, seed = 0, G = null, LOG = [], shown = null, lastQ = null, prevSt = null, cgShown = false, pendC = null;
   var revealed = false, busy = false, focal = 'now', sel = 'spx', hl = null, fold = true, pick = false, pgrp = 'idx', pq = '', pins = [];
+  // Types of events the reader stops at (kept for this browser). null = all of them. The types and their names are the adapter's; a world3 event's type is its group.
+  var TYPES = []; A2.WF.events.forEach(function (e) { A2.WF.ev.types(e).forEach(function (x) { if (TYPES.indexOf(x) < 0) TYPES.push(x); }); });
+  var stopT = null; try { var sv0 = JSON.parse(localStorage.getItem('stop-types') || 'null'); if (Array.isArray(sv0)) { sv0 = sv0.filter(function (x) { return TYPES.indexOf(x) >= 0; }); if (sv0.length < TYPES.length) stopT = new Set(sv0); } } catch (e) { }
+  // what the adapter gets: always a set, so that a state easing back by itself is rolled in the background (with no set the adapter stops at those too)
+  var stopArg = function () { return new Set(stopT ? Array.from(stopT) : TYPES); };
   var newSeed = function () { return (Math.random() * 2147483646 | 0) + 1; };
   function sync() { LOG = G.log(); pendC = null; }
-  function begin(g) { clearTimeout(autoT); autoT = null; G = g || A2.play({ seed: seed, knobs: knobs, stop: null }); sync(); revealed = false; shown = null; lastQ = prevSt = null; cgShown = false; hl = null; ranged = null; }
+  function begin(g) { clearTimeout(autoT); autoT = null; G = g || A2.play({ seed: seed, knobs: knobs, stop: stopArg() }); sync(); revealed = false; shown = null; lastQ = prevSt = null; cgShown = false; hl = null; ranged = null; }
   var done = function () { return G.done() && !revealed; };
   var played = function () { return LOG.some(function (x) { return !x.auto; }); };
   function Q(ids) { var o = {}; ids.forEach(function (id) { try { var q = G.quotes([id])[0]; o[id] = { v: q.close, chg: q.sinceAnchor, name: q.name }; } catch (e) { } }); return o; }
@@ -4564,7 +4623,7 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
   function QA(ids) { try { var o = {}; G.quotes(ids).forEach(function (x, j) { o[ids[j]] = { v: x.close, chg: x.sinceAnchor, name: x.name }; }); return o; } catch (e) { return Q(ids); } }
   var vis = function () { return FOCUS.map(function (f) { return f[0]; }).concat(pins); };
   function pend() { if (pendC) return pendC; var q = G.pending(); if (!q) return null;
-    return pendC = { routine: !!ROUT[q.ev] && q.scenarioDay == null, note: q.blurb || (typeof EVNOTE !== 'undefined' && EVNOTE[q.ev]) || '', date: q.date, stage: q.stage, name: q.label || q.name, types: q.types, grade: q.gradeName || '', psrc: q.psrc, expect: q.expect,
+    return pendC = { note: q.blurb || (typeof EVNOTE !== 'undefined' && EVNOTE[q.ev]) || '', date: q.date, stage: q.stage, name: q.label || q.name, types: q.types, grade: q.gradeName || '', psrc: q.psrc, expect: q.expect,
       options: q.options.map(function (o) { return { tags: o.tags || [], sev: o.sev, name: o.label || o.name, raw: o.name, p: o.cp, delta: (o.delta || []).filter(function (d) { return !story(d); }), price: o.price, off: !!o.off, rest: !!o.rest, mods: o.mods || [] }; }) }; }
   // landing shares from here: the start uses the adapter's overview (1000 runs), later steps its forecast (300 runs); both are kept by the adapter
   // The forecast takes seconds and blocks the page while it runs, so a step never waits for it: fc() answers from what is already worked out, or
@@ -4743,6 +4802,12 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
     var a = (o.price || []).map(function (s) { var m = /因子 (.+?) ([+−])([\d.]+)/.exec(s); return m ? [m[1], m[2] === '+' ? 1 : -1, +m[3]] : null; }).filter(Boolean).sort(function (x, y) { return y[2] - x[2]; }).slice(0, 3);
     return a.map(function (x) { return '<span>' + esc(x[0]) + ' <b class="' + (x[1] > 0 ? 'up' : 'dn') + '">' + (x[1] > 0 ? (x[2] >= 1 ? '▲' : '△') : (x[2] >= 1 ? '▼' : '▽')) + '</b></span>'; }).join('');
   }
+  // The probability of a step, for showing: always how likely that outcome was once the event came up. For a scheduled event that is the recorded figure.
+  // For an event that is not scheduled the recorded figure is the chance of that outcome on that one day (a fraction of a percent); divided by the chance
+  // of any outcome of the event that day (the rows of the step's explanation) it is the outcome's share, the same figure the waiting card showed. Null when the rows are not there.
+  function shownP(date, ev, out, p) { for (var k = 0; k < LOG.length; k++) { var x = LOG[k]; if (x.date !== date || x.ev !== ev || x.out !== out) continue; if (x.kind === 'scheduled' || x.kind === undefined) return p;
+      var rows = x.expl && x.expl.rows, s = rows ? rows.reduce(function (z, r) { return z + (r.p || 0); }, 0) : 0; return s > 0 ? Math.min(1, x.p / s) : null; } return p; }
+  var notDice = function (date, ev, out) { for (var k = 0; k < LOG.length; k++) { var x = LOG[k]; if (x.date === date && x.ev === ev && x.out === out) return x.kind !== 'scheduled' && x.kind !== undefined; } return false; };   // its dice figure is on the one-day scale too
   function endCard() {
     var E = G.ending(), R = G.report(), q = Q(FOCUS.map(function (f) { return f[0]; })), kind = typeof CGK !== 'undefined' && CGK[E.id];
     return '<article class="sheet" id="sheet"><div class="stamp" style="animation:none">' + esc(E.name) + '<small>' + A2.dates.last.slice(0, 4) + ' 年底</small></div>' +
@@ -4750,7 +4815,7 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
       '<h3>' + esc(E.name) + '</h3><p class="lede" style="color:var(--ink)">' + esc(E.d || '') + '</p>' +
       '<div class="endrow">' + FOCUS.map(function (f) { var x = q[f[0]]; if (!x) return ''; return '<div><span>' + esc(x.name) + '</span><b class="n ' + (x.chg >= 0 ? 'up' : 'dn') + '">' + sg(x.chg * 100, 0) + '</b></div>'; }).join('') + '</div>' +
       '<p class="endline">' + esc(E.spx.name) + '這一年途中最大回檔 <b class="n">' + (E.spx.dd * 100).toFixed(1) + '%</b>。' + (R.startShare ? '從起點看，落在這裡的機率是 <b class="n">' + (R.startShare.p * 100).toFixed(1) + '%</b>。' : '') + '這一局走了 <b class="n">' + R.n + '</b> 步。</p>' +
-      '<h4 class="endh">把這一局帶到這裡的事件</h4><ol class="chain">' + E.chain.map(function (c) { return '<li><span class="n">' + c.date.replace(/-/g, '/') + '</span>　<b>' + esc(c.ev) + '</b>：' + esc(c.out) + '　<span class="n">' + esc(pct(c.p)) + '</span></li>'; }).join('') + '</ol>' +
+      '<h4 class="endh">把這一局帶到這裡的事件</h4><ol class="chain">' + E.chain.map(function (c) { return '<li><span class="n">' + c.date.replace(/-/g, '/') + '</span>　<b>' + esc(c.ev) + '</b>：' + esc(c.out) + (shownP(c.date, c.ev, c.out, c.p) == null ? '' : '　<span class="n">' + esc(pct(shownP(c.date, c.ev, c.out, c.p))) + '</span>') + '</li>'; }).join('') + '</ol>' +
       '<div class="act">' + (kind ? '<button class="next" data-cg="1">' + (E.lv ? '結局演出' : '年底場景') + '</button>' : '') + '<button class="roll" data-focal="run">看這一局的報告</button><button class="ghost" data-back="1"><kbd>←</kbd>退一步</button><button class="ghost" data-reset="1">同一局從頭再走</button><button class="ghost" data-new="1">開新的一局</button></div></article>';
   }
   // Outcome colours. The world file tags each outcome as better, unchanged or worse (and some as a rescue), with a degree inside a kind of outcome:
@@ -4773,14 +4838,16 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
     var ticks = '<span>0</span>' + on.slice(0, -1).map(function (o) { cum += o.p * 100; if (cum < 4 || cum > 96 || cum - lastTick < 4) return ''; lastTick = cum; return '<span style="position:absolute;left:' + cum + '%;transform:translateX(-50%)">' + Math.round(cum) + '</span>'; }).join('') + '<span>100</span>';
     var mods = e.options.filter(function (o) { return o.mods.length; }).map(function (o) { return '<p>' + esc(o.name) + '：' + o.mods.map(function (m) { return esc(m.name) + ' ' + esc(m.x); }).join('、') + '</p>'; }).join('');
     var why = (e.grade.indexOf('判斷') === 0 || !e.grade ? '' : '<p>有資料：' + esc(e.grade) + '。' + esc(e.psrc || '') + '</p>') + (e.expect ? '<p>預期：' + esc(e.expect) + '</p>' : '') + (mods ? '<p>目前的處境讓機率變了：</p>' + mods : '');
-    return '<article class="sheet" id="sheet">' + (revealed ? '<div class="stamp">' + esc(r.out) + '<small>' + (r.dice ? '擲出 ' + r.dice : '自己選的') + '</small></div>' : '<div class="seal" id="seal">待決</div>') +
+    var tail = []; if (!revealed) for (var ti = LOG.length - 1; ti >= 0 && LOG[ti].auto; ti--) tail.unshift(LOG[ti]);
+    var since = tail.length ? '<div class="since"><b>世界發生了</b><ul>' + (tail.length > 6 ? '<li class="more">前面還有 ' + (tail.length - 6) + ' 則</li>' : '') + tail.slice(-6).map(function (x) { return '<li class="' + (x.kind === 'random' ? 'rand' : 'sched') + '"><span class="n">' + md(x.date) + '</span><span><b>' + esc(x.ev) + '</b>：' + esc(x.out) + '</span></li>'; }).join('') + '</ul></div>' : '';
+    return '<article class="sheet" id="sheet">' + since + (revealed ? '<div class="stamp">' + esc(r.out) + '<small>' + (r.dice ? '擲出 ' + r.dice : '自己選的') + '</small></div>' : '<div class="seal" id="seal">待決</div>') +
       '<div class="dateline">' + e.types.map(function (t) { return '<span class="cat">' + esc(t) + '</span>'; }).join('') + '<span>' + e.date.replace(/-/g, '/') + '</span><span>第 ' + (LOG.length + (revealed ? 0 : 1)) + ' 則</span><span>' + esc(A2.STAGES[e.stage]) + '</span></div>' +
       '<h3>' + esc(e.name) + '</h3>' + (e.note ? '<p class="lede">' + esc(e.note) + '</p>' : '') +
       '<div class="pbar">' + bar + '<span class="mark' + (r && r.dice ? ' on' : '') + '" id="mark"' + (r && r.dice ? ' style="left:' + (r.dice - .5) + '%"' : '') + '><b id="markn">' + (r && r.dice ? r.dice : 0) + '</b></span></div><div class="pticks">' + ticks + '</div>' +
       e.options.map(function (o, j) {
         return '<button class="opt' + (o.rest ? ' rest' : '') + (revealed ? (j === r.j ? ' won' : ' lost') : o.off ? ' lost' : '') + '" data-opt="' + j + '" style="--oc:' + o.oc + ';--ot:' + o.ot + '"' + (o.off && !revealed ? ' disabled' : '') + ' title="點這一列：直接選這個結果"><span class="k"' + (o.side ? ' title="' + o.side + '"' : '') + '>' + (j + 1) + '</span><span class="t">' + esc(o.name) + '</span><span class="p">' + (o.off ? '—' : esc(pct(o.p))) + '</span><span class="c"><span>' + (o.delta.length ? o.delta.map(function (d) { return esc(d).replace(/→(.+)$/, ' → <b>$1</b>'); }).join('；') : '世界現況不變') + '</span>' + chips(o) + '</span></button>';
       }).join('') +
-      '<div class="act">' + (revealed ? '<button class="next' + (autoT ? ' auto' : '') + '" data-next="1"><kbd>Enter</kbd>下一則</button>' : '<button class="roll" data-roll="1"><kbd>空白鍵</kbd>擲骰</button>') + (LOG.length ? '<button class="ghost" data-back="1"><kbd>←</kbd>退一步</button>' : '') + '<span class="ffs">' + (Object.keys(ROUT).length ? '<button class="ghost" data-skip="1" aria-pressed="' + skip + '">例行自動擲</button>' : '') + '<button class="ghost" data-ff="stage">擲完這一季</button><button class="ghost" data-ff="end">一路擲到年底</button></span></div>' +
+      '<div class="act">' + (revealed ? '<button class="next' + (autoT ? ' auto' : '') + '" data-next="1"><kbd>Enter</kbd>下一則</button>' : '<button class="roll" data-roll="1"><kbd>空白鍵</kbd>擲骰</button>') + (LOG.length ? '<button class="ghost" data-back="1"><kbd>←</kbd>退一步</button>' : '') + '<span class="ffs"><button class="ghost" data-ff="stage">擲完這一季</button><button class="ghost" data-ff="end">一路擲到年底</button></span></div>' +
       (why ? '<details class="why"><summary>這幾個機率怎麼來的</summary>' + why + '</details>' : '') + '</article>';
   }
   function market(k, lite) {   // lite: only the focus table (the price tween after a roll redraws it every frame; the long list stays as it is)
@@ -4800,7 +4867,7 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
   function evTable(R) {
     var rows = '';
     R.stages.forEach(function (st) { if (!st.rows.length) return; rows += '<tr class="stg"><td colspan="' + (4 + R.cols.length) + '">' + esc(st.name) + '</td></tr>';
-      st.rows.forEach(function (s) { rows += '<tr><td class="n">' + md(s.date) + '</td><td><b>' + esc(s.ev) + '</b>：' + esc(s.out) + '</td><td class="r n">' + esc(pct(s.p)) + '</td><td class="r n mu">' + (s.dice != null ? s.dice : s.how === 'chosen' ? '自選' : '—') + '</td>' + (s.imp ? s.imp.map(function (d) { return '<td class="r n ' + (Math.abs(d) < .05 ? 'mu' : d >= 0 ? 'up' : 'dn') + '">' + (d >= 0 ? '+' : '−') + Math.abs(d).toFixed(1) + '</td>'; }).join('') : R.cols.map(function () { return '<td class="r n mu">〃</td>'; }).join('')) + '</tr>'; }); });
+      st.rows.forEach(function (s) { rows += '<tr><td class="n">' + md(s.date) + '</td><td><b>' + esc(s.ev) + '</b>：' + esc(s.out) + '</td><td class="r n">' + (shownP(s.date, s.ev, s.out, s.p) == null ? '<span class="mu">—</span>' : esc(pct(shownP(s.date, s.ev, s.out, s.p)))) + '</td><td class="r n mu">' + (s.how === 'chosen' ? '自選' : notDice(s.date, s.ev, s.out) || s.dice == null ? '—' : s.dice) + '</td>' + (s.imp ? s.imp.map(function (d) { return '<td class="r n ' + (Math.abs(d) < .05 ? 'mu' : d >= 0 ? 'up' : 'dn') + '">' + (d >= 0 ? '+' : '−') + Math.abs(d).toFixed(1) + '</td>'; }).join('') : R.cols.map(function () { return '<td class="r n mu">〃</td>'; }).join('')) + '</tr>'; }); });
     return '<div class="scrollbox"><table style="min-width:760px"><tr><th>日期</th><th>事件：結果</th><th class="r">機率</th><th class="r">擲出</th>' + R.cols.map(function (c) { return '<th class="r" title="這個事件對這個標的的累計影響（對數 %）">' + esc(c) + '</th>'; }).join('') + '</tr>' + rows + '</table></div>';
   }
   function codeBox(R) { return '<details class="code"><summary>種子與進度碼：存下這一局，或載入別的一局</summary><p>種子 <span class="n">' + seed + '</span>' + (R ? '　整條路徑的機率 <span class="n">10^' + R.l10.toFixed(1) + '</span>' : '') + '</p><p class="n codebox">' + esc(G.code()) + '</p><p><input id="codein" placeholder="把進度碼貼在這裡" aria-label="進度碼" style="width:min(100%,520px)"> <button class="chip" data-load="1">載入</button> <button class="chip" data-new="1">開新的一局</button></p></details>'; }
@@ -4843,6 +4910,16 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
       (FQ ? '<div class="packs">頻率：' + FQ.options.map(function (o) { return '<button class="chip" data-freq="' + esc(o.v) + '" aria-pressed="' + ((knobs[FQ.knob] || FQ.options[0].v) === o.v) + '">' + esc(o.name) + '</button>'; }).join('') + '</div>' : '');
     var r = btn.getBoundingClientRect(), w = el.offsetWidth; el.style.top = Math.round(r.bottom + 6) + 'px'; el.style.left = Math.round(Math.max(8, Math.min(r.left, window.innerWidth - w - 8))) + 'px';
   }
+  var stopOpen = false;
+  function stopPop() {
+    var el = $('#stoppop'), btn = $('#stopbtn'); if (!btn) return; btn.setAttribute('aria-expanded', stopOpen); btn.textContent = '停在：' + (stopT ? (stopT.size ? stopT.size + ' 類' : '都不停') : '全部') + ' ▾'; el.hidden = !stopOpen; if (!stopOpen) return;
+    el.innerHTML = '<h2>停下來讓我選的事件</h2><div class="packs">' + TYPES.map(function (x) { return '<button class="chip" data-stop="' + esc(x) + '" aria-pressed="' + (!stopT || stopT.has(x)) + '">' + esc(A2.WF.typeName(x)) + '</button>'; }).join('') + '</div>';
+    var r = btn.getBoundingClientRect(), w = el.offsetWidth; el.style.top = Math.round(r.bottom + 6) + 'px'; el.style.left = Math.round(Math.max(8, Math.min(r.left, window.innerWidth - w - 8))) + 'px';
+  }
+  // a type is ticked or unticked: the same run goes on under the new set (its run code is read back with it), so what is decided stays decided
+  function setStop(x) { var s = new Set(stopT ? Array.from(stopT) : TYPES); if (s.has(x)) s.delete(x); else s.add(x); stopT = s.size === TYPES.length ? null : s;
+    try { localStorage.setItem('stop-types', JSON.stringify(stopT ? Array.from(stopT) : TYPES)); } catch (e) { }
+    var r = A2.load(G.code(), stopArg()); if (r.err) { toast(r.err); return; } stopAuto(); G = r.g; sync(); revealed = false; shown = null; lastQ = prevSt = null; render(); river(); arrive(); }
   function render(prevState) {
     document.querySelectorAll('[data-focal]').forEach(function (b) { if (b.closest('.focal')) b.setAttribute('aria-pressed', b.dataset.focal === focal); });
     $('#river').classList.toggle('wide', focal !== 'now');
@@ -4852,7 +4929,7 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
     head(); bank(); tape();
     $('#ind').innerHTML = [['d', '日'], ['w', '週'], ['m', '月']].map(function (x) { return '<button class="chip" data-unit="' + x[0] + '" aria-pressed="' + (unit === x[0]) + '">' + x[1] + '</button>'; }).join('') + '<button class="chip" data-home="1" title="時間與價格範圍回到預設：現在這條線附近到年底">⌖ 回到焦點</button><span>　指標</span>' + INDN.map(function (x) { return '<button class="chip" data-ind="' + x[0] + '" aria-pressed="' + IND[x[0]] + '">' + x[1] + '</button>'; }).join('') + '<span>　</span><button class="chip" data-swap="1" aria-pressed="' + swap + '" title="預設紅漲綠跌；按下改成綠漲紅跌">紅綠反轉</button>';
     var on = packsOn(); $('#assume').textContent = '假設：' + (on.length ? '開了 ' + on.length + ' 個特殊劇本' : '沒有開特殊劇本') + ' ▾';
-    packPop();
+    packPop(); stopPop();
     var bm = $('#bmain'); bm.textContent = focal !== 'now' ? '回到此刻' : done() ? '看報告' : revealed ? '下一則' : '擲骰'; $('#bback').disabled = !LOG.length; $('#bmore').textContent = focal === 'all' ? '這一局' : '看全部可能';
   }
   function toast(t) { var e = $('#toast'); e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function () { e.classList.remove('on'); }, 2400); }
@@ -4860,46 +4937,39 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
 
   // ---------- actions ----------
   // after an outcome is shown the page goes on to the next event by itself in three seconds; any step the reader takes first cancels the wait
-  var AUTO = 3000, autoT = null, autoR = null, stopAuto = function () { clearTimeout(autoT); clearTimeout(autoR); autoT = autoR = null; };
-  // Routine events on their own dice (a switch, kept for this browser): every scheduled event (monthly releases, central banks, quarterly results) is
-  // rolled without waiting for the reader, each result shown for a moment; the opening event of a special script still waits. The world and the dates are untouched.
-  // hold: the reader stepped back onto a routine event, so that one waits for them.
-  var ROUT = {}; A2.WF.events.forEach(function (e) { if (e.kind === 'scheduled') ROUT[e.id] = 1; });
-  var skip = false, hold = false, QUICK = 1000; try { skip = localStorage.getItem('skip-routine') === '1'; } catch (e) { }
-  function maybeAuto() { clearTimeout(autoR); autoR = null; if (!skip || hold || revealed || busy || focal !== 'now' || G.done()) return; var q = pend(); if (!q || !q.routine) return;
-    autoR = setTimeout(function () { autoR = null; if (skip && !hold && !revealed && !busy && focal === 'now' && !G.done() && pend().routine) decide(undefined, true); }, 450); }
-  async function decide(j, quick) {   // j === undefined: the dice decide; otherwise the reader picks outcome j. quick: a routine event rolled by the switch
-    clearTimeout(autoR); autoR = null; if (!quick) hold = false;
+  var AUTO = 3000, autoT = null, stopAuto = function () { clearTimeout(autoT); autoT = null; };
+  async function decide(j) {   // j === undefined: the dice decide; otherwise the reader picks outcome j
     if (busy || revealed || G.done() || focal !== 'now') return; var e = pend(); if (j !== undefined && (!e.options[j] || e.options[j].off)) return; busy = true;
     lastQ = Q(vis()); prevSt = G.state();
     if (j === undefined) G.roll(); else G.choose(j);
     var L = G.last() || {}; sync(); var out = L.out !== undefined ? L.out : LOG[LOG.length - 1].out, k = e.options.findIndex(function (o) { return o.raw === out; });
     if (j === undefined && k >= 0) out = e.options[k].name; else if (j !== undefined) out = e.options[j].name;
     e.rolled = { out: out, dice: j === undefined ? L.dice : null, j: j !== undefined ? j : k }; shown = e;
-    if (e.rolled.dice && !quick) { var mk = $('#mark'); mk.classList.add('on'); mk.getBoundingClientRect(); mk.style.left = (e.rolled.dice - .5) + '%';
+    if (e.rolled.dice) { var mk = $('#mark'); mk.classList.add('on'); mk.getBoundingClientRect(); mk.style.left = (e.rolled.dice - .5) + '%';
       await tween(900, function (x) { $('#markn').textContent = Math.max(1, Math.round(e.rolled.dice * x)); }); await wait(220); }
     revealed = true; render(prevSt); river();
-    stopAuto(); autoT = setTimeout(function wake() { autoT = null; if (!revealed || focal !== 'now') return; if (busy) { autoT = setTimeout(wake, 200); return; } next(); }, quick ? QUICK : AUTO);
-    var nb = document.querySelector('[data-next]'); if (nb) { nb.style.setProperty('--auto', (quick ? QUICK : AUTO) + 'ms'); nb.classList.add('auto'); }
+    stopAuto(); autoT = setTimeout(function wake() { autoT = null; if (!revealed || focal !== 'now') return; if (busy) { autoT = setTimeout(wake, 200); return; } next(); }, AUTO);
+    var nb = document.querySelector('[data-next]'); if (nb) nb.classList.add('auto');
     var rail = $('#grid').querySelector('.rail:last-of-type');
     await tween(900, function (x) { var tmp = document.createElement('div'); tmp.innerHTML = market(x, true); var a = rail && rail.querySelector('table'); if (a) a.innerHTML = tmp.querySelector('table').innerHTML; });
     busy = false; var nx = document.querySelector('[data-next]'); if (nx) nx.focus({ preventScroll: true });
   }
   function playEnd() { var E = G.ending(), k = typeof CGK !== 'undefined' && CGK[E.id]; if (!k || typeof playCG === 'undefined') { toast('這個落點沒有演出。'); return; } var q = Q(['spx', 'sox', 'twii']); playCG(k, { title: E.name, stats: ['spx', 'sox', 'twii'].map(function (x) { return q[x].name + ' ' + sg(q[x].chg * 100, 0); }).join('　·　') }); }
   function arrive() { if (done() && !cgShown) { cgShown = true; if (!document.hidden && !reduce) playEnd(); } }
-  function ff(kind) { if (busy || G.done()) return; stopAuto(); revealed = false; shown = null; var n0 = LOG.length; if (kind === 'end') G.rollEnd(); else G.rollStage(); sync(); lastQ = prevSt = null; render(); river(); toast('往前擲了 ' + (LOG.length - n0) + ' 則' + (G.done() ? '，到年底了' : '')); arrive(); maybeAuto(); }
-  function next() { if (busy || !revealed) return; stopAuto(); revealed = false; shown = null; render(); river(); var s = $('#sheet'); if (s) s.classList.add('swap'); arrive(); maybeAuto(); }
-  function back() { if (busy || !LOG.length) return; stopAuto(); revealed = false; shown = null; G.undo(); sync(); lastQ = prevSt = null; cgShown = false; hold = true; render(); river(); }
-  function setFocal(f) { stopAuto(); focal = f; hl = null; redraw(); river(); maybeAuto(); window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' }); }
-  function restart(g) { begin(g); hold = false; focal = g ? focal : 'now'; render(); river(); maybeAuto(); }
+  function ff(kind) { if (busy || G.done()) return; stopAuto(); revealed = false; shown = null; var n0 = LOG.length; if (kind === 'end') G.rollEnd(); else G.rollStage(); sync(); lastQ = prevSt = null; render(); river(); toast('往前擲了 ' + (LOG.length - n0) + ' 則' + (G.done() ? '，到年底了' : '')); arrive(); }
+  function next() { if (busy || !revealed) return; stopAuto(); revealed = false; shown = null; render(); river(); var s = $('#sheet'); if (s) s.classList.add('swap'); arrive(); }
+  function back() { if (busy || !LOG.length) return; stopAuto(); revealed = false; shown = null; G.undo(); sync(); lastQ = prevSt = null; cgShown = false; render(); river(); }
+  function setFocal(f) { stopAuto(); focal = f; hl = null; redraw(); river(); window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' }); }
+  function restart(g) { begin(g); focal = g ? focal : 'now'; render(); river(); arrive(); }
 
   document.addEventListener('click', function (ev) {
     if (popOpen && !ev.target.closest('#packpop,#assume')) { popOpen = false; packPop(); }
-    var t = ev.target.closest('[data-focal],[data-ins],[data-fam],[data-land],[data-roll],[data-next],[data-back],[data-reset],[data-new],[data-load],[data-opt],[data-fold],[data-pick],[data-grp],[data-pin],[data-pack],[data-freq],[data-skip],[data-ind],[data-unit],[data-swap],[data-home],[data-ff],[data-cg],#bmain,#bback,#bmore,#assume'); if (!t) return; var d = t.dataset;
+    if (stopOpen && !ev.target.closest('#stoppop,#stopbtn')) { stopOpen = false; stopPop(); }
+    var t = ev.target.closest('[data-focal],[data-ins],[data-fam],[data-land],[data-roll],[data-next],[data-back],[data-reset],[data-new],[data-load],[data-opt],[data-fold],[data-pick],[data-grp],[data-pin],[data-pack],[data-freq],[data-stop],[data-ind],[data-unit],[data-swap],[data-home],[data-ff],[data-cg],#bmain,#bback,#bmore,#assume,#stopbtn'); if (!t) return; var d = t.dataset;
     if (d.pin) { var j = pins.indexOf(d.pin); j >= 0 ? pins.splice(j, 1) : pins.push(d.pin); if (j >= 0 && sel === d.pin) sel = 'spx'; redraw(); river(); ev.stopPropagation(); }
     else if (d.focal) setFocal(d.focal);
     else if (d.unit) { unit = d.unit; redraw(); river(); }
-    else if (d.skip) { skip = !skip; hold = false; try { localStorage.setItem('skip-routine', skip ? '1' : '0'); } catch (e) { } if (!skip) { clearTimeout(autoR); autoR = null; } redraw(); maybeAuto(); }
+    else if (d.stop) setStop(d.stop);
     else if (d.ff) ff(d.ff);
     else if (d.cg) playEnd();
     else if (d.home) { ranged = null; river(); }
@@ -4911,12 +4981,13 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
     else if (d.roll) decide(); else if (d.next) next(); else if (d.back || t.id === 'bback') back();
     else if (d.reset) restart();
     else if (d.new) { seed = newSeed(); restart(); toast('開了新的一局。'); }
-    else if (d.load) { var r = A2.load($('#codein').value, null); if (r.err) toast(r.err); else { knobs = r.knobs; seed = r.seed; restart(r.g); toast('載入了，走到第 ' + LOG.length + ' 步。'); } }
+    else if (d.load) { var r = A2.load($('#codein').value, stopArg()); if (r.err) toast(r.err); else { knobs = r.knobs; seed = r.seed; restart(r.g); toast('載入了，走到第 ' + LOG.length + ' 步。'); } }
     else if (d.opt) decide(+d.opt);
     else if (d.fold) { fold = !fold; redraw(); }
     else if (d.pick) { pick = !pick; if (focal !== 'now') focal = 'now'; redraw(); }
     else if (d.grp) { pgrp = d.grp; pq = ''; pjump = true; redraw(); }
-    else if (t.id === 'assume') { popOpen = !popOpen; packPop(); }
+    else if (t.id === 'assume') { popOpen = !popOpen; stopOpen = false; packPop(); stopPop(); }
+    else if (t.id === 'stopbtn') { stopOpen = !stopOpen; popOpen = false; packPop(); stopPop(); }
     else if (d.freq) { var fq = A2.WF.freq; if (played() && !confirm('換假設會讓這一局從頭開始。要換嗎？')) return; knobs[fq.knob] = +d.freq; begin(); render(); river(); }
     else if (d.pack) { if (played() && !confirm('換假設會讓這一局從頭開始。要換嗎？')) return; if (knobs[d.pack]) delete knobs[d.pack]; else knobs[d.pack] = 1; begin(); render(); river(); }
     else if (t.id === 'bmain') { focal !== 'now' ? setFocal('now') : done() ? setFocal('run') : revealed ? next() : decide(); }
@@ -4924,6 +4995,7 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
   });
   document.addEventListener('input', function (ev) { if (ev.target.id !== 'pq') return; pq = ev.target.value.trim(); pjump = true; redraw(); var x = $('#pq'); x.focus(); x.setSelectionRange(x.value.length, x.value.length); });
   document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' && stopOpen) { stopOpen = false; stopPop(); $('#stopbtn').focus(); return; }
     if (ev.key === 'Escape' && popOpen) { popOpen = false; packPop(); $('#assume').focus(); return; }
     if (ev.target.closest('input,textarea')) return;
     if (ev.code === 'Space') { ev.preventDefault(); if (focal === 'now' && !revealed) decide(); }
@@ -4937,7 +5009,7 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
     sp.addEventListener('keydown', function (ev) { if (ev.key === 'ArrowUp' || ev.key === 'ArrowDown') { ev.preventDefault(); ev.stopPropagation(); set(w.getBoundingClientRect().height + (ev.key === 'ArrowDown' ? 24 : -24)); } });
     sp.addEventListener('dblclick', function () { w.style.height = w.style.maxHeight = w.style.minHeight = ''; try { localStorage.removeItem('chart-h'); } catch (e) { } }); })();
   $('#asof').textContent = A2.dates.cutoff.replace(/-/g, '/');
-  var us = +new URLSearchParams(location.search).get('seed'); seed = us > 0 ? us | 0 : newSeed(); begin(); render(); river(); maybeAuto();
+  var us = +new URLSearchParams(location.search).get('seed'); seed = us > 0 ? us | 0 : newSeed(); begin(); render(); river();
   window.__app2 = { get G() { return G; } };   // for the page check (shot-d2.js)
 })();
 </script>
