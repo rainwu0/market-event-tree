@@ -2622,6 +2622,8 @@ const CGX={
     band = new Bands(); candle.attachPrimitive(band); marks = LW.createSeriesMarkers(candle, []);
     var line = function (color, o) { return chart.addSeries(LW.LineSeries, Object.assign({ color: color, lineWidth: 1 }, quiet, o || {})); };
     ser.med = line(WHITE, { lineStyle: LW.LineStyle.Dashed });
+    // the library keeps the view relative to the last bar that has data; this unseen line always reaches the last slot, so that bar does not jump while the bands are being worked out
+    ser.anchor = line('transparent', { autoscaleInfoProvider: function () { return null; } });
     for (var j = 0; j < 8; j++) pool.push(line(MUTE));
     if (IND.ma) { ser.ma20 = line(K('ma20')); ser.ma60 = line(K('ma60')); }
     if (IND.boll) { ser.bu = line(FC[1]); ser.bm = line(FC[1], { lineStyle: LW.LineStyle.Dotted }); ser.bl = line(FC[1]); }
@@ -2651,13 +2653,16 @@ const CGX={
     var now = last, curv = bars[bars.length - 1].close, nd = bars.length, F = isDone ? { dates: [], paths: [], left: [] } : fan(fc(), sel), idx = []; cdec = dec(curv); fanBusy = F.left.length > 0;
     var key = function (d) { if (unit === 'm') return d.slice(0, 7); var x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() - (x.getUTCDay() + 6) % 7); return x.toISOString().slice(0, 10); };
     if (unit !== 'd') { var agg = []; bars.forEach(function (b) { var k = key(b.time), a = agg[agg.length - 1]; if (a && a.k === k) { a.time = b.time; a.high = Math.max(a.high, b.high); a.low = Math.min(a.low, b.low); a.close = b.close; } else agg.push({ k: k, time: b.time, open: b.open, high: b.high, low: b.low, close: b.close }); }); bars = agg; }
-    if (!fanBusy) F.dates.forEach(function (d, j) { if (d > now && (unit !== 'm' || (d.slice(0, 7) > now.slice(0, 7) && (j === F.dates.length - 1 || F.dates[j + 1].slice(0, 7) !== d.slice(0, 7))))) idx.push(j); });
-    // the time axis is one slot per item, so the future gets one empty slot per weekday: spacing stays calendar-like
-    var slots = {}, t = new Date(now + 'T00:00:00Z'), end = Date.parse(A2.dates.last + 'T00:00:00Z');
-    if (unit === 'd') for (t.setUTCDate(t.getUTCDate() + 1); t.getTime() <= end; t.setUTCDate(t.getUTCDate() + 1)) { var wd = t.getUTCDay(); if (wd && wd < 6) slots[t.toISOString().slice(0, 10)] = 1; }
-    idx.forEach(function (j) { slots[F.dates[j]] = 1; });
+    // the time axis is one slot per item. The future slots depend only on the calendar and the bar period (every weekday, every Friday, every month end),
+    // never on the sampled runs, so the axis does not change length while the bands are being worked out; each weekly close of the runs sits on the slot it belongs to
+    var slots = {}, t = new Date(now + 'T00:00:00Z'), end = Date.parse(A2.dates.last + 'T00:00:00Z'), DAY = 86400000, tm = {};
+    for (t.setUTCDate(t.getUTCDate() + 1); t.getTime() <= end; t.setUTCDate(t.getUTCDate() + 1)) { var wd = t.getUTCDay(); if (!wd || wd > 5) continue; var nx = new Date(t.getTime() + DAY * (wd === 5 ? 3 : 1));
+      if (unit === 'd' || nx.getTime() > end || (unit === 'w' && wd === 5) || (unit === 'm' && nx.getUTCMonth() !== t.getUTCMonth())) slots[t.toISOString().slice(0, 10)] = 1; }
+    var sl = Object.keys(slots).sort(), pj = -1;
+    if (!fanBusy) sl.forEach(function (s) { var lim = new Date(Date.parse(s + 'T00:00:00Z') + 2 * DAY).toISOString().slice(0, 10), j = -1; for (var a = 0; a < F.dates.length && F.dates[a] <= lim; a++) if (F.dates[a] > now) j = a; if (j >= 0 && j !== pj) { idx.push(j); tm[j] = s; pj = j; } });
     candle.applyOptions({ priceFormat: { type: 'price', precision: cdec, minMove: cdec ? .01 : 1 } });
-    candle.setData(bars.map(function (b) { return { time: b.time, open: b.open, high: b.high, low: b.low, close: b.close }; }).concat(Object.keys(slots).sort().map(function (d) { return { time: d }; })));
+    candle.setData(bars.map(function (b) { return { time: b.time, open: b.open, high: b.high, low: b.low, close: b.close }; }).concat(sl.map(function (d) { return { time: d }; })));
+    ser.anchor.setData(sl.length ? [{ time: now, value: curv }, { time: sl[sl.length - 1], value: curv }] : []);
     // the high and the low of the real history shown (about one year of trading days), as price lines of the library
     if (hiLine) { candle.removePriceLine(hiLine); candle.removePriceLine(loLine); hiLine = loLine = null; }
     band.ext = null;
@@ -2666,7 +2671,7 @@ const CGX={
         hiLine = pl(hi, swap ? RED : GRN, '一年高'); loLine = pl(lo, swap ? GRN : RED, '一年低'); } }
     // quantile bands of the sampled runs (fan chart: darker towards the centre), and the subset the reader picked
     var pk = function (p) { return !hl || (hl.fam != null ? p.f === hl.fam : p.l === hl.land); }, sub = F.paths.filter(pk);
-    var qs = function (paths) { return idx.map(function (j) { var c = paths.map(function (p) { return p.c[j]; }).sort(function (a, b) { return a - b; }); return { time: F.dates[j], q10: quant(c, .1), q25: quant(c, .25), q50: quant(c, .5), q75: quant(c, .75), q90: quant(c, .9) }; }); };
+    var qs = function (paths) { return idx.map(function (j) { var c = paths.map(function (p) { return p.c[j]; }).sort(function (a, b) { return a - b; }); return { time: tm[j], q10: quant(c, .1), q25: quant(c, .25), q50: quant(c, .5), q75: quant(c, .75), q90: quant(c, .9) }; }); };
     var all = F.paths.length ? qs(F.paths) : [], head0 = { time: now, lo: curv, hi: curv }, edge = function (q, a, b) { return [head0].concat(q.map(function (x) { return { time: x.time, lo: x[a], hi: x[b] }; })); };
     var sets = all.length ? [{ pts: edge(all, 'q10', 'q90'), fill: hl ? 'rgba(217,178,92,.05)' : 'rgba(217,178,92,.10)' }, { pts: edge(all, 'q25', 'q75'), fill: hl ? 'rgba(217,178,92,.06)' : 'rgba(217,178,92,.18)' }] : [];
     var med = all, col = hl ? (FC[hl.fam != null ? hl.fam : (sub[0] || {}).f] || MUTE) : null;
@@ -2677,7 +2682,7 @@ const CGX={
     var show = !all.length ? [] : hl ? sub : IND.paths ? F.paths : [], srt = show.slice().sort(function (a, b) { return a.c[a.c.length - 1] - b.c[b.c.length - 1]; });
     pool.forEach(function (s, j) { var p = srt.length ? srt[Math.min(srt.length - 1, Math.round((j + .5) * srt.length / pool.length - .5))] : null, dup = p && j && srt.length < pool.length && j >= srt.length;
       if (!p || dup) { s.setData([]); return; } if (srt.length < pool.length) p = srt[j];
-      s.applyOptions({ color: (FC[p.f] || MUTE) + 'cc' }); s.setData([{ time: now, value: curv }].concat(idx.map(function (k) { return { time: F.dates[k], value: p.c[k] }; }))); });
+      s.applyOptions({ color: (FC[p.f] || MUTE) + 'cc' }); s.setData([{ time: now, value: curv }].concat(idx.map(function (k) { return { time: tm[k], value: p.c[k] }; }))); });
     // indicators on the real and played bars
     var cl = bars.map(function (b) { return b.close; }), at2 = function (arr, off, f) { return arr.map(function (x, j) { return f(x, bars[j + off].time); }); };
     var SMA = TI('SMA'), BB = TI('BollingerBands'), RSI = TI('RSI'), MACD = TI('MACD');
