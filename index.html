@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI 與科技市場事件樹</title>
+<title>超級循環</title>
 <style>
 /* New structure, wire-desk art. One picture carries past prices, the present, and every sampled future down to the landings (the "river");
    the event sheet, the world board and the focus instruments sit under it. Three focal lengths instead of five tabs. */
@@ -26,7 +26,8 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .up{color:var(--up)} .dn{color:var(--dn)} .mu{color:var(--dim)}
 /* top */
 .top{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;padding:12px 22px 10px}
-.top h1{font:700 18px/1.3 var(--serif);margin:0;letter-spacing:.04em}
+.top h1{font:900 21px/1.2 var(--serif);margin:0;letter-spacing:.14em;display:flex;align-items:center;gap:10px}
+.ring{width:26px;height:26px;transform:rotate(-90deg);flex:none} .ring circle{fill:none;stroke-width:5} .ring .bg{stroke:var(--rule)} .ring .fg{stroke:var(--lamp);transition:stroke-dasharray .9s ease,stroke .9s ease}
 .focal{display:flex;border:1px solid var(--rule);border-radius:999px;overflow:hidden}
 .focal button{border:0;background:none;color:var(--dim);padding:5px 16px;font-size:13.5px}
 .focal button[aria-pressed=true]{background:var(--lamp);color:var(--c1);font-weight:700}
@@ -168,7 +169,7 @@ tr.stg td{background:var(--desk2);font:500 11.5px var(--serif);letter-spacing:.3
 </head>
 <body>
 <header class="top">
-  <h1>AI 與科技市場事件樹</h1>
+  <h1 id="namemark"><svg class="ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="bg" cx="18" cy="18" r="14"/><circle class="fg" id="ringfg" cx="18" cy="18" r="14" stroke-dasharray="88 88"/></svg><span>超級循環</span></h1>
   <div class="focal" role="group" aria-label="看多遠"><button data-focal="now">此刻</button><button data-focal="run">這一局</button><button data-focal="all">所有可能</button></div>
   <button class="assume" id="assume" aria-haspopup="dialog" aria-expanded="false" aria-controls="packpop">假設：沒有開特殊劇本 ▾</button>
   <span class="asof">資料到 <span class="n" id="asof"></span></span>
@@ -4681,6 +4682,11 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
   }
   function bank() {
     var f = fc(), fam = f.fam || [0, 0, 0, 0], by = [[], [], [], []]; lands(f).forEach(function (l) { if (l.fam != null) by[l.fam].push(l.name); });
+    // The ring beside the name: how much of the cycle still holds. While the run goes on its length is the share of runs from here that end the year
+    // in the upper two classes, and it turns red when that share is low; at year end it closes in the landing's colour, or is left broken.
+    var fg = $('#ringfg'); if (fg) { var E = done() ? G.ending() : null, hold = fam[0] + fam[1], len = E ? (E.fam <= 1 ? 1 : .12) : hold;
+      fg.setAttribute('stroke-dasharray', (88 * Math.max(.03, Math.min(1, len))).toFixed(1) + ' 88'); fg.style.stroke = E ? (FC[E.fam] || LAMP) : hold < .35 ? FC[3] : LAMP;
+      $("#namemark").title = E ? '' : '從這裡往下，' + Math.round(hold * 100) + '% 的局年底落在' + FAM[0] + '或' + FAM[1]; }
     $('#bank').innerHTML = '<h2>年底落在哪</h2>' + FAM.map(function (n, k) { return '<button class="fam" data-fam="' + k + '" aria-pressed="' + (!!hl && hl.fam === k) + '" style="border-color:' + FC[k] + ';flex-grow:' + Math.max(.04, fam[k]).toFixed(3) + '"><b>' + n + '</b><span>' + Math.round(fam[k] * 100) + '%</span><em>' + by[k].slice(0, 3).map(esc).join('、') + '</em></button>'; }).join('');
   }
   function tape() {
