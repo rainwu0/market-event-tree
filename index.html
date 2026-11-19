@@ -53,7 +53,7 @@ body.us .up{color:var(--dn)} body.us .dn{color:var(--up)} body.us .opt .c b.up{c
 .ind .chip{padding:2px 10px;font-size:12.5px}
 .limit{font-size:11.5px;color:var(--dim);line-height:1.5;margin-top:6px}
 .zone{position:absolute;top:8px;font:500 11.5px var(--serif);letter-spacing:.3em;color:var(--dim);pointer-events:none;white-space:nowrap}
-.bank{display:flex;flex-direction:column;gap:2px;padding:10px 10px 30px 0;transition:opacity .3s} .bank.stale{opacity:.45}
+.bank{display:flex;flex-direction:column;gap:2px;padding:10px 10px 30px 0;transition:opacity .3s} .bank.stale{opacity:.45} .pane.stale .tiers,.pane.stale .lands{opacity:.45;transition:opacity .3s}
 .bank h2{font:500 11.5px var(--serif);letter-spacing:.3em;color:var(--dim);margin:0 0 4px;white-space:nowrap}
 .fam{position:relative;flex:1 1 0;min-height:22px;border-left:5px solid;padding:2px 8px;background:#ffffff08;border-radius:0 3px 3px 0;overflow:hidden;cursor:pointer;transition:flex-grow .6s ease,background .2s;text-align:left;border-top:0;border-right:0;border-bottom:0;color:var(--txt)}
 .fam:hover,.fam[aria-pressed=true]{background:#ffffff16}
@@ -3287,20 +3287,21 @@ const PAGE_SOURCES=[{"t": "Correlates of War，Militarized Interstate Disputes�
     return pendC = { note: q.blurb || (typeof EVNOTE !== 'undefined' && EVNOTE[q.ev]) || '', date: q.date, stage: q.stage, name: q.label || q.name, types: q.types, grade: q.gradeName || '', psrc: q.psrc, expect: q.expect,
       options: q.options.map(function (o) { return { tags: o.tags || [], sev: o.sev, name: o.label || o.name, raw: o.name, p: o.cp, delta: (o.delta || []).filter(function (d) { return !story(d); }), price: o.price, off: !!o.off, rest: !!o.rest, mods: o.mods || [] }; }) }; }
   // landing shares from here: the start uses the adapter's overview (1000 runs), later steps its forecast (300 runs); both are kept by the adapter
-  // The forecast: FCN runs from here, asked of the adapter a slice at a time (budgetMs) so that the page never stops for it. fc() answers from what is
-  // already worked out, or returns null and starts working once the page has been still for a moment (after the dice); the shares shown meanwhile are the
-  // last ones, dimmed, and they fill in as the slices come back. An adapter that takes no budget runs its whole batch in one go, as before; it reports the
-  // number of runs it really did (N), and `target` when more are to come.
-  var FCN = 240, SLICE = 30, fcC = null, fcLast = null, fcT = null, FC_WAIT = 700;
+  // The forecast: FCN runs from here, worked out by the adapter's batch job a slice at a time (job.step(ms)), so the page never stops for it. fc() answers
+  // with the finished batch for where the run is now, or returns null and gets the job going once the page has been still for a moment (at once when asked
+  // with `now`). Until the batch is finished the shares shown are the last ones, dimmed. A job has no partial result.
+  var FCN = 200, SLICE = 30, fcC = null, fcLast = null, fcT = null, FC_WAIT = 700;
   var fcKey = function () { return LOG.length + '|' + seed + '|' + JSON.stringify(knobs); };
-  var fcAsk = function () { return LOG.length ? G.forecast(FCN, { budgetMs: SLICE }) : A2.overview({ knobs: knobs, N: FCN, seed: 1, budgetMs: SLICE }); };
-  var fcMore = function (f) { return !!f && typeof f.target === 'number' && f.N < f.target; };
+  function fcJob() { if (LOG.length ? G.forecastJob : A2.overviewJob) return LOG.length ? G.forecastJob(FCN) : A2.overviewJob({ knobs: knobs, N: FCN, seed: 1 });
+    var res = null; return { step: function () { res = LOG.length ? G.forecast(FCN) : A2.overview({ knobs: knobs, N: FCN, seed: 1 }); return true; }, result: function () { return res; } }; }   // an adapter without jobs: the whole batch in one go
   function fcStep(k) { fcT = null; if (k !== fcKey()) { fcT = setTimeout(function () { fcStep(fcKey()); }, FC_WAIT); return; }   // the run moved on while this waited: start over for where it is now
     if (busy) { fcT = setTimeout(function () { fcStep(k); }, 120); return; }
-    var f = fcAsk(); fcC = { k: k, f: f }; fcLast = f; bank(); if (fcMore(f)) { fcT = setTimeout(function () { fcStep(k); }, 0); return; } river(); if (focal === 'all') redraw(); }
-  var fc = function (force) { var k = fcKey(); if (fcC && fcC.k === k && (!force || !fcMore(fcC.f))) return fcC.f;
-    if (!force) { if (!fcT) fcT = setTimeout(function () { fcStep(k); }, FC_WAIT); return fcC && fcC.k === k ? fcC.f : null; }
-    clearTimeout(fcT); fcT = null; var f = fcAsk(), n = 0; while (fcMore(f) && n++ < 400) f = fcAsk(); fcC = { k: k, f: f }; fcLast = f; return f; };
+    if (!fcC || fcC.k !== k) fcC = { k: k, job: fcJob(), f: null };
+    if (!fcC.job.step(SLICE)) { fcT = setTimeout(function () { fcStep(k); }, 0); return; }
+    fcC.f = fcLast = fcC.job.result(); bank(); river(); if (focal === 'all') redraw(); }
+  var fc = function (now) { var k = fcKey(); if (fcC && fcC.k === k && fcC.f) return fcC.f;
+    if (now && fcT && !(fcC && fcC.k === k)) { clearTimeout(fcT); fcT = null; }   // asked for now: do not sit out the wait
+    if (!fcT) fcT = setTimeout(function () { fcStep(k); }, now ? 0 : FC_WAIT); return null; };
   var lands = function (f) { return f.rows.filter(function (r) { return r.n > 0; }); };
   // weekly closes of one instrument on a sample of the runs counted in a forecast (in proportion to the landings), worked out a few at a time
   var fanC = new Map(), fanJob = 0, PER = 40;
@@ -3383,7 +3384,7 @@ const PAGE_SOURCES=[{"t": "Correlates of War，Militarized Interstate Disputes�
     bars = H.map(mb); var last = bars.length ? bars[bars.length - 1].time : '', nh = bars.length; cname = ch.name;
     ch.proj.forEach(function (b) { if (b.d > last) { bars.push(mb(b)); last = b.d; } });
     if (!bars.length) { var q1 = Q([sel])[sel], v1 = q1 ? q1.v : 0; last = A2.dates.cutoff; bars = [{ time: last, open: v1, high: v1, low: v1, close: v1 }]; }
-    var now = last, curv = bars[bars.length - 1].close, nd = bars.length, f0 = isDone ? null : fc(), F = isDone ? { dates: [], paths: [], left: [] } : f0 && !fcMore(f0) ? fan(f0, sel) : { dates: [], paths: [], left: [0] }, idx = []; cdec = dec(curv); fanBusy = F.left.length > 0;
+    var now = last, curv = bars[bars.length - 1].close, nd = bars.length, f0 = isDone ? null : fc(), F = isDone ? { dates: [], paths: [], left: [] } : f0 ? fan(f0, sel) : { dates: [], paths: [], left: [0] }, idx = []; cdec = dec(curv); fanBusy = F.left.length > 0;
     var key = function (d) { if (unit === 'm') return d.slice(0, 7); var x = new Date(d + 'T00:00:00Z'); x.setUTCDate(x.getUTCDate() - (x.getUTCDay() + 6) % 7); return x.toISOString().slice(0, 10); };
     if (unit !== 'd') { var agg = []; bars.forEach(function (b) { var k = key(b.time), a = agg[agg.length - 1]; if (a && a.k === k) { a.time = b.time; a.high = Math.max(a.high, b.high); a.low = Math.min(a.low, b.low); a.close = b.close; } else agg.push({ k: k, time: b.time, open: b.open, high: b.high, low: b.low, close: b.close }); }); bars = agg; }
     // the time axis is one slot per item. The future slots depend only on the calendar and the bar period (every weekday, every Friday, every month end),
@@ -3438,7 +3439,7 @@ const PAGE_SOURCES=[{"t": "Correlates of War，Militarized Interstate Disputes�
       '<button class="chip add" data-pick="1">＋ 其他標的</button><span class="rnow">' + esc(m.name) + '<b class="n">' + fx(m.v) + '</b><span class="n ' + (m.chg >= 0 ? 'up' : 'dn') + '">' + (LOG.length ? sg(m.chg * 100) + ' 從起點' : '起始收盤') + '</span></span>';
   }
   function bank() {
-    var cur = fc(), f = cur || fcLast; $('#bank').classList.toggle('stale', !cur || fcMore(cur)); if (!f) { $('#bank').innerHTML = '<h2>年底落在哪</h2>'; return; }
+    var cur = fc(), f = cur || fcLast; $('#bank').classList.toggle('stale', !cur); if (!f) { $('#bank').innerHTML = '<h2>年底落在哪</h2>'; return; }
     var fam = f.fam || [0, 0, 0, 0], by = [[], [], [], []]; lands(f).forEach(function (l) { if (l.fam != null) by[l.fam].push(l.name); });
     // The ring beside the name: how much of the cycle still holds. While the run goes on its length is the share of runs from here that end the year
     // in the upper two classes, and it turns red when that share is low; at year end it closes in the landing's colour, or is left broken.
@@ -3562,10 +3563,11 @@ const PAGE_SOURCES=[{"t": "Correlates of War，Militarized Interstate Disputes�
   var pjump = false;   // a new group or search starts the list from its top
   var packsOn = function () { return A2.WF.packs.filter(function (p) { return knobs[p.knob]; }); };
   function paneAll() {
-    var f = fc(true), t = f.tiers || null, L = lands(f), max = Math.max.apply(null, L.map(function (l) { return l.n; })), on = packsOn();
+    var cur = fc(true), f = cur || fcLast; if (!f) return '<section class="pane stale"><div class="rail"><h2>年底落在哪</h2></div></section>';
+    var t = f.tiers || null, L = lands(f), max = Math.max.apply(null, L.map(function (l) { return l.n; })), on = packsOn();
     var df = on.length && !LOG.length ? A2.diff(f, A2.overview({ knobs: {}, N: 1000, seed: 1 })) : null, rv = hl && hl.land ? A2.reverse(f, hl.land, 6) : null;
     var dtxt = function (id) { var x = df && df.byId[id]; if (!x || x.noise) return ''; var pts = x.d * 100; return '<span class="n ' + (pts >= 0 ? 'up' : 'dn') + '" title="和沒開特殊劇本相比，差幾個百分點">' + (pts >= 0 ? '+' : '−') + Math.abs(pts).toFixed(1) + '</span>'; };
-    return '<section class="pane"><div class="rail"><h2>從' + (LOG.length ? '現在' : '起點') + '往下擲 ' + f.N + ' 局，年底落在哪</h2></div>' +
+    return '<section class="pane' + (cur ? '' : ' stale') + '"><div class="rail"><h2>從' + (LOG.length ? '現在' : '起點') + '往下擲 ' + f.N + ' 局，年底落在哪</h2></div>' +
       (t ? '<div class="tiers">' + TIER.map(function (x, j) { return '<div class="tier"><b>' + x[0] + '</b><span>' + Math.round(t[j] * 100) + '%</span><p>' + x[1] + '</p></div>'; }).join('') + '</div>' : '') +
       '<div class="lands">' + L.map(function (l) { return '<button class="land" data-land="' + esc(l.id) + '" aria-pressed="' + (!!hl && hl.land === l.id) + '" title="' + esc(l.blurb || '') + '"><i style="background:' + (FC[l.fam] || MUTE) + '"></i><span>' + esc(l.name) + '</span><span class="n">' + (100 * l.n / f.N).toFixed(1) + '%' + (df ? '　' + dtxt(l.id) : '') + '</span><span class="bar"><u style="width:' + (100 * l.n / max) + '%;background:' + (FC[l.fam] || MUTE) + '"></u></span></button>'; }).join('') + '</div>' +
       (rv ? '<div class="rail" style="margin-top:14px"><h2>落到這裡的路徑，常見這些結果</h2></div>' + (rv.length ? '<ol class="chain">' + rv.map(function (c) { return '<li><b>' + esc(c.ev) + '</b>：' + esc(c.out) + '　<span class="n">' + Math.round(c.share * 100) + '% 的路徑有，是平常的 ' + c.lift.toFixed(1) + ' 倍</span></li>'; }).join('') + '</ol>' : '<p class="note">沒有特別突出的。</p>') : '') +
