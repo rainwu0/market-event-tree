@@ -2794,6 +2794,8 @@ const CALIB=(()=>{ const c=IS3&&typeof WORLD3_DRIFT_CALIB!=='undefined'?WORLD3_D
   for(const k in cnt){ const row=PRICE_ROWS.by.get(k); if(!row) throw new Error('drift calib: no price row '+k); const e=evById[k.split('|')[0]]; if(!e||e.kind==='scheduled') throw new Error('drift calib: not a random event '+k);
     for(const y of W2.events.find(q=>q.id===row.ev).outcomes[row.out].effects||[]){ if(!(y.fac||y.firm||y.group)) continue; const id=y.fac?'fac:'+y.fac:y.firm?'firm:'+y.firm:'group:'+y.group;   // one same-day piece per factor, firm or group: the windows sum to 1, and spread over every day the shape washes out
       const a=acc.get(id)||acc.set(id,{fac:y.fac,firm:y.firm,group:y.group,d:0,win:'day'}).get(id); a.d-=cnt[k]*row.mult*y.d/n; } }
+  // the price base's mean year-end contribution per factor (base.perRunMean, from the same kind of runs) is compensated the same way: minus it, evenly over the price days
+  const bm=c.base&&c.base.perRunMean||{}; for(const f in bm){ if(!eng.factors.includes(f)||!bm[f]) continue; const id='fac:'+f; const a=acc.get(id)||acc.set(id,{fac:f,d:0,win:'day'}).get(id); a.d-=bm[f]/n; }
   if(acc.size) daily=[...acc.values()];
   return {on:true,sched,daily,days:n}; })();
 const knownOf=r=>{ const e=evById[r.ev]; if(!e) return null;
