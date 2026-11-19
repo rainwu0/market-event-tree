@@ -478,6 +478,63 @@ const MARKET_DATA={"version":"2026-11-18.4","cutoff":"2026-11-18","anchors":{"00
     return slot < 0 ? 'closed' : calendar.halted[slot] ? 'halted' : 'open';
   }
 
+  function instant(value) {
+    if (typeof value !== 'string' || !isoDay(value.slice(0, 10)) ||
+        !/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})$/.test(value) ||
+        !Number.isFinite(Date.parse(value))) throw error('InvalidInstant', '公告與截止時點須為包含時區的 ISO 時戳');
+    return Date.parse(value);
+  }
+
+  function sessionImpacts(moves, cutoff, dates, byDate, calendar) {
+    if (!Array.isArray(moves)) throw error('InvalidImpact', '公告衝擊須為陣列');
+    const seen = new Map(), days = new Map();
+    for (const move of moves) {
+      if (move?.availableAt == null) continue;
+      const at = instant(move.availableAt);
+      if (at > cutoff) continue;
+      const { date, phase, availableAt, releaseId, revision, channel, label, logPct, eventId } = move;
+      if (!isoDay(date)) throw error('InvalidImpact', '公告衝擊須有有效交易日期');
+      if ((phase !== 'open' && phase !== 'intraday') || !Number.isFinite(logPct) ||
+          !Number.isSafeInteger(revision) || revision < 1 ||
+          ![releaseId, channel, label].every(s => typeof s === 'string' && s.length > 0) ||
+          (eventId !== undefined && (typeof eventId !== 'string' || !eventId.length))) {
+        throw error('InvalidImpact', '公告衝擊須有反應時段、對數百分點、公告及版本、渠道與名稱');
+      }
+      const key = JSON.stringify([releaseId, revision, channel]);
+      const contents = JSON.stringify([date, phase, availableAt, label, logPct, eventId]);
+      if (seen.has(key)) {
+        if (seen.get(key) !== contents) throw error('InvalidImpact', '公告衝擊重複且內容不一致');
+        continue;
+      }
+      seen.set(key, contents);
+      if (!logPct || date < dates[0] || date > dates.at(-1)) continue;
+      const day = byDate.get(date);
+      if (day === undefined || statusAt(calendar, day) !== 'open') throw error('InvalidImpact', '公告衝擊須分派到實際可交易日');
+      if (!days.has(day)) days.set(day, []);
+      days.get(day).push({ phase, at, availableAt, releaseId, revision, channel, label, logPct, eventId, key });
+    }
+
+    for (const [day, moves] of days) {
+      moves.sort((a, b) => a.at - b.at || (a.key < b.key ? -1 : 1));
+      let atOpen = 0;
+      const moments = new Map(), byRelease = new Map();
+      for (const move of moves) {
+        if (move.phase === 'open') atOpen += move.logPct;
+        else moments.set(move.at, (moments.get(move.at) ?? 0) + move.logPct);
+        const key = JSON.stringify([move.releaseId, move.revision]);
+        byRelease.set(key, (byRelease.get(key) ?? 0) + move.logPct);
+      }
+      let logPct = atOpen, highest = atOpen, lowest = atOpen;
+      for (const jump of moments.values()) {
+        logPct += jump;
+        highest = Math.max(highest, logPct);
+        lowest = Math.min(lowest, logPct);
+      }
+      days.set(day, { atOpen, logPct, highest, lowest, moves, trading: [...byRelease.values()] });
+    }
+    return days;
+  }
+
   // One slot per affected model day, with the path's own factors and exact generated pieces.
   // ret() still applies all exposures, own/granular routes and the original link deduplication.
   function eventInputs(path, factors, limit) {
@@ -571,37 +628,58 @@ const MARKET_DATA={"version":"2026-11-18.4","cutoff":"2026-11-18","anchors":{"00
     return records.map(r => ({ date: dates[r.day], outcome: event.outcomes[r.out].name, instance: r.inst }));
   }
 
-  function partsFor(parts, from, through, instrument) {
+  function partsFor(parts, from, through, instrument, timedMoves) {
     const channels = Object.entries(parts.fac).map(([id, values]) => ['fac:' + id, '共同因子：' + (factorNames[id] ?? id), values]);
     for (const [id, label] of baseParts) channels.push([id, label, parts[id]]);
     channels.push(['resid', instrument.model?.mode === 'volatilityOnly' ? '自身波動' : '標的殘差', parts.resid]);
-    return channels.map(([id, label, values]) => {
+    const out = channels.map(([id, label, values]) => {
       let logPct = 0;
       for (let day = from; day <= through; day++) logPct += values[day];
       return { id, label, logPct };
     });
+    for (const move of timedMoves ?? []) {
+      const part = out.find(x => x.id === move.channel);
+      if (part) part.logPct += move.logPct;
+      else out.push({ id: move.channel, label: move.label, logPct: move.logPct });
+    }
+    return out;
   }
 
-  function applyReturns(dates, calendar, total, anchor, rows) {
-    let pending = 0, cumulative = 0, row = null;
+  function applyReturns(dates, calendar, total, anchor, timed, rows) {
+    let pending = 0, cumulative = 0, repricing = 0, row = null;
     let lastTradeDate = anchor.date;
     for (const [day, date] of dates.entries()) {
       pending += total[day];
       const status = statusAt(calendar, day);
       const trading = status === 'open';
-      const logReturnPct = trading ? pending : null;
+      const priorRepricing = repricing, session = timed?.get(day);
+      const logReturnPct = trading ? session ? pending + session.logPct : pending : null;
       if (trading) {
         cumulative += pending;
         pending = 0;
         lastTradeDate = date;
       }
+      if (session) repricing += session.logPct;
       if (!rows && day !== dates.length - 1) continue;
-      row = { date, status, lastTradeDate, close: anchor.close * Math.exp(cumulative / 100), logReturnPct,
+      const baselineClose = anchor.close * Math.exp(cumulative / 100);
+      row = { date, status, lastTradeDate, baselineClose, priorRepricing, session,
+        close: baselineClose * Math.exp(repricing / 100), logReturnPct,
         dayChange: trading ? Math.expm1(logReturnPct / 100) : null,
-        sinceAnchor: Math.expm1(cumulative / 100), calendar: calendar.evidence[day] };
+        sinceAnchor: Math.expm1((cumulative + repricing) / 100), calendar: calendar.evidence[day] };
       if (rows) rows.push(row);
     }
     return row;
+  }
+
+  function sessionBar(bar, { close, priorRepricing, session }) {
+    if (!bar || (!priorRepricing && !session)) return bar;
+    const atOpen = priorRepricing + (session?.atOpen ?? 0);
+    const upper = priorRepricing + (session?.highest ?? 0);
+    const lower = priorRepricing + (session?.lowest ?? 0);
+    const o = bar.o * Math.exp(atOpen / 100);
+    // The baseline does not locate its extrema in time. Bound every shifted segment.
+    return { ...bar, o, h: Math.max(o, close, bar.h * Math.exp(upper / 100)),
+      l: Math.min(o, close, bar.l * Math.exp(lower / 100)), c: close, ev: bar.ev || !!session };
   }
 
   function addSignals(dest, lines, day) {
@@ -641,7 +719,7 @@ const MARKET_DATA={"version":"2026-11-18.4","cutoff":"2026-11-18","anchors":{"00
       return Array.from(catalog.values()).filter(x => terms.get(x.id).some(x => x.includes(term)));
     }
 
-    function forPath(P, { through, provisional = false } = {}) {
+    function forPath(P, { through, provisional = false, asOf, timedImpactsFor } = {}) {
       if (!P || !P.fac || !P.facN || !P.facEv || !P.groupEv || !P.firmEv ||
           !P._C || !Array.isArray(P.dates) || !Array.isArray(P.rec) || !Array.isArray(P.halts) || P.T !== P.dates.length) {
         throw error('MissingPrices', '路徑須包含引擎的價格資料');
@@ -649,7 +727,11 @@ const MARKET_DATA={"version":"2026-11-18.4","cutoff":"2026-11-18","anchors":{"00
       const limit = endIndex(P.dates, through);
       const dates = P.dates.slice(0, limit);
       const byDate = new Map(dates.map((date, day) => [date, day]));
-      const calendars = new Map(), markets = new Map(), quotes = new Map();
+      if (timedImpactsFor !== undefined && typeof timedImpactsFor !== 'function') {
+        throw error('InvalidImpact', '公告衝擊來源須為逐標的函式');
+      }
+      const cutoff = asOf === undefined ? Infinity : instant(asOf);
+      const calendars = new Map(), markets = new Map(), quotes = new Map(), timed = new Map();
       let inspected = null;
 
       function instrumentOf(id) {
@@ -670,6 +752,13 @@ const MARKET_DATA={"version":"2026-11-18.4","cutoff":"2026-11-18","anchors":{"00
         return markets.get(market);
       }
 
+      function timedFor(instrument, calendar) {
+        if (!timedImpactsFor) return undefined;
+        const { id } = instrument;
+        if (!timed.has(id)) timed.set(id, sessionImpacts(timedImpactsFor(id) ?? [], cutoff, dates, byDate, calendar));
+        return timed.get(id);
+      }
+
       const provisionalFields = row => provisional && row?.status === 'open' && row.date === through ? { provisional: true } : {};
 
       function rememberQuote(instrument, anchor, row) {
@@ -682,7 +771,11 @@ const MARKET_DATA={"version":"2026-11-18.4","cutoff":"2026-11-18","anchors":{"00
         const instrument = instrumentOf(id);
         if (!quotes.has(id)) {
           const anchor = anchorFor(data, id, P.dates[0]);
-          const row = limit ? applyReturns(dates, calendarFor(instrument.market), eng.ret(projected(instrument.market).path, id).total, anchor) : null;
+          let row = null;
+          if (limit) {
+            const calendar = calendarFor(instrument.market);
+            row = applyReturns(dates, calendar, eng.ret(projected(instrument.market).path, id).total, anchor, timedFor(instrument, calendar));
+          }
           rememberQuote(instrument, anchor, row);
         }
         return quotes.get(id);
@@ -697,7 +790,7 @@ const MARKET_DATA={"version":"2026-11-18.4","cutoff":"2026-11-18","anchors":{"00
         const calendar = calendarFor(market);
         const priced = eng.ret(context.path, id);
         const returns = [];
-        const last = applyReturns(dates, calendar, priced.total, anchor, returns);
+        const last = applyReturns(dates, calendar, priced.total, anchor, timedFor(instrument, calendar), returns);
         const inputs = context.inputs ??= eventInputs(context.path, eng.factors, limit);
         const closes = [anchor.close], eventMask = [], details = [];
         let pending = new Map(), start = 0, latent = 0;
@@ -708,17 +801,18 @@ const MARKET_DATA={"version":"2026-11-18.4","cutoff":"2026-11-18","anchors":{"00
           // Kline keeps the hidden close through a halt as the reference for the next opening bar.
           if (row.status === 'halted') closes.push(anchor.close * Math.exp(latent / 100));
           if (row.status === 'open') {
-            closes.push(row.close);
+            closes.push(row.baselineClose);
             const events = Array.from(pending.values()).filter(x => x.logPct !== 0);
             eventMask[calendar.slots[day]] = events.length > 0;
-            details[day] = { start, events };
+            details[day] = { start, events, session: row.session, baselineEvent: eventMask[calendar.slots[day]] };
             pending = new Map();
             start = day + 1;
           }
         }
         const klineId = ownValue(data.indexes, id)?.klineId ?? id;
-        const bars = kline.bars({ id: klineId, market, type, dates: calendar.sessions, closes, seed: P.seed,
+        const baselineBars = kline.bars({ id: klineId, market, type, dates: calendar.sessions, closes, seed: P.seed,
           halted: calendar.halted, event: eventMask });
+        const bars = baselineBars.map(bar => bar && sessionBar(bar, returns[byDate.get(bar.d)]));
         const rows = returns.map((row, day) => {
           const b = bars[calendar.slots[day]];
           const { date, status, lastTradeDate, close, logReturnPct, dayChange, sinceAnchor, calendar: calendarEvidence } = row;
@@ -742,6 +836,11 @@ const MARKET_DATA={"version":"2026-11-18.4","cutoff":"2026-11-18","anchors":{"00
             let matchedShares = 0, netBought = 0;
             for (const event of details[day].events) {
               const order = Math.round(anchor.medianDailyShares * Math.tanh(event.logPct / 100));
+              matchedShares += Math.abs(order);
+              netBought += order;
+            }
+            for (const logPct of row.session?.trading ?? []) {
+              const order = Math.round(anchor.medianDailyShares * Math.tanh(logPct / 100));
               matchedShares += Math.abs(order);
               netBought += order;
             }
@@ -776,7 +875,7 @@ const MARKET_DATA={"version":"2026-11-18.4","cutoff":"2026-11-18","anchors":{"00
         const row = result.rows[index];
         const modelFields = instrument.model ? { model: instrument.model } : {};
         if (row.status !== 'open') return { ...row, ...modelFields, parts: [], drivers: [], kline: null };
-        const { events, start } = details[index];
+        const { events, start, session, baselineEvent } = details[index];
         const members = ownValue(data.indexes, id)?.members ?? [id];
         const contributingInstruments = members.map(id => ({ id, group: ownValue(firms, id)?.group }));
         const drivers = events.map(contribution => {
@@ -790,11 +889,17 @@ const MARKET_DATA={"version":"2026-11-18.4","cutoff":"2026-11-18","anchors":{"00
             ...(occurrences.length > 1 ? { ambiguous: true } : {}),
             timing: { ...timing, grade: rule?.grade ?? 'assumption', ...(rule ? { label: rule.label } : {}) } };
         });
+        for (const move of session?.moves ?? []) {
+          const { eventId, releaseId, revision, phase, availableAt, logPct, label } = move;
+          drivers.push({ kind: 'event', id: eventId ?? releaseId, label, logPct, occurrences: [],
+            timing: { kind: 'session-impact', firstDayIndex: index, grade: 'assumption', releaseId, revision, phase, availableAt,
+              label: phase === 'open' ? '開盤入帳' : '盤中入帳' } });
+        }
         const fromEvents = drivers.reduce((amount, row) => amount + row.logPct, 0);
         drivers.push({ kind: 'background', id: 'background', label: '市場背景',
           logPct: row.logReturnPct - fromEvents, occurrences: [] });
         const params = kline.paramsFor(klineId, instrument);
-        const calibration = row.eventDay ? params.evt : params.ord;
+        const calibration = baselineEvent ? params.evt : params.ord;
         const previousClose = index === 0 ? result.anchor.close : result.rows[index - 1].close;
         const shape = {
           previousClose, gapLogPct: 100 * Math.log(row.open / previousClose),
@@ -803,9 +908,11 @@ const MARKET_DATA={"version":"2026-11-18.4","cutoff":"2026-11-18","anchors":{"00
           lowerWickLogPct: 100 * Math.log(Math.min(row.open, row.close) / row.low),
           calibrationDays: calibration.n, gapSlope: calibration.gap_slope, wickExtra: calibration.wick_extra
         };
-        return { ...row, ...modelFields, parts: partsFor(parts, start, index, instrument), drivers,
-          kline: { from: row.eventDay ? params.evt_from : params.from, grade: row.eventDay ? params.evt_grade : params.grade,
-            event: row.eventDay, method: 'seeded-kline2', source: 'estimation/bt6/kline2data.json', shape } };
+        return { ...row, ...modelFields, parts: partsFor(parts, start, index, instrument, session?.moves), drivers,
+          kline: { from: baselineEvent ? params.evt_from : params.from, grade: baselineEvent ? params.evt_grade : params.grade,
+            event: row.eventDay, method: 'seeded-kline2', source: 'estimation/bt6/kline2data.json', shape,
+            ...(session ? { sessionImpact: { method: 'shifted-baseline-envelope', grade: 'assumption', baselineEvent,
+              label: '日 K 高低為套用公告倍率後的價格包絡' } } : {}) } };
       }
 
       return Object.freeze({ quote, series, day, aggregate });
@@ -850,10 +957,13 @@ function stateImpacts(prefix, exposures) {
   return effects;
 }
 
-function announcementSurprise(release) {
+function surpriseOf(release, allowAgendaTie) {
   const event = release.event, outlook = event?.outlook;
+  const knownAt = Date.parse(release.knownAt), asOf = Date.parse(outlook?.asOf);
+  const agendaTie = allowAgendaTie && release.kind === 'event' && release.origin === 'sourceRelease' &&
+    event?.pSrc === 'scenario' && asOf === knownAt;
   if (!Array.isArray(outlook?.outcomes) || !Number.isFinite(event.announcedDelta) ||
-      !event.quantityId || !event.unit || !(Date.parse(outlook.asOf) < Date.parse(release.knownAt))) return null;
+      !event.quantityId || !event.unit || !(asOf < knownAt || agendaTie)) return null;
   let probability = 0, expectation = 0;
   const keys = new Set();
   for (const outcome of outlook.outcomes) {
@@ -868,16 +978,24 @@ function announcementSurprise(release) {
   return event.announcedDelta - expectation;
 }
 
+function announcementSurprise(release) {
+  return surpriseOf(release, false);
+}
+
 const policyExposure = node ? require('./policy-equity.json') : scope.POLICY_EQUITY;
 if (!policyExposure) throw new Error('StatePricing needs the policy exposure data');
-function policyEquityImpact(release) {
+function equityImpact(release, allowAgendaTie) {
   if (release.event?.quantityId !== policyExposure.quantityId ||
       release.event.unit !== policyExposure.unit) return null;
-  const surprise = announcementSurprise(release);
+  const surprise = surpriseOf(release, allowAgendaTie);
   if (surprise === null) return null;
   return {releaseId: release.releaseId, revision: release.revision, availableAt: release.availableAt,
     factor: policyExposure.factor, surprise, unit: policyExposure.unit,
     logPct: surprise * policyExposure.logPctPerUnit, source: policyExposure.source};
+}
+
+function policyEquityImpact(release) {
+  return equityImpact(release, false);
 }
 
 // Sessions contain only tradable regular sessions for this instrument.
@@ -892,20 +1010,31 @@ function reactionSlot(availableAt, sessions) {
   return {session, phase: time <= Date.parse(sessions[session].openAt) ? 'open' : 'intraday'};
 }
 
-function policySessionImpacts(prefix, sessions) {
-  const prior = new Map(), moves = [];
+function policySessionPlan(prefix, sessions, {world3AgendaOutlook = false} = {}) {
+  const prior = new Map(), moves = [], formalReleaseIds = [];
+  // The caller attests that v2 outlooks at the same timestamp were frozen before the agenda item.
+  const allowAgendaTie = prefix.version === 2 && world3AgendaOutlook === true;
   for (const release of prefix.releases) {
-    const last = prior.get(release.releaseId);
-    if (last && release.revision <= last.revision) continue;
-    const impact = policyEquityImpact(release);
-    if (!impact) continue;
-    const slot = reactionSlot(impact.availableAt, sessions);
+    const {releaseId, revision, availableAt} = release;
+    const last = prior.get(releaseId);
+    if (last && revision <= last.revision) continue;
+    const slot = reactionSlot(availableAt, sessions);
     if (!slot) continue;
-    prior.set(release.releaseId, impact);
-    const logPct = impact.logPct - (last?.logPct ?? 0);
-    if (logPct !== 0) moves.push({...impact, ...slot, logPct});
+    const impact = last?.formal === false ? null : equityImpact(release, allowAgendaTie);
+    // Preserve the first assigned channel, including a formal surprise of zero.
+    const formal = last?.formal ?? Boolean(impact);
+    if (!last && formal) formalReleaseIds.push(releaseId);
+    prior.set(releaseId, {revision, formal, logPct: impact?.logPct ?? last?.logPct ?? 0});
+    if (impact) {
+      const logPct = impact.logPct - (last?.logPct ?? 0);
+      if (logPct !== 0) moves.push({...impact, ...slot, logPct});
+    }
   }
-  return moves;
+  return {moves, formalReleaseIds};
+}
+
+function policySessionImpacts(prefix, sessions, options) {
+  return policySessionPlan(prefix, sessions, options).moves;
 }
 
 // Baseline quotes exclude this channel. Carry its cumulative repricing forward.
@@ -927,7 +1056,7 @@ function policyQuotes(bars, moves) {
   });
 }
 
-const api = Object.freeze({stateImpacts, announcementSurprise, policyEquityImpact, reactionSlot, policySessionImpacts, policyQuotes});
+const api = Object.freeze({stateImpacts, announcementSurprise, policyEquityImpact, reactionSlot, policySessionPlan, policySessionImpacts, policyQuotes});
 if (node) module.exports = api;
 else scope.StatePricing = api;
 })(globalThis);
@@ -2602,7 +2731,7 @@ const WORLD3 = {
     fAiLoss: { name: '已發生 AI 系統失控事故', start: false, src: 'own' },
     fBreakthrough: { name: '已有實體技術進入商轉', start: false, src: 'own' },
     fRescue: { name: '聯準會已臨時出手', start: false, src: 'own' },
-    fShipBlock: { name: '先進晶片出貨曾實際受阻', start: false, src: 'own' } },
+    fShipBlock: { name: '先進晶片出貨仍受阻', start: false, src: 'own' } },
 
   cross: {
     hostility: { "threat": 3, "tradeBarrier": 1, "jobless": 0, "cpiTrend": 0, "oil": 2, "fedStance": 0, "aiUsage": 0, "buildout": -2, "gpuRent": 2, "leverage": 0, "strain": 0, "dollar": 0, "vol": 2, "aiHeat": 0, "usDoubt": 0 },
@@ -2777,9 +2906,9 @@ const WORLD3 = {
       label: '交戰後停火或談判',
       blurb: '東亞戰事走向停火或談判，結果決定風險能退到什麼程度。',
       outcomes: [
-        { key: 'settlement', publicKey: null, name: '第三方斡旋，簽署協議', label: '第三方斡旋簽協議', branch: 'deal', w: 0.2, tags: ['up'], effects: [{ attr: 'threat', d: -45 }, { clock: 'hostility', d: -1 }] },
-        { key: 'truce', publicKey: null, name: '停火，停火線凍結（無和約的長期僵持也算）', label: '停火，戰線凍結', branch: 'truce', w: 0.6, tags: ['up'], effects: [{ attr: 'threat', d: -30 }, { clock: 'hostility', d: -1 }] },
-        { key: 'regimeEnd', publicKey: null, name: '一方政權更迭或退出戰爭而停戰', label: '政權更迭而停戰', branch: 'regimeEnd', w: 0.05, tags: ['flat'], effects: [{ attr: 'threat', d: -25 }, { clock: 'hostility', d: -1 }] },
+        { key: 'settlement', publicKey: null, name: '第三方斡旋，簽署協議', label: '第三方斡旋簽協議', branch: 'deal', w: 0.2, tags: ['up'], effects: [{ attr: 'threat', d: -45 }, { clock: 'hostility', d: -1 }, { flag: 'fWar', v: false }] },
+        { key: 'truce', publicKey: null, name: '停火，停火線凍結（無和約的長期僵持也算）', label: '停火，戰線凍結', branch: 'truce', w: 0.6, tags: ['up'], effects: [{ attr: 'threat', d: -30 }, { clock: 'hostility', d: -1 }, { flag: 'fWar', v: false }] },
+        { key: 'regimeEnd', publicKey: null, name: '一方政權更迭或退出戰爭而停戰', label: '政權更迭而停戰', branch: 'regimeEnd', w: 0.05, tags: ['flat'], effects: [{ attr: 'threat', d: -25 }, { clock: 'hostility', d: -1 }, { flag: 'fWar', v: false }] },
         { key: 'collapse', publicKey: null, name: '談判破裂，戰事延續（含轉成長期封鎖與經濟戰）', label: '談判破裂，戰事延續', branch: 'fail', w: 0.15, tags: ['down'], effects: [{ attr: 'threat', d: 10 }] } ],
       cond: [
         { layer: 'L1', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 1, situ: 'S02（2008-10-10：雷曼倒閉後一個月，全球股市崩跌，聯準會 10-08 緊急降息）；strain 讀數 16' }, or: 1.8 }, mech: '資金與信用壓力高時，交戰各方與盟友承受不起長期戰事，更快談停火' },
@@ -2893,8 +3022,8 @@ const WORLD3 = {
       label: '能源要道重開',
       blurb: '受戰事影響的能源要道重新開放，油價與運費有機會回落。',
       outcomes: [
-        { key: 'reopened', publicKey: null, name: '航道全面重開', label: '航道全面重開', branch: 'reopened', w: 0.5, tags: ['up'], effects: [{ attr: 'threat', d: -15 }, { attr: 'oil', d: -25, noMod: true }] },
-        { key: 'partial', publicKey: null, name: '中斷之後在護航或談判的通行安排下部分重開', label: '航道部分重開', branch: 'partial', w: 0.35, tags: ['flat'], effects: [{ attr: 'threat', d: -5 }, { attr: 'oil', d: -10, noMod: true }] },
+        { key: 'reopened', publicKey: null, name: '航道全面重開', label: '航道全面重開', branch: 'reopened', w: 0.5, tags: ['up'], effects: [{ attr: 'threat', d: -15 }, { attr: 'oil', d: -25, noMod: true }, { flag: 'fShipBlock', v: false }] },
+        { key: 'partial', publicKey: null, name: '中斷之後在護航或談判的通行安排下部分重開', label: '航道部分重開', branch: 'partial', w: 0.35, tags: ['flat'], effects: [{ attr: 'threat', d: -5 }, { attr: 'oil', d: -10, noMod: true }, { flag: 'fShipBlock', v: false }] },
         { key: 'reclosed', publicKey: null, name: '重開後再度中斷', label: '重開後再度中斷', branch: 'reclosed', w: 0.15, tags: ['down'], effects: [{ attr: 'threat', d: 10 }, { attr: 'oil', d: 10, noMod: true }] } ],
       cond: [
         { layer: 'L2', target: 'reclosed', read: { state: 'threat' }, anchor: { lo: { x: -0.0989, situ: 'S28（2021-11-08：低利率下的題材與新上市熱潮）；threat 讀數 80.22' }, hi: { x: 1, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；threat 讀數 318.93' }, or: 1.8 }, mech: '整體地緣風險仍高時，重開的航道更容易再被打斷' } ] },
@@ -2914,7 +3043,7 @@ const WORLD3 = {
       scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
         { key: 'none', publicKey: null, name: '虛驚／沒有成真', label: '虛驚一場', branch: 'none', tags: ['flat'], effects: [] },
-        { key: 'quarantine', publicKey: null, name: '海上檢疫或部分封鎖，數週內放行', label: '海上檢疫，數週放行', branch: 'blockade', sev: 0, w: 0.5, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 30 }, { flag: 'fShipBlock', v: true }, { attr: 'gpuRent', d: 30, noMod: true }, { attr: 'aiUsage', d: -15, noMod: true }, { attr: 'vol', d: 20, noMod: true }] },
+        { key: 'quarantine', publicKey: null, name: '海上檢疫或部分封鎖，數週內放行', label: '海上檢疫，數週放行', branch: 'blockade', sev: 0, w: 0.5, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 30 }, { attr: 'gpuRent', d: 30, noMod: true }, { attr: 'aiUsage', d: -15, noMod: true }, { attr: 'vol', d: 20, noMod: true }] },
         { key: 'blockade', publicKey: null, name: '全面封鎖，長期中斷', label: '全面封鎖，長期中斷', branch: 'blockade', sev: 1, w: 0.4, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 45 }, { flag: 'fShipBlock', v: true }, { attr: 'gpuRent', d: 50, noMod: true }, { attr: 'aiUsage', d: -30, noMod: true }, { attr: 'vol', d: 35, noMod: true }] },
         { key: 'strike', publicKey: null, name: '對島內設施的攻擊', label: '攻擊島內設施', branch: 'attack', w: 0.1, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 50 }, { flag: 'fShipBlock', v: true }, { attr: 'gpuRent', d: 60, noMod: true }, { attr: 'aiUsage', d: -35, noMod: true }, { attr: 'vol', d: 40, noMod: true }] } ],
       cond: [
@@ -2958,9 +3087,9 @@ const WORLD3 = {
       label: '台海封鎖後的管轄結局',
       blurb: '台海封鎖之後的結局揭曉，影響晶片供應能否回到原狀。',
       outcomes: [
-        { key: 'held', publicKey: null, name: '封鎖解除，管轄未變', label: '封鎖解除，管轄未變', branch: 'held', w: 0.7, tags: ['up'], effects: [{ attr: 'threat', d: -20 }] },
-        { key: 'negotiated', publicKey: null, name: '在壓力下談判改變管轄', label: '談判改變管轄', branch: 'change', sev: 0, w: 0.15, tags: ['down'], effects: [{ attr: 'threat', d: 10 }, { flag: 'fStraitChange', v: true }, { attr: 'gpuRent', d: 30, noMod: true }] },
-        { key: 'forced', publicKey: null, name: '武力奪取或投降', label: '武力奪取或投降', branch: 'change', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'threat', d: 25 }, { flag: 'fStraitChange', v: true }, { attr: 'gpuRent', d: 50, noMod: true }] } ],
+        { key: 'held', publicKey: null, name: '封鎖解除，管轄未變', label: '封鎖解除，管轄未變', branch: 'held', w: 0.7, tags: ['up'], effects: [{ attr: 'threat', d: -20, noMod: true }, { flag: 'fShipBlock', v: false }] },
+        { key: 'negotiated', publicKey: null, name: '在壓力下談判改變管轄', label: '談判改變管轄', branch: 'change', sev: 0, w: 0.15, tags: ['down'], effects: [{ attr: 'threat', d: 10, noMod: true }, { flag: 'fStraitChange', v: true }, { attr: 'gpuRent', d: 30, noMod: true }] },
+        { key: 'forced', publicKey: null, name: '武力奪取或投降', label: '武力奪取或投降', branch: 'change', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'threat', d: 25, noMod: true }, { flag: 'fStraitChange', v: true }, { attr: 'gpuRent', d: 50, noMod: true }] } ],
       cond: [
         { layer: 'L2', target: 'change', read: { mem: 'conflictRun' }, anchor: { lo: { x: -0.9, situ: 'S06（2018-12-24：升息加縮表，聖誕前夕股市谷底）；記憶 conflictRun 的折現和照記憶定義手算，x＝-0.9' }, hi: { x: 1, situ: 'S10（2024-08-05：日圓套利平倉，VIX 單日暴衝；6 月仁愛礁有人受傷）；記憶 conflictRun 的折現和照記憶定義手算，x＝1' }, or: 2 }, mech: '升級一路累積時，管轄改變的機會較大；中途有緩和則較小' },
         { layer: 'L3', target: 'forced', read: { state: 'threat' }, anchor: { lo: { x: 0.31095, situ: 'S16（2022-08-04：裴洛西訪台後，中國圍台演習第一天）；threat 讀數 162.19' }, hi: { x: 1, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；threat 讀數 318.93' }, or: 1.8 }, mech: '整體風險越高，越可能是武力奪取而不是談判' } ] },
@@ -3463,7 +3592,7 @@ const WORLD3 = {
       label: '台灣晶片出貨中斷',
       blurb: '台灣先進晶片出貨中斷，下游科技業面臨缺料。',
       outcomes: [
-        { key: 'short', publicKey: null, name: '中斷一到三週後復工', label: '中斷一到三週', branch: 'halt', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'aiUsage', d: -10 }, { attr: 'gpuRent', d: 25 }, { flag: 'fShipBlock', v: true }] },
+        { key: 'short', publicKey: null, name: '中斷一到三週後復工', label: '中斷一到三週', branch: 'halt', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'aiUsage', d: -10 }, { attr: 'gpuRent', d: 25 }] },
         { key: 'long', publicKey: null, name: '中斷一個月以上', label: '中斷一個月以上', branch: 'halt', sev: 1, w: 0.3, tags: ['down'], effects: [{ attr: 'aiUsage', d: -25 }, { attr: 'gpuRent', d: 45 }, { flag: 'fShipBlock', v: true }] } ],
       cond: [
         { layer: 'L3', target: 'long', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 0.666667, situ: 'S07（2020-03-16：新冠疫情，聯準會降到零利率）；strain 讀數 8.9' }, or: 1.5, src: 'alessandriMumtaz', data: '金融壓力高時，不確定性衝擊使產出下降約六倍（原文 roughly six times larger：−0.17% 對 −0.025%）；方向來自這份，大小是判斷', grade: '未核' }, mech: '資金與保險緊時，修復與替代產能更慢' } ] },
@@ -3480,7 +3609,7 @@ const WORLD3 = {
       label: '晶片出貨恢復',
       blurb: '先進晶片恢復出貨，科技供應鏈的缺料壓力逐步紓解。',
       outcomes: [
-        { key: 'full', publicKey: null, name: '全面恢復', label: '全面恢復', branch: 'full', w: 0.6, tags: ['up'], effects: [{ attr: 'gpuRent', d: -30 }, { attr: 'aiUsage', d: 15 }] },
+        { key: 'full', publicKey: null, name: '全面恢復', label: '全面恢復', branch: 'full', w: 0.6, tags: ['up'], effects: [{ attr: 'gpuRent', d: -30 }, { attr: 'aiUsage', d: 15 }, { flag: 'fShipBlock', v: false }] },
         { key: 'partial', publicKey: null, name: '部分恢復', label: '部分恢復', branch: 'partial', w: 0.3, tags: ['up'], effects: [{ attr: 'gpuRent', d: -15 }, { attr: 'aiUsage', d: 5 }] },
         { key: 'relapse', publicKey: null, name: '恢復後再中斷', label: '恢復後再中斷', branch: 'relapse', w: 0.1, tags: ['down'], effects: [{ attr: 'gpuRent', d: 15 }] } ],
       cond: [
@@ -3499,16 +3628,16 @@ const WORLD3 = {
       label: '攻擊後晶片產能恢復',
       blurb: '台灣晶片設施遭攻擊後開始恢復產能，供應能補回多少是關鍵。',
       outcomes: [
-        { key: 'staged', publicKey: null, name: '分段恢復到可觀比例', label: '分段恢復到可觀比例', branch: 'restart', sev: 1, w: 0.15, tags: ['up'], effects: [{ attr: 'gpuRent', d: -15 }, { attr: 'aiUsage', d: 5 }] },
-        { key: 'partialRestart', publicKey: null, name: '未受損的產線部分復工出貨（產能優先分配給少數客戶或政府指定的用途也算）', label: '未受損產線部分復工', branch: 'restart', sev: 0, w: 0.35, tags: ['up'], effects: [{ attr: 'gpuRent', d: -8 }, { attr: 'aiUsage', d: 5 }] },
-        { key: 'overseas', publicKey: null, name: '海外與其他來源產能補位（含美日德新廠與非台積電的代工）', label: '海外產能補位', branch: 'overseas', w: 0.25, tags: ['up'], effects: [{ attr: 'gpuRent', d: -4 }, { attr: 'buildout', d: 5 }] },
+        { key: 'staged', publicKey: null, name: '分段恢復到可觀比例', label: '分段恢復到可觀比例', branch: 'restart', sev: 1, w: 0.15, tags: ['up'], effects: [{ attr: 'gpuRent', d: -15 }, { attr: 'aiUsage', d: 5 }, { flag: 'fShipBlock', v: false }] },
+        { key: 'partialRestart', publicKey: null, name: '未受損的產線部分復工出貨（產能優先分配給少數客戶或政府指定的用途也算）', label: '未受損產線部分復工', branch: 'restart', sev: 0, w: 0.35, tags: ['up'], effects: [{ attr: 'gpuRent', d: -8 }, { attr: 'aiUsage', d: 5 }, { flag: 'fShipBlock', v: false }] },
+        { key: 'overseas', publicKey: null, name: '海外與其他來源產能補位（含美日德新廠與非台積電的代工）', label: '海外產能補位', branch: 'overseas', w: 0.25, tags: ['up'], effects: [{ attr: 'gpuRent', d: -4 }, { attr: 'buildout', d: 5 }, { flag: 'fShipBlock', v: false }] },
         { key: 'stalled', publicKey: null, name: '遲遲無法復工，或重建以年計、期間內供給仍遠低於攻擊前', label: '遲遲無法復工', branch: 'stalled', w: 0.2, tags: ['flat'], effects: [] },
         { key: 'relapse', publicKey: null, name: '復工嘗試失敗或再度中斷（第一次抽到也算）', label: '復工失敗或再中斷', branch: 'relapse', w: 0.05, tags: ['down'], effects: [{ attr: 'gpuRent', d: 8 }] } ],
       cond: [
         { layer: 'L1', read: { mem: 'conflictRun' }, anchor: { lo: { x: -0.9, situ: 'S06（2018-12-24：升息加縮表，聖誕前夕股市谷底）；記憶 conflictRun 的折現和照記憶定義手算，x＝-0.9' }, hi: { x: 1, situ: 'S10（2024-08-05：日圓套利平倉，VIX 單日暴衝；6 月仁愛礁有人受傷）；記憶 conflictRun 的折現和照記憶定義手算，x＝1' }, or: 0.5 }, mech: '東亞仍在連續升級時，受損設施的修復與復工都更少（停火之後才是收拾期）' } ] },
     { id: 'aiResume', name: 'AI 事故之後解除暫停', kind: 'random', group: 'ai', system: 4, rate: 2, max: 1,
-      if: 'fAiLoss',
-      ifWhy: '前置條件讀已發生的事件（fired）或旗標，是這個情勢能不能發生的開關，不是機率隨狀態變；內容與理由見事件規格第 4 版該事件的 desc。',
+      if: 'fired(aiAccident.severe) >= 1',
+      ifWhy: '前置條件讀已發生的事件（fired）或旗標，是這個情勢能不能發生的開關，不是機率隨狀態變；內容與理由見事件規格第 4 版該事件的 desc。 ／事件規格第 4 版把 if 改成：fAiPause ／事件規格第 4 版把 if 改成：fired(aiAccident.severe) >= 1',
       grade: 'judgement',
       psrc: 'own',
       pWhy: '事件規格第 4 版（裁定 250、258–263）：新事件，說明在事件規格第 4 版該事件的 desc。pSrcOut：填 scenario；依賴集合未重算（交核對）',
@@ -3561,8 +3690,8 @@ const WORLD3 = {
       scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
         { key: 'none', publicKey: null, name: '虛驚／沒有成真', label: '虛驚一場', branch: 'none', tags: ['flat'], effects: [] },
-        { key: 'contained', publicKey: null, name: '事故造成損害但受控，主管機關限制後補上防護', label: '損害受控，補上防護', branch: 'accident', sev: 0, w: 0.55, tags: ['down'], effects: [{ attr: 'aiUsage', d: -10 }, { flag: 'fAiLoss', v: true }, { attr: 'vol', d: 15, noMod: true }] },
-        { key: 'severe', publicKey: null, name: '多國緊急暫停高階模型部署', label: '多國緊急暫停高階模型', branch: 'accident', sev: 1, w: 0.35, tags: ['down'], effects: [{ attr: 'aiUsage', d: -30 }, { flag: 'fAiLoss', v: true }, { attr: 'vol', d: 40, noMod: true }] },
+        { key: 'contained', publicKey: null, name: '事故造成損害但受控，主管機關限制後補上防護', label: '損害受控，補上防護', branch: 'accident', sev: 0, w: 0.55, tags: ['down'], effects: [{ attr: 'aiUsage', d: -10 }, { attr: 'vol', d: 15, noMod: true }] },
+        { key: 'severe', publicKey: null, name: '多國緊急暫停高階模型部署', label: '多國緊急暫停高階模型', branch: 'accident', sev: 1, w: 0.35, tags: ['down'], effects: [{ attr: 'aiUsage', d: -30 }, { attr: 'vol', d: 40, noMod: true }] },
         { key: 'uncontained', publicKey: null, name: '無法完全關閉', label: '無法完全關閉', branch: 'accident', sev: 2, w: 0.1, tags: ['down'], effects: [{ attr: 'aiUsage', d: -50 }, { flag: 'fAiLoss', v: true }, { attr: 'vol', d: 60, noMod: true }] } ],
       cond: [
         { layer: 'L3', target: 'severe', read: { state: 'aiHeat' }, anchor: { lo: { x: -0.3425, situ: 'S09（2022-10-12：美元與殖利率高點；晶片出口管制剛宣布）；aiHeat 讀數 -13.7' }, hi: { x: 0.51, situ: 'S21（2025-10-29：輝達市值創高，AI 題材重燃（決議日前））；aiHeat 讀數 20.4' }, or: 1.5 }, mech: '題材熱、部署越廣，同樣的事故牽連越大' } ] },
@@ -3858,6 +3987,7 @@ const WORLD3 = {
     { id: 'straitChange', name: '台灣管轄改變', tier: 'order', family: 'fall', if: 'fStraitChange', d: '台海情勢以管轄改變收場，先進製程的歸屬成為全球科技業的核心變數', grade: 'judgement', src: 'own' },
     { id: 'aiLossOfControl', name: 'AI 失控事故後的全面管制', tier: 'order', family: 'fall', if: 'fAiLoss', d: '高階 AI 系統出了失控事故，各國以緊急手段限制算力與網路', grade: 'judgement', src: 'own' },
     { id: 'physicalLeap', name: '實體技術進入商轉', tier: 'order', family: 'rise', if: 'fBreakthrough && vol < 40', d: '能源、機器人或太空算力有一項跨過商轉門檻，長期成本預期被改寫', grade: 'judgement', src: 'own' },
+    { id: 'warTruce', name: '東亞交戰後停火', tier: 'system', family: 'fall', if: 'peak(hostility) == 3', d: '東亞大國交戰後停火：停火只讓局離開交戰，不代表經濟回到原狀（統籌裁定 342(2)、343(1)）', grade: 'judgement', src: 'own' },
     { id: 'supplyCut', name: '供應鏈斷裂', tier: 'system', family: 'fall', if: 'fShipBlock', d: '這一年中曾有公司或主管機關公告，先進製程晶片的出貨連續中斷五個交易日以上，而且中斷的部分合計佔全球這類產品出貨的一半以上（名單與全球份額見 docs/world-states.md 第 8.3 節；原因只寫在設它的事件的說明裡）。只有期間內曾達，沒有年底是否恢復的讀數', grade: 'judgement', src: 'own' },
     { id: 'creditCrisis', name: '信用危機', tier: 'system', family: 'fall', if: 'peak(strain) == 3', mark: { name: '年底已回落', if: 'strain <= 2' }, d: '這一年中高收益債利差到過 9 個百分點以上（不論央行有沒有臨時出手）：信用市場失靈，借不到錢的範圍從單一產業擴到整個信用市場', grade: 'judgement', src: 'research_g' },
     { id: 'aiBust', name: 'AI 投資潮退', tier: 'system', family: 'fall', if: 'buildout < 25 && aiUsage < 40 && aiHeat < 31.25', d: '年底大廠資本支出年減、晶圓代工營收成長掉到兩成以下，而且半導體落後大盤 15% 以上：投資與市場同時離開 AI', grade: 'judgement', src: 'research_g' },
