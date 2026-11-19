@@ -1269,7 +1269,7 @@ function create(data){
   // A world without format (or format 2) takes exactly the code above.
   const v3=W=>!!W&&W.format===3, to3=(f,g)=>function(W){ return v3(W)?g.apply(null,arguments):f.apply(null,arguments); };
   const no3=(f,name)=>function(W){ if(v3(W)) throw new Error(name+': a format 3 world runs in E2.world3 (world layer only); its prices come from a price file (docs/price-format.md), which this version does not read yet'); return f.apply(null,arguments); };
-  const W3S=(W,knobs)=>world3.start(W,knobs);
+  const W3S=(W,knobs,draw)=>world3.start(W,knobs,draw);
   return {version:VERSION,factors:F,groups:GO,indexIds:INDEX_IDS,extraIds,factorLoadings,irf:Ah,simulate:no3(simulate,'simulate'),ret,replay:no3(replay,'replay'),explain:no3(explain,'explain'),many:no3(many,'many'),why,budget:no3(budget,'budget'),eventShare:no3(eventShare,'eventShare'),params:to3(params,world3.params),
     start:to3(start,W3S),pending:to3(pending,world3.pending),step:to3(step,world3.step),advance:to3(advance,world3.advance),run:to3(run,(W,knobs,draw)=>world3.run(W,knobs,draw,{trace:true})),encodePath:no3(encodePath,'encodePath'),decodePath:no3(decodePath,'decodePath'),
     _s:{walk,advance:advanceP,roll,choose},   // internal: the prefix form of the S line (tests; simulate and many with a prefix)
@@ -1333,7 +1333,7 @@ const world3=(function(){
     return null; }
   // docs/world-format.md 1 (ruling 301): the version of the world file itself. Only the versions this engine can compute are loaded; a new field or a changed meaning in a world file
   // means a new version here (and nowhere else), so an engine that does not know it refuses the file instead of reading it wrongly.
-  const WORLD_VERSIONS=['1','3.0.0-seq4b','3.1.0-eventspec4'];
+  const WORLD_VERSIONS=['1','3.0.0-seq4b','3.1.0-eventspec4','3.2.0-scenario'];
   function check(W){ const P=[], bad=(path,why)=>P.push(path+': '+why);
     if(!W||typeof W!=='object') return ['world: not an object'];
     if(!WORLD_VERSIONS.includes(W.version)) bad('version','the engine does not know the world file version '+JSON.stringify(W.version)+' (it loads '+WORLD_VERSIONS.map(v=>JSON.stringify(v)).join(', ')+')');
@@ -1409,7 +1409,7 @@ const world3=(function(){
     // docs/world-format.md 5.8, spec-w4a-conditional 4.1 and 4.2: the outcome fields key, branch, sev, w and the conditions cond. Every message names the field.
     // Nothing is filled in and nothing is cut: a missing or wrong field is an error.
     const MEMO=W.memory&&typeof W.memory==='object'&&!Array.isArray(W.memory)?W.memory:{}, KEYRE=/^[A-Za-z_]\w*$/, CM=W.assume&&W.assume.cond_max&&typeof W.assume.cond_max.value==='number'&&W.assume.cond_max.value>0?W.assume.cond_max.value:null;
-    const eventNew=(e,pth)=>{ const os=Array.isArray(e.outcomes)?e.outcomes:[], N=os.length, rnd=e.kind==='random', multiRnd=rnd&&N>1, keys=new Set(), sevs=new Map();
+    const eventNew=(e,pth)=>{ const os=Array.isArray(e.outcomes)?e.outcomes:[], rnd=e.kind==='random', SSd=rnd&&has(e,'scenarioStart')&&e.scenarioStart&&typeof e.scenarioStart==='object'?e.scenarioStart:null, isNone=o=>!!SSd&&!!o&&o.key===SSd.noneKey, N=os.length-(SSd&&os.some(isNone)?1:0), multiRnd=rnd&&os.length>1, keys=new Set(), sevs=new Map();
       const cond0=has(e,'cond')&&Array.isArray(e.cond)?e.cond:[], schedC=!rnd&&cond0.some(c=>c&&(c.layer==='L2'||c.layer==='L3')), schedK=!rnd&&cond0.some(c=>c&&c.layer==='L3');
       os.forEach((o,j)=>{ const po=pth+'.outcomes['+j+']'; if(!o||typeof o!=='object') return;
         if(has(o,'key')){ if(typeof o.key!=='string'||!KEYRE.test(o.key)) bad(po+'.key','a name: letters, digits and _, not starting with a digit'); else if(keys.has(o.key)) bad(po+'.key','used twice in this event ('+o.key+')'); else keys.add(o.key); }
@@ -1419,10 +1419,11 @@ const world3=(function(){
         if(has(o,'sev')){ if(!(Number.isInteger(o.sev)&&o.sev>=0)) bad(po+'.sev','an integer >= 0'); else { const b=classKeyOf(o,j), s=sevs.get(b)||new Set(); if(s.has(o.sev)) bad(po+'.sev','used twice in class '+JSON.stringify(b)); s.add(o.sev); sevs.set(b,s); } }
         if(has(o,'funding')&&!(o.funding&&typeof o.funding==='object'&&!Array.isArray(o.funding))) bad(po+'.funding','an object (the funding fields; the engine does not use them to compute a probability or a state, it only turns them into the public shape in publicView)');
         else if(has(o,'funding')) fundWindowCheck(po+'.funding.window',o.funding.window);   // rulings 308, 311, 312; layer-ok: 1 window is the name of a funding field of the world file (docs/world-format.md 5.8), not a browser window
-        if(rnd&&(multiRnd||has(o,'w'))&&!(typeof o.w==='number'&&o.w>0)) bad(po+'.w','a weight > 0'+(multiRnd?' (a multi-outcome random event needs it)':'')); });
+        if(isNone(o)){ if(has(o,'w')) bad(po+'.w','the none outcome of a scenarioStart event has no w (its probability is p0^f)'); }
+        else if(rnd&&(multiRnd||has(o,'w'))&&!(typeof o.w==='number'&&o.w>0)) bad(po+'.w','a weight > 0'+(multiRnd?' (a multi-outcome random event needs it)':'')); });
       if(multiRnd&&!has(e,'max')) bad(pth+'.max','a multi-outcome random event writes max explicitly (ruling 244)');
       // ruling 293: the weights of an event with two outcomes or more add up to 1 within 0.005 (the engine still normalises). Only when every w is a valid number: a bad or missing w is reported above, once.
-      if(N>=2&&os.every(o=>o&&typeof o.w==='number'&&o.w>0)){ const sw=os.reduce((s,o)=>s+o.w,0); if(!(Math.abs(sw-1)<=0.005)) bad(pth+'.outcomes.w','the weights add up to '+sw.toFixed(4)+', not 1 +- 0.005 (ruling 293): the engine would normalise them, but a sum that is not 1 is almost always a mistake'); }
+      const osw=os.filter(o=>!isNone(o)); if(N>=2&&osw.every(o=>o&&typeof o.w==='number'&&o.w>0)){ const sw=osw.reduce((s,o)=>s+o.w,0); if(!(Math.abs(sw-1)<=0.005)) bad(pth+'.outcomes.w','the weights add up to '+sw.toFixed(4)+', not 1 +- 0.005 (ruling 293): the engine would normalise them, but a sum that is not 1 is almost always a mistake'); }
       if(!has(e,'cond')){ let d0=0; for(const o of os) if(o&&(o.effects||[]).some(x=>x&&has(x,'dRead')&&x.dRead!==0)) d0++;   // docs/world-format.md 5.8: n_e <= 12 for every event; without conditions n_e = (outcomes - 1) + dRead outcomes
         const n0=(N-1)+d0; if(n0>12) bad(pth+'.outcomes','n_e = (outcomes - 1) + conditions + outcomes with dRead != 0 = '+n0+' is above 12'); return; }
       const cp=pth+'.cond', cl=e.cond;
@@ -1463,6 +1464,20 @@ const world3=(function(){
         if(layerOK&&rk){ const g=L+'|'+(L==='L1'?'':String(c.target)), list=groups.get(g)||[], tag=rk+':'+rid, dup=list.find(x=>x.tag===tag); if(dup) bad(pc,'reads the same reading as cond['+dup.i+'] on the same layer and target (two readings of one thing are counted twice)'); list.push({i,tag}); groups.set(g,list); } });
       for(const [g,list] of groups) if(list.length>2) bad(cp,'at most 2 conditions on one layer and one target ('+g.replace('|',' ')+' has '+list.length+')');
       const ne=(N-1)+cl.length+dN; if(ne>12) bad(cp,'n_e = (outcomes - 1) + conditions + outcomes with dRead != 0 = '+ne+' is above 12'); };
+    // scenarioStart (handover/2026-11-19/assign-scenario-start.md): {freqKnob, p0, noneKey, requires?}. The event is one decision on a day drawn at the start; the none outcome is its "nothing came of it".
+    const scenarioStartCheck=(e,pth)=>{ const q=e.scenarioStart, ps=pth+'.scenarioStart';
+      if(!q||typeof q!=='object'||Array.isArray(q)){ bad(ps,'an object {freqKnob, p0, noneKey, requires?}'); return; }
+      for(const k of Object.keys(q)) if(!['freqKnob','p0','noneKey','requires'].includes(k)) bad(ps+'.'+k,'not a scenarioStart field');
+      if(has(e,'rate')) bad(pth+'.rate','a scenarioStart event has no rate (its day comes from the draw at the start)'); if(has(e,'rateKnob')) bad(pth+'.rateKnob','a scenarioStart event has no rateKnob (freqKnob is in scenarioStart)');
+      if(e.max!==1) bad(pth+'.max','a scenarioStart event has max 1 written');
+      if(!(typeof q.freqKnob==='string'&&has(KN,q.freqKnob))) bad(ps+'.freqKnob','a knob of this world file');
+      if(!(typeof q.p0==='number'&&q.p0>0&&q.p0<1)) bad(ps+'.p0','a number with 0 < p0 < 1');
+      const os=Array.isArray(e.outcomes)?e.outcomes:[], nj=os.findIndex(o=>o&&o.key===q.noneKey);
+      if(!(typeof q.noneKey==='string'&&nj>=0)) bad(ps+'.noneKey','the key of an outcome of this event (the one that is the none outcome)');
+      else { const o=os[nj], po=pth+'.outcomes['+nj+']'; if((o.effects||[]).length) bad(po+'.effects','the none outcome has no state effect'); if(o.publicKey!==null) bad(po+'.publicKey','the none outcome has publicKey null written'); }
+      if(os.length<2) bad(pth+'.outcomes','a scenarioStart event has the none outcome and at least one other');
+      if(q.requires!==undefined){ const r=(W.events||[]).find(x=>x&&x.id===q.requires); if(!(typeof q.requires==='string'&&r&&r.kind==='random'&&r!==e)) bad(ps+'.requires','the id of another random event of this world file');
+        else if(has(r,'scenarioStart')) bad(ps+'.requires','an event with scenarioStart is not a requires target'); } };
     (W.events||[]).forEach((e,ei)=>{ const pth='events['+ei+']'+(e&&e.id?'('+e.id+')':'');
       if(!e||!e.id||!e.name) { bad(pth,'id and name needed'); return; } if(String(e.id)[0]==='~') bad(pth+'.id','ids starting with ~ are kept for the recovery items (~rx.<clock>)');
       if(names[e.name]) bad(pth+'.name','same name as '+names[e.name]); names[e.name]=e.id;
@@ -1496,7 +1511,8 @@ const world3=(function(){
         if(e.dateAssume!==undefined){ const da=e.dateAssume, DS=Array.isArray(D)?D:[]; if(!da||typeof da!=='object') bad(pth+'.dateAssume','{<date>: knownAtAssume key}');
           else for(const k in da){ if(!DS.includes(k)) bad(pth+'.dateAssume.'+k,k+' is not one of the dates'); if(!has(KA,da[k])) bad(pth+'.dateAssume.'+k,JSON.stringify(da[k])+' is not in knownAtAssume'); } }
         if(!Array.isArray(e.outcomes)||!e.outcomes.length) bad(pth+'.outcomes','missing'); else e.outcomes.forEach((o,j)=>{ if(!(typeof o.w==='number'&&o.w>0)) bad(pth+'.outcomes['+j+'].w','a weight > 0'); }); }
-      else if(e.kind==='random'){ if(has(e,'dates')) bad(pth+'.dates','a random event has no dates'); if(!(typeof e.rate==='number'&&e.rate>0)) bad(pth+'.rate','a rate per year > 0');
+      else if(e.kind==='random'){ if(has(e,'dates')) bad(pth+'.dates','a random event has no dates'); if(!has(e,'scenarioStart')&&!(typeof e.rate==='number'&&e.rate>0)) bad(pth+'.rate','a rate per year > 0');
+        if(has(e,'scenarioStart')) scenarioStartCheck(e,pth);
         if(!Array.isArray(e.outcomes)||e.outcomes.length<1) bad(pth+'.outcomes','a random event has at least one outcome (several need key, w and an explicit max: docs/world-format.md 5.8)');
         if(has(e,'max')&&!(Number.isInteger(e.max)&&e.max>=1)) bad(pth+'.max','an integer >= 1');
         if(e.rateKnob!==undefined&&!(has(KN,e.rateKnob)&&Array.isArray(KN[e.rateKnob].options))) bad(pth+'.rateKnob','a knob with options');
@@ -1606,13 +1622,23 @@ const world3=(function(){
       if(Array.isArray(q.options)&&!q.options.some(o=>o.value===v)) throw new Error('knob '+k+': '+v+' is not one of its option values');
       if(q.flag&&v!==0&&v!==1) throw new Error('knob '+k+': 0 or 1'); K[k]=v; }
     return K; }
-  function start(W,knobs){ ensure(W); const K=knobsOf3(W,knobs), clocks={}, attrs={}, flags={}, locked={}, peak={};
+  // scenarioStart (handover/2026-11-19/assign-scenario-start.md): at the start, each start event that is open (its if holds on the start state) gets its day d = floor(T (1 - U^(1/f))), U = draw('world|<id>|day'),
+  // f = the value of its freqKnob: the earliest of f uniform days. S.scen = {<id>: d} exists only in a world that has such an event. internal = a call that only needs the clocks (the public replay): no draw, no days.
+  function scenDays(W,S,K,draw,internal){ const list=(W.events||[]).filter(e=>e.kind==='random'&&has(e,'scenarioStart')); if(!list.length) return; S.scen={}; if(internal) return;
+    const cal=calendar(W), g=reader(W,S); let d=null;
+    for(const e of list){ if(e.if!==undefined&&!cond(e.if,false)(g)) continue;
+      if(d===null){ if(typeof draw==='function') d=draw; else if(typeof draw==='number'&&isFinite(draw)) d=keyDraw(draw); else throw new Error('start: this world file has a scenario that is open ('+e.id+'), so the start needs draw(key) or a seed to draw its day (the engine does not pick its own)'); }
+      const q=e.scenarioStart, f=K[q.freqKnob], U=d('world|'+e.id+'|day'); let t=Math.min(cal.T-1,Math.max(0,Math.floor(cal.T*(1-Math.pow(U,1/f)))));
+      // the window: a day outside from..to is moved to the nearest day inside it
+      let lo=0, hi=cal.T-1; if(e.from){ lo=cal.dates.findIndex(x=>x>=e.from); if(lo<0) continue; } if(e.to){ for(hi=cal.T-1;hi>=0&&cal.dates[hi]>e.to;hi--); if(hi<0) continue; } if(lo>hi) continue;
+      S.scen[e.id]=Math.min(hi,Math.max(lo,t)); } }
+  function start(W,knobs,draw,internal){ ensure(W); const K=knobsOf3(W,knobs), clocks={}, attrs={}, flags={}, locked={}, peak={};
     for(const c in W.clocks){ const q=W.clocks[c], L=q.levels.length, k=K['start_'+c]; let v=k!==undefined?k:q.start;
       if(!(Number.isInteger(v)&&v>=0&&v<L)) throw new Error('start_'+c+': a level 0..'+(L-1)); clocks[c]=v; peak[c]=v; if(v>=q.lock) locked[c]={day:-1,by:'start'}; }
     for(const a in W.attrs){ const k=K['start_'+a]; const v=k!==undefined?k:W.attrs[a].start; if(!(v>=0&&v<=100)) throw new Error('start_'+a+': 0..100'); attrs[a]=v; }
     for(const f in W.flags) flags[f]=!!W.flags[f].start; for(const k in W.knobs) if(W.knobs[k].flag) flags[k]=!!K[k];
     const S={day:0,cursor:0,clocks,attrs,flags,locked,fired:{},peak}; if(W.memory){ S.mem={}; for(const m in W.memory) S.mem[m]=[]; }   // spec 5: S.mem only when the world has memory
-    return S; }
+    scenDays(W,S,K,draw,internal); return S; }
   // ---- push and probability (docs/world-math.md 4, 5) ----
   const lvlOf=(W,S,i)=>has(W.clocks,i)?S.clocks[i]/(levelsN(W,i)-1):clip((S.attrs[i]-W.attrs[i].rest)/50,-1,1);
   // the terms of B_j: cross cells, the state's own self term, the input ports (a port at its default or with a 0 cell adds no term)
@@ -1662,7 +1688,7 @@ const world3=(function(){
   //   clip   {layer, target, seg, add}: seg table (L3 only: tau_k - t_k), cond (the layer's condition sum clipped at shift_max), hazard (L1: h clipped at hazard_min or hazard_max); after minus before
   //   pp     {player, pp}: the table is one participant, each condition another; exact Shapley share of p - base, in percentage points (2^n subsets, n = 1 + conditions)
   // the three layers add up to: L1 logit h - logit h0, L2 A_b - log sum of w over the class, L3 a_k - log w_k. The probabilities are not taken from here: scanNew has them already.
-  function explainNew(W,X,os,w,sw,tau,ch,xs,h0,h,rnd,dm){ const cls=X.cls, bs=X.classes, N=os.length, nC=X.conds.length, nP=1+nC, lg=Math.log, cl=v=>clip(v,-dm,dm);
+  function explainNew(W,X,os,w,sw,tau,ch,xs,h0,h,rnd,dm,hzf){ const cls=X.cls, bs=X.classes, N=os.length, nC=X.conds.length, nP=1+nC, lg=Math.log, cl=v=>clip(v,-dm,dm);
     const adds=X.conds.map((c,i)=>c.slope*xs[i]), tkey=(o,j)=>o.key!==undefined?o.key:String(j);
     const sumOf=(layer,target)=>{ let s=0; X.conds.forEach((c,i)=>{ if(c.layer===layer&&(layer==='L1'||c.target===target)) s+=adds[i]; }); return s; };
     // layer-ok: 1 beta here is the slope of a condition in the reason items, a field name set by spec-w4a-conditional section 11, not a price loading
@@ -1678,7 +1704,7 @@ const world3=(function(){
     // p of every row when only the participants in mask are on (bit 0 the table, bit i + 1 condition i): the general formula of A.1 with every clip applied again
     function vOf(mask){ const t=tau.map(v=>(mask&1)?v:0); let c1=0; const c2=new Map(), c3=new Map();
       X.conds.forEach((c,i)=>{ if(!((mask>>(i+1))&1)) return; if(c.layer==='L1') c1+=adds[i]; else { const m=c.layer==='L2'?c2:c3; m.set(c.target,(m.get(c.target)||0)+adds[i]); } });
-      const Tm=N===1?t[0]:lg(os.reduce((s,o,j)=>s+w[j]*Math.exp(t[j]),0))-lg(sw), hm=rnd?hazard(W,h0,cl(Tm)+cl(c1)):1;
+      const Tm=N===1?t[0]:lg(os.reduce((s,o,j)=>s+w[j]*Math.exp(t[j]),0))-lg(sw), hm=rnd?(hzf?hzf(cl(Tm)+cl(c1)):hazard(W,h0,cl(Tm)+cl(c1))):1;
       const A=bs.map(b=>lg(os.reduce((s,o,j)=>s+(cls[j]===b?w[j]*Math.exp(t[j]):0),0))+cl(c2.get(b)||0)), a=os.map((o,j)=>lg(w[j])+t[j]+(o.key!==undefined?cl(c3.get(o.key)||0):0));
       const mA=Math.max(...A), zA=A.reduce((s,v)=>s+Math.exp(v-mA),0), ma=bs.map(b=>Math.max(...a.filter((v,j)=>cls[j]===b))), za=bs.map((b,i)=>a.reduce((s,v,j)=>s+(cls[j]===b?Math.exp(v-ma[i]):0),0));
       const v=os.map((o,j)=>{ const i=bs.indexOf(cls[j]); return hm*(Math.exp(A[i]-mA)/zA)*(Math.exp(a[j]-ma[i])/za[i]); }); if(rnd) v.push(1-hm); return v; }
@@ -1692,7 +1718,11 @@ const world3=(function(){
         return out.concat(layer('L2',b,t2.get(b),0), layer('L3',tkey(o,j),raw,tau[j]!==raw?tau[j]-raw:0), pp(j)); },
       none:()=>l1().concat(pp(N)) }; }
   // one decision of a new-shape event: the rows (one per outcome, then "nothing today" for a random event) and their probabilities
-  function scanNew(W,cal,K,S,ports,k,e,ii,h0,lite){ const X=xinfo(W,e), os=e.outcomes, N=os.length, rnd=e.kind==='random', dm=W.assume.shift_max.value, cls=X.cls;
+  // scenarioStart: the engine reads the event without its none outcome (the others keep their weights and conditions); h = 1 - p_none, and h0 = 1 - p0^f, so logit h = logit h0 + clip(T) + C1 is
+  // logit p_none = logit(p0^f) - clip(T) - C1, with no clip at hazard_max (p_none is not a daily hazard). The rows go back to the outcome numbers of the whole event, none last.
+  const SUBE=new WeakMap();
+  function subOf(W,e0){ let s=SUBE.get(e0); if(!s){ s=Object.assign({},e0,{outcomes:e0.outcomes.filter(o=>o.key!==e0.scenarioStart.noneKey)}); xinfo(W,s).path='gen'; SUBE.set(e0,s); } return s; }
+  function scanNew(W,cal,K,S,ports,k,e0,ii,h0,lite,forced){ const SS=e0.scenarioStart, e=SS?subOf(W,e0):e0, X=xinfo(W,e), os=e.outcomes, N=os.length, rnd=e.kind==='random', dm=W.assume.shift_max.value, cls=X.cls;
     const dayStart=W.days&&W.days[S.day]&&W.days[S.day].startAt||null, theta=(!rnd&&e.occursAt&&e.occursAt[ii])||dayStart;   // theta(e): the time the reading item takes effect (ruling 188)
     const ch=os.map(o=>{ const ws=why(W,S,K,ports,dirs(W,S,o.effects)); return {ws,sh:shiftOf(W,ws)}; });
     const tau=ch.map(c=>c.sh);
@@ -1702,20 +1732,27 @@ const world3=(function(){
     const C1=clip(c1,-dm,dm);
     const C2=b=>clip(c2.get(b)||0,-dm,dm);
     const C3=key=>clip(c3.get(key)||0,-dm,dm);
-    let p, h=1;
-    if(X.path==='i'){ h=hazard(W,h0,tau[0]); p=[h]; }
+    let p, h=1, sNone=0; const hz=s=>SS?(s===0?h0:logistic(logit(h0)+s)):hazard(W,h0,s);
+    if(X.path==='i'){ h=forced?1:hazard(W,h0,tau[0]); p=[h]; }
     else if(X.path==='ii'||X.path==='iii'){ const adj=os.map((o,j)=>w[j]*Math.exp(tau[j]+(X.path==='iii'?C2(cls[j]):0))), ta=adj.reduce((s,v)=>s+v,0); p=adj.map(v=>v/ta); }
     else { const bs=X.classes, T=N===1?tau[0]:Math.log(os.reduce((s,o,j)=>s+w[j]*Math.exp(tau[j]),0))-Math.log(sw);
-      if(rnd) h=hazard(W,h0,clip(T,-dm,dm)+C1);
+      if(rnd){ h=forced?1:hz(clip(T,-dm,dm)+C1); sNone=-(clip(T,-dm,dm)+C1); }
       const A=bs.map(b=>Math.log(os.reduce((s,o,j)=>s+(cls[j]===b?w[j]*Math.exp(tau[j]):0),0))+C2(b));
       const a=os.map((o,j)=>Math.log(w[j])+tau[j]+(o.key!==undefined?C3(o.key):0));
       const mA=Math.max(...A), zA=A.reduce((s,v)=>s+Math.exp(v-mA),0), ma=bs.map(b=>Math.max(...a.filter((v,j)=>cls[j]===b))), za=bs.map((b,i)=>a.reduce((s,v,j)=>s+(cls[j]===b?Math.exp(v-ma[i]):0),0));
       p=os.map((o,j)=>{ const i=bs.indexOf(cls[j]); return h*(Math.exp(A[i]-mA)/zA)*(Math.exp(a[j]-ma[i])/za[i]); }); }
-    const ex=lite?null:explainNew(W,X,os,w,sw,tau,ch,xs,h0,h,rnd,dm);   // spec 11: the table, cond, clip and pp items; a step needs only p
+    const ex=lite?null:explainNew(W,X,os,w,sw,tau,ch,xs,h0,h,rnd,dm,SS?(s=>hz(s)):undefined);   // spec 11: the table, cond, clip and pp items; a step needs only p
     const rows=os.map((o,j)=>{ const r={j,name:o.name}; if(has(o,'key')) r.key=o.key; r.branch=cls[j]; if(has(o,'sev')) r.sev=o.sev;
       r.p=p[j]; r.base=rnd?h0*w[j]/sw:w[j]/sw; r.shift=ch[j].sh; r.why=ex?ch[j].ws.concat(ex.row(j)):ch[j].ws; r.tags=(o.tags||[]).slice(); r.effects=o.effects; return r; });
-    if(rnd) rows.push({j:-1,name:null,branch:null,p:1-h,base:1-h0,why:ex?ex.none():[]});
-    return rnd?{kind:'r',at:k,e,choices:rows}:{kind:'s',at:k,e,ii,choices:rows}; }
+    if(SS){ const idx=[]; e0.outcomes.forEach((o,j)=>{ if(o.key!==SS.noneKey) idx.push(j); }); rows.forEach((r,jj)=>{ r.j=idx[jj]; });
+      const nj=e0.outcomes.findIndex(o=>o.key===SS.noneKey), no=e0.outcomes[nj]; rows.push({j:nj,name:no.name,key:no.key,branch:classKeyOf(no,nj),p:1-h,base:1-h0,shift:sNone,why:ex?ex.none():[],tags:(no.tags||[]).slice(),effects:no.effects||[]}); }
+    else if(rnd) rows.push({j:-1,name:null,branch:null,p:1-h,base:1-h0,why:ex?ex.none():[]});
+    return rnd?{kind:'r',at:k,e:e0,choices:rows}:{kind:'s',at:k,e:e0,ii,choices:rows}; }
+  // requires: the event that has to have happened before a scenarioStart event, given as a decision of its own on the same day. Its probabilities are those of its outcomes given it happens, P(b) P(k|b) (no nothing row).
+  function reqItem(W,cal,K,S,ports,k,rq,by,lite){ const h0=1-Math.exp(-rq.rate*(rq.rateKnob!==undefined?K[rq.rateKnob]:1)/cal.Y); let it;
+    if(shapeOf(W,rq)) it=scanNew(W,cal,K,S,ports,k,rq,undefined,h0,true,true);
+    else { const o=rq.outcomes[0], ws=why(W,S,K,ports,dirs(W,S,o.effects)); it={kind:'r',at:k,e:rq,choices:[{j:0,name:o.name,p:1,base:h0,shift:shiftOf(W,ws),why:ws,tags:(o.tags||[]).slice(),effects:o.effects}]}; }
+    it.choices=it.choices.filter(c=>c.j>=0); it.reqFor=by.id; return it; }
   // ---- the agenda scan: skip what cannot happen today (no draw, no record) ----
   function scan(W,cal,K,S,ports,lite){ if(S.day>=cal.T) return {kind:'end'}; const dayStart=W.days&&W.days[S.day]&&W.days[S.day].startAt||null, sch=cal.byDay.get(S.day)||[], nS=sch.length, nR=cal.rand.length, nX=cal.rx.length, date=cal.dates[S.day], g=reader(W,S);
     for(let k=S.cursor;k<nS+nR+nX;k++){
@@ -1724,7 +1761,11 @@ const world3=(function(){
         const ch=e.outcomes.map(o=>{ const ws=why(W,S,K,ports,dirs(W,S,o.effects)); return {o,ws,sh:shiftOf(W,ws)}; }), tw=e.outcomes.reduce((s,o)=>s+o.w,0);
         const adj=ch.map((c,j)=>e.outcomes[j].w*Math.exp(c.sh)), ta=adj.reduce((s,x)=>s+x,0);
         return {kind:'s',at:k,e,ii,choices:e.outcomes.map((o,j)=>({j,name:o.name,p:adj[j]/ta,base:o.w/tw,shift:ch[j].sh,why:ch[j].ws,tags:(o.tags||[]).slice(),effects:o.effects}))}; }
-      if(k<nS+nR){ const e=W.events[cal.rand[k-nS]]; if((S.fired[e.id]||0)>=(e.max===undefined?1:e.max)) continue; if((e.from&&date<e.from)||(e.to&&date>e.to)) continue;
+      if(k<nS+nR){ const e=W.events[cal.rand[k-nS]]; if((S.fired[e.id]||0)>=(e.max===undefined?1:e.max)) continue;
+        if(e.scenarioStart){ const q=e.scenarioStart; if(!S.scen||S.scen[e.id]!==S.day) continue;   // its one day, from S.scen; the daily hazard does not run for it
+          if(e.if!==undefined&&!cond(e.if,false)(reader(W,S,dayStart))) continue;
+          const rq=q.requires?W.events.find(x=>x.id===q.requires):null; if(rq&&(S.fired[rq.id]||0)===0) return reqItem(W,cal,K,S,ports,k,rq,e,lite);   // fired 0 means max is not used up (max >= 1)
+          return scanNew(W,cal,K,S,ports,k,e,undefined,1-Math.pow(q.p0,K[q.freqKnob]),lite); } if((e.from&&date<e.from)||(e.to&&date>e.to)) continue;
         if(e.if!==undefined&&!cond(e.if,false)(reader(W,S,dayStart))) continue; const o=e.outcomes[0], m=e.rateKnob!==undefined?K[e.rateKnob]:1, h0=1-Math.exp(-e.rate*m/cal.Y);
         if(shapeOf(W,e)) return scanNew(W,cal,K,S,ports,k,e,undefined,h0,lite);
         const ws=why(W,S,K,ports,dirs(W,S,o.effects)), sh=shiftOf(W,ws), h=hazard(W,h0,sh);
@@ -1738,6 +1779,8 @@ const world3=(function(){
       grade:e.grade===undefined?null:e.grade,psrc:e.psrc===undefined?null:e.psrc,expect:e.expect===undefined?null:e.expect};
     if(it.kind==='s'){ o.occursAt=e.occursAt?e.occursAt[it.ii]:null; o.knownAt=e.knownAt?e.knownAt[it.ii]:null; }
     if(it.kind==='x'){ o.state=it.c; o.from=it.from; o.to=it.to; } if(has(e,'knownAtRule')) o.knownAtRule=e.knownAtRule; if(has(e,'pSrcOut')) o.pSrcOut=e.pSrcOut;
+    if(e.scenarioStart){ const c=it.choices.find(x=>x.key===e.scenarioStart.noneKey); o.scenarioDay=S.scen?S.scen[e.id]:null; o.pNone=c?c.p:null; }   // scenarioStart: its day and the chance now that nothing comes of it
+    if(it.reqFor) o.requiredBy=it.reqFor;
     o.choices=it.choices; return o; }
   function apply(W,S,e,effects,t){ for(const x of effects){
       if(x.clock!==undefined){ const c=x.clock, q=W.clocks[c], cur=S.clocks[c]; let v=x.d!==undefined?cur+x.d:x.set!==undefined?x.set:Math.max(cur,x.min);
@@ -1768,9 +1811,9 @@ const world3=(function(){
     if(input&&input.out!==undefined){ out=input.out; u='chosen'; if(!ch.some(c=>c.j===out)) throw new Error('step: '+it.e.id+' has no outcome '+out); }
     else if(input&&typeof input.u==='number'&&input.u>=0&&input.u<1){ u=input.u; let acc=0; out=ch[ch.length-1].j; for(const c of ch){ acc+=c.p; if(u<acc){ out=c.j; break; } } }
     else throw new Error('step: a decision needs {out: j} or {u} in [0, 1)');
-    const c=ch.find(x=>x.j===out), t=R.day; R.cursor=it.at+1;
+    const c=ch.find(x=>x.j===out), t=R.day; R.cursor=it.reqFor?it.at:it.at+1;   // a required event does not use up the slot of the scenarioStart event after it
     if(out>=0){ apply(W,R,it.e,c.effects,t); book(W,cal,R,it.e,it.ii,out,t); }
-    const rec=withKey(c,{type:'decide',ev:it.e.id,inst:it.kind==='s'?it.ii:(S.fired[it.e.id]||0),day:t,out,p:c.p,u});
+    const rec=withKey(c,{type:'decide',ev:it.e.id,inst:it.kind==='s'?it.ii:(S.fired[it.e.id]||0),day:t,out,p:c.p,u}); if(it.reqFor) rec.reqFor=it.reqFor;   // a required event given on the day of a scenarioStart event: its p has no "does it happen" factor
     if(it.kind==='x'){ rec.kind='relax'; rec.state=it.c; rec.from=it.from; rec.to=R.clocks[it.c]; }   // ruling 162: a recovery is its own kind of record
     return {state:R,record:rec}; }
   // reference draw: draw(key) = a 32-bit hash of seed + '|' + key, mixed, divided by 2^32 (docs/world-format.md 9.4)
@@ -1783,10 +1826,10 @@ const world3=(function(){
     for(;;){ const pr=portsAt(ports,st.day), P=pendingLite(W,st,knobs,pr); if(P.type==='pathEnd'||(P.type==='decide'&&P.kind==='scheduled')) return {state:st,records,pending:pending(W,st,knobs,pr)};
       const r=step(W,st,knobs,P.type==='decide'?{u:d('world|'+P.key)}:undefined,pr); st=r.state; records.push(r.record); } }
   // the whole path; o.trace keeps every record, o.daily the state after each day end, o.ports = {port: value} or a function of the day
-  function run(W,knobs,draw,o){ o=o||{}; const d=drawOf(draw,'run'); let S=start(W,knobs); const records=[], trace=o.trace?[]:null, daily=o.daily?[]:null;
+  function run(W,knobs,draw,o){ o=o||{}; const d=drawOf(draw,'run'); let S=start(W,knobs,d); const records=[], trace=o.trace?[]:null, daily=o.daily?[]:null;
     for(;;){ const pr=portsAt(o.ports,S.day), P=pendingLite(W,S,knobs,pr); if(P.type==='pathEnd') break;
       const r=step(W,S,knobs,P.type==='decide'?{u:d('world|'+P.key)}:undefined,pr); S=r.state; if(trace) trace.push(r.record);
-      if(r.record.type==='decide'&&r.record.out>=0){ const x=r.record, y=withKey(x,{ev:x.ev,inst:x.inst,day:x.day,out:x.out,p:x.p,u:x.u}); if(x.kind==='relax') Object.assign(y,{kind:'relax',state:x.state,from:x.from,to:x.to}); records.push(y); }
+      if(r.record.type==='decide'&&r.record.out>=0){ const x=r.record, y=withKey(x,{ev:x.ev,inst:x.inst,day:x.day,out:x.out,p:x.p,u:x.u}); if(x.reqFor) y.reqFor=x.reqFor; if(x.kind==='relax') Object.assign(y,{kind:'relax',state:x.state,from:x.from,to:x.to}); records.push(y); }
       if(daily&&r.record.type==='dayEnd') daily.push({day:r.record.day,clocks:Object.assign({},S.clocks),attrs:Object.assign({},S.attrs),flags:Object.assign({},S.flags)}); }
     const R={state:S,records,landing:landing(W,S)}; if(trace) R.trace=trace; if(daily) R.daily=daily; return R; }
   function landing(W,S){ ensure(W); const g=reader(W,S); for(const l of W.landings) if(cond(l.if,true)(g)){ const mk=l.mark&&cond(l.mark.if,true)(g)?l.mark.name:null;
@@ -1797,7 +1840,7 @@ const world3=(function(){
     for(const a in W.attrs){ const q=W.attrs[a]; add('attr.'+a+'.pull',q.pull,'per day (rest '+q.rest+')',q.grade,q.src); if(q.self) add('attr.'+a+'.self',q.self,'points',q.grade,q.src); }
     for(const k in W.assume) add('assume.'+k,W.assume[k].value,W.assume[k].unit,W.assume[k].grade,W.assume[k].src);
     for(const k in W.knobs){ const q=W.knobs[k]; add('knob.'+k,q.def,q.unit,q.grade,q.src); }
-    for(const e of W.events) add('event.'+e.id+'.p',e.kind==='random'?e.rate:e.outcomes.map(o=>o.w).join(' / '),e.kind==='random'?'times per year'+(e.rateKnob?' x knob '+e.rateKnob:''):'weights',e.grade,e.psrc);
+    for(const e of W.events) add('event.'+e.id+'.p',e.kind==='random'?(e.scenarioStart?e.scenarioStart.p0:e.rate):e.outcomes.map(o=>o.w).join(' / '),e.kind==='random'?(e.scenarioStart?'chance of the none outcome when knob '+e.scenarioStart.freqKnob+' is 1 (p0 ^ the knob)':'times per year'+(e.rateKnob?' x knob '+e.rateKnob:'')):'weights',e.grade,e.psrc);
     // spec 13: only a world that has the new fields gets more rows. A condition: the coefficient ln(or) / (hi.x - lo.x) of its anchor, its note the two situations and the odds ratio; grade and src only when the anchor writes them
     for(const e of W.events) if(Array.isArray(e.cond)) e.cond.forEach((c,i)=>{ const a=c.anchor;
       // layer-ok: 1 beta is the name of the coefficient of a condition in the parameter list (spec-w4a-conditional 13), not a price loading
@@ -1824,7 +1867,7 @@ const world3=(function(){
       const rule=e.knownAtRule, A=rule!==undefined&&rule!==null&&W.knownAtAssume?W.knownAtAssume[rule]:null;
       return {r,date,kind:'r',e,name:e.name,effects:o.effects,K:A&&A.byDate&&A.byDate[date]||null,assume:rule===undefined?null:rule}; }); }
   // public replay: items i with use(i) true, day ends with dayEnd(t) true; stop before item index stop (if given). Snapshots after each day end.
-  function replay(W,cal,knobs,items,use,dayEnd,stop){ const S=start(W,knobs), snaps=[], lastK={}, evN={}, evK={}; let t=0;
+  function replay(W,cal,knobs,items,use,dayEnd,stop){ const S=start(W,knobs,null,true), snaps=[], lastK={}, evN={}, evK={}; let t=0;
     const endDay=t=>{ if(dayEnd(t)){ for(const a in W.attrs){ const q=W.attrs[a]; S.attrs[a]+=(q.rest-S.attrs[a])*q.pull; } } snaps[t]=copy(S); };
     for(let i=0;i<items.length;i++){ const it=items[i]; if(stop!==undefined&&i>=stop) break; while(t<it.r.day){ endDay(t); t++; }
       if(use(it)){ apply(W,S,{id:it.r.ev},it.effects,it.r.day); if(it.e) book(W,cal,S,it.e,it.r.inst,it.r.out,it.r.day);   // a recovery has no e: nothing to book
@@ -1851,8 +1894,10 @@ const world3=(function(){
     return D; }
   // the probability of the outcome that happened, in the substituted state S_sub (docs/world-math.md 11.3); no ports (their values are not in the view)
   function scenarioP(W,K,S,it){
+    if(it.r&&it.r.reqFor){ const e=it.e, cal=calendar(W); if(!shapeOf(W,e)) return 1; const h0=1-Math.exp(-e.rate*(e.rateKnob!==undefined?K[e.rateKnob]:1)/cal.Y);   // a required decision: P(b) P(k|b), as the engine gave it
+      return scanNew(W,cal,K,Object.assign({},S,{day:it.r.day}),null,0,e,undefined,h0,true,true).choices.find(c=>c.j===it.r.out).p; }
     // an event of the new shape (conditions, several outcomes, key/branch/sev): the same scan as the engine's, on S_sub, at the reader's own day; ports read 0 (not public)
-    if(it.kind!=='relax'&&shapeOf(W,it.e)){ const e=it.e, cal=calendar(W), m=e.rateKnob!==undefined?K[e.rateKnob]:1, h0=e.kind==='random'?1-Math.exp(-e.rate*m/cal.Y):undefined;
+    if(it.kind!=='relax'&&shapeOf(W,it.e)){ const e=it.e, cal=calendar(W), m=e.rateKnob!==undefined?K[e.rateKnob]:1, h0=e.kind==='random'?(e.scenarioStart?1-Math.pow(e.scenarioStart.p0,K[e.scenarioStart.freqKnob]):1-Math.exp(-e.rate*m/cal.Y)):undefined;
       const X=scanNew(W,cal,K,Object.assign({},S,{day:it.r.day}),null,0,e,e.kind==='scheduled'?it.r.inst:undefined,h0,true); return X.choices.find(c=>c.j===it.r.out).p; }
     if(it.kind==='s'){ const e=it.e, sh=e.outcomes.map(o=>shiftOf(W,why(W,S,K,null,dirs(W,S,o.effects)))), adj=e.outcomes.map((o,j)=>o.w*Math.exp(sh[j])), ta=adj.reduce((a,b)=>a+b,0); return adj[it.r.out]/ta; }
     const Y=YEAR[W.calendar]; if(it.kind==='relax'){ const s=Math.sign(it.r.to-it.r.from), q=W.clocks[it.c]; return hazard(W,1-Math.exp(-q.relax/Y),shiftOf(W,why(W,S,K,null,[[it.c,s]]))); }
@@ -1897,7 +1942,7 @@ const world3=(function(){
     const subState=(R,it,dep,inputs)=>{ const Ssub=copy(R.S);
     for(const i of states){ const q=qOf(W,i), v=pubOf(q.public), tgt=has(W.clocks,i)?Ssub.clocks:Ssub.attrs; let basis=null, period=null, asOfI=null;
         if(v==='never'){ tgt[i]=has(W.clocks,i)?(has(q,'home')?q.home:0):q.rest; basis='rest'; }
-        else if(v!=='now'){ const d=it.r.day-v.lag, snap=d>=0?R.snaps[d]:start(W,knobs); tgt[i]=(has(W.clocks,i)?snap.clocks:snap.attrs)[i]; basis='lagged'; period=d>=0?{from:cal.dates[d],to:cal.dates[d],tz:dayTz}:null; }
+        else if(v!=='now'){ const d=it.r.day-v.lag, snap=d>=0?R.snaps[d]:start(W,knobs,null,true); tgt[i]=(has(W.clocks,i)?snap.clocks:snap.attrs)[i]; basis='lagged'; period=d>=0?{from:cal.dates[d],to:cal.dates[d],tz:dayTz}:null; }
         else if(M.has(i)){ basis='replay'; asOfI=R.lastK[i]===undefined?null:R.lastK[i]; }
         if(inputs&&basis&&dep.has(i)) inputs.push({quantityId:i,basis,value:readingOf(W,i,Ssub),observedPeriod:period,asOf:asOfI,releases:null}); }
       return Ssub; };
@@ -2492,6 +2537,7 @@ const WORLD3 = {
       knownAtWhy: '演習多在開始當天由官方或媒體公布',
       pSrcOut: 'scenario',
       desc: '當事方：中國對台灣，或中、美、日、韓、北韓、菲律賓之間。爭點：主權與航行。大規模演習、封鎖演練、動員或飛彈試射；收場看它按期結束、延長、擦槍走火，或之後重啟對話',
+      blurb: '東亞出現大規模軍演或武力展示，市場開始替地緣風險加價。',
       outcomes: [
         { key: 'ended', publicKey: null, name: '演習按期結束', branch: 'end', w: 0.7, tags: ['down'], effects: [{ clock: 'hostility', min: 1 }, { attr: 'threat', d: 15 }] },
         { key: 'prolonged', publicKey: null, name: '延長或常態化（封鎖演練、常駐巡邏）', branch: 'escalate', sev: 0, w: 0.15, tags: ['down'], effects: [{ clock: 'hostility', min: 1 }, { attr: 'threat', d: 20 }] },
@@ -2510,6 +2556,7 @@ const WORLD3 = {
       knownAtWhy: '交火與傷亡通常當天由當事國公布',
       pSrcOut: 'scenario',
       desc: '當事方：東亞國家之間（含海警、民兵船）。爭點：島礁、海域、邊界。交火、攻擊、扣押、撞擊造成傷亡或擊沉擊落；收場看各自收手、連續報復、擴大成多日交火，或立刻談判。不動武的經濟與外交報復不在這個情勢（由 tariffUp 的對手反制表示）',
+      blurb: '東亞國家之間發生交火或攻擊，避險情緒升溫，亞洲股市承壓。',
       outcomes: [
         { key: 'contained', publicKey: null, name: '單次交火後各自收手', branch: 'contain', w: 0.6, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 20 }] },
         { key: 'spiral', publicKey: null, name: '連續報復', branch: 'escalate', sev: 0, w: 0.2, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 35 }] },
@@ -2529,6 +2576,7 @@ const WORLD3 = {
       knownAtWhy: '開戰當天全世界知道',
       pSrcOut: 'scenario',
       desc: '當事方：中、美、日、台、南北韓之間。持續的國家間交戰；收場只分規模（海空有限交戰或全面交戰）；戰爭怎麼結束（短期停火、停火線凍結、斡旋協議、一方政權更迭或退出、轉成長期封鎖與經濟戰）另由 warCeasefire 表示',
+      blurb: '東亞大國直接開戰，全球市場進入避險，供應鏈與晶片首當其衝。',
       outcomes: [
         { key: 'limited', publicKey: null, name: '海空有限交戰', branch: 'war', sev: 0, w: 0.7, tags: ['down'], effects: [{ clock: 'hostility', set: 3 }, { attr: 'threat', d: 40 }, { flag: 'fWar', v: true }] },
         { key: 'full', publicKey: null, name: '全面交戰（攻擊本土與基地）', branch: 'war', sev: 1, w: 0.3, tags: ['down'], effects: [{ clock: 'hostility', set: 3 }, { attr: 'threat', d: 70 }, { flag: 'fWar', v: true }, { attr: 'dollar', d: 10, noMod: true }] } ],
@@ -2546,6 +2594,7 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；消息在發生日之後第一個開盤前已知',
       pSrcOut: 'scenario',
       desc: '當事方：交戰各方與斡旋的第三方。東亞大國交戰之後的停火談判；收場看停火線凍結（含無和約的長期僵持）、第三方斡旋的協議、一方政權更迭或退出，或談判破裂。破裂之後可以再談（max 3），停了就不再開',
+      blurb: '東亞戰事走向停火或談判，結果決定風險能退到什麼程度。',
       outcomes: [
         { key: 'truce', publicKey: null, name: '停火，停火線凍結（無和約的長期僵持也算）', branch: 'truce', w: 0.6, tags: ['up'], effects: [{ attr: 'threat', d: -30 }, { clock: 'hostility', d: -1 }] },
         { key: 'settlement', publicKey: null, name: '第三方斡旋，簽署協議', branch: 'deal', w: 0.2, tags: ['up'], effects: [{ attr: 'threat', d: -45 }, { clock: 'hostility', d: -1 }] },
@@ -2562,6 +2611,7 @@ const WORLD3 = {
       knownAtWhy: '行政命令與公告當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：美國與主要貿易對手（對手的反制管制也算，例如稀土、鎵鍺）。宣布或威脅提高關稅、擴大晶片與設備出口管制；收場看照實施、全面加碼、延後豁免或被法院擋下、或換成協議',
+      blurb: '關稅或出口管制加碼，貿易與科技供應鏈的成本與不確定性上升。',
       outcomes: [
         { key: 'imposed', publicKey: null, name: '照宣布實施（含晶片與設備出口管制）', branch: 'impose', sev: 0, w: 0.45, tags: ['down'], effects: [{ clock: 'tradeBarrier', d: 1 }, { attr: 'threat', d: 5 }, { attr: 'aiUsage', d: -5, noMod: true }] },
         { key: 'imposedBig', publicKey: null, name: '全面加碼（多國、多品項）', branch: 'impose', sev: 1, w: 0.1, tags: ['down'], effects: [{ clock: 'tradeBarrier', d: 2 }, { attr: 'threat', d: 10 }, { attr: 'aiUsage', d: -10, noMod: true }, { attr: 'usDoubt', d: 10, noMod: true }] },
@@ -2580,6 +2630,7 @@ const WORLD3 = {
       knownAtWhy: '協議與公告當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：美國與主要貿易對手。談判期限屆滿或峰會；收場看部分協議或休兵、全面協議、延長談判，或破局加碼',
+      blurb: '貿易談判來到期限或峰會，談成能讓市場鬆一口氣，破局則再添壓力。',
       outcomes: [
         { key: 'partial', publicKey: null, name: '部分協議、休兵或單方面下調關稅（含框架協議但執行不足）', branch: 'deal', sev: 0, w: 0.45, tags: ['up'], effects: [{ clock: 'tradeBarrier', d: -1 }] },
         { key: 'comprehensive', publicKey: null, name: '全面協議', branch: 'deal', sev: 1, w: 0.1, tags: ['up'], effects: [{ clock: 'tradeBarrier', d: -2 }] },
@@ -2598,6 +2649,7 @@ const WORLD3 = {
       knownAtWhy: '協議與會談當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：美、中、台、日、南北韓、菲律賓之間（和東亞對峙鐘的範圍相同；含南北韓峰會、美朝峰會）。峰會、高層會談、恢復軍事熱線；收場看具體緩和、實質協議、無果，或會後關係惡化',
+      blurb: '東亞與美中展開外交接觸，緊張情勢有機會降溫。',
       outcomes: [
         { key: 'thaw', publicKey: null, name: '具體緩和（熱線、聯合聲明）', branch: 'thaw', sev: 0, w: 0.5, tags: ['up'], effects: [{ attr: 'threat', d: -20 }] },
         { key: 'accord', publicKey: null, name: '實質協議（停火、撤軍、互不侵犯）', branch: 'thaw', sev: 1, w: 0.1, tags: ['up'], effects: [{ attr: 'threat', d: -35 }, { clock: 'hostility', d: -1 }] },
@@ -2617,6 +2669,7 @@ const WORLD3 = {
       knownAtWhy: '開戰當天全世界知道',
       pSrcOut: 'scenario',
       desc: '當事方：歐洲、中東等地的國家。國家間戰爭爆發，戰場或制裁碰到原油生產或運輸；東亞對峙鐘不動。收場看數週內停火，或持續戰爭與能源受擾；後續停火另由 farWarCeasefire 表示',
+      blurb: '東亞以外爆發國家間戰爭並牽動原油，能源價格與通膨預期跟著動。',
       outcomes: [
         { key: 'short', publicKey: null, name: '短期交火，數週內停火', branch: 'short', w: 0.45, tags: ['down'], effects: [{ attr: 'threat', d: 15 }, { attr: 'oil', d: 15, noMod: true }, { attr: 'vol', d: 10, noMod: true }] },
         { key: 'war', publicKey: null, name: '持續戰爭，能源受擾', branch: 'prolonged', sev: 0, w: 0.45, tags: ['down'], effects: [{ attr: 'threat', d: 25 }, { attr: 'oil', d: 25, noMod: true }, { attr: 'vol', d: 20, noMod: true }] },
@@ -2633,6 +2686,7 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；消息在發生日之後第一個開盤前已知',
       pSrcOut: 'scenario',
       desc: '當事方：東亞以外交戰的各方與斡旋者。停火、和約，或停火破裂；fired() 不退場，戰事已結束時也可能再發生一次（已知限制，max 與 farWar 同為 2）',
+      blurb: '東亞以外的戰事走向停火或和約，能源與避險壓力可能退去。',
       outcomes: [
         { key: 'truce', publicKey: null, name: '停火或和約', branch: 'truce', w: 0.6, tags: ['up'], effects: [{ attr: 'threat', d: -20 }, { attr: 'oil', d: -15, noMod: true }] },
         { key: 'stalled', publicKey: null, name: '談判拖延', branch: 'stalled', w: 0.3, tags: ['flat'], effects: [] },
@@ -2650,6 +2704,7 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；消息在發生日之後第一個開盤前已知',
       pSrcOut: 'scenario',
       desc: '當事方：參戰各國、護航聯盟、航運與保險業。東亞以外戰事擴大、能源要道受阻之後，航道全面重開、在護航下部分重開，或重開後再度中斷。新事件（第 4 版，裁定 263(b)：1988 兩伊油輪戰停火後波斯灣航運恢復；2024 年起紅海在護航下部分通行）',
+      blurb: '受戰事影響的能源要道重新開放，油價與運費有機會回落。',
       outcomes: [
         { key: 'reopened', publicKey: null, name: '航道全面重開', branch: 'reopened', w: 0.5, tags: ['up'], effects: [{ attr: 'threat', d: -15 }, { attr: 'oil', d: -25, noMod: true }] },
         { key: 'partial', publicKey: null, name: '中斷之後在護航或談判的通行安排下部分重開', branch: 'partial', w: 0.35, tags: ['flat'], effects: [{ attr: 'threat', d: -5 }, { attr: 'oil', d: -10, noMod: true }] },
@@ -2668,6 +2723,7 @@ const WORLD3 = {
       knownAtWhy: '設這個旗標的條件本身就是公司或主管機關的公告（docs/world-states.md 8.3(a)），公告當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：中國與台灣（美日介入與否不限）。對台灣動用武力（攔截、扣押、封鎖、攻擊）使先進製程或封裝出貨連續中斷五個交易日以上、佔全球一半以上；收場看數週內放行的檢疫、長期封鎖，或對設施的攻擊',
+      blurb: '台海衝突讓台灣先進晶片出貨中斷，科技供應鏈面臨斷料。',
       outcomes: [
         { key: 'quarantine', publicKey: null, name: '海上檢疫或部分封鎖，數週內放行', branch: 'blockade', sev: 0, w: 0.5, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 30 }, { flag: 'fShipBlock', v: true }, { attr: 'gpuRent', d: 30, noMod: true }, { attr: 'aiUsage', d: -15, noMod: true }, { attr: 'vol', d: 20, noMod: true }] },
         { key: 'blockade', publicKey: null, name: '全面封鎖，長期中斷', branch: 'blockade', sev: 1, w: 0.4, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 45 }, { flag: 'fShipBlock', v: true }, { attr: 'gpuRent', d: 50, noMod: true }, { attr: 'aiUsage', d: -30, noMod: true }, { attr: 'vol', d: 35, noMod: true }] },
@@ -2688,6 +2744,7 @@ const WORLD3 = {
       knownAtWhy: '參戰與航道中斷當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：兩個以上直接參戰的大國。一條主要能源航道受阻；收場看護航下局部通行、中斷數週，或中斷數月以上',
+      blurb: '東亞以外的戰事擴大到多個大國，能源要道受威脅，油價與運費上揚。',
       outcomes: [
         { key: 'escort', publicKey: null, name: '護航下局部通行，運費與保險長期偏高', branch: 'escort', w: 0.3, tags: ['down'], effects: [{ attr: 'threat', d: 20 }, { attr: 'oil', d: 15, noMod: true }, { attr: 'vol', d: 10, noMod: true }] },
         { key: 'closure', publicKey: null, name: '航道中斷數週', branch: 'closure', sev: 0, w: 0.45, tags: ['down'], effects: [{ attr: 'threat', d: 40 }, { attr: 'oil', d: 35, noMod: true }, { attr: 'vol', d: 25, noMod: true }] },
@@ -2707,6 +2764,7 @@ const WORLD3 = {
       knownAtWhy: '協議、投降或實際控制的改變當天由當事方公布',
       pSrcOut: 'scenario',
       desc: '當事方：中國、台灣與介入的各方。長期封鎖或攻擊之後的結局：封鎖解除而管轄不變，或在協議、投降、實際控制易手下管轄改變。只讀長期封鎖與攻擊兩個收場，檢疫數週放行的不開這個情勢（設計頁必答 7）。封鎖或管制持續、還沒有結局的長期僵持，就是這個情勢還沒出現（每天的「沒事」），不是一個收場；部分外島或海域的控制改變算 negotiated',
+      blurb: '台海封鎖之後的結局揭曉，影響晶片供應能否回到原狀。',
       outcomes: [
         { key: 'held', publicKey: null, name: '封鎖解除，管轄未變', branch: 'held', w: 0.7, tags: ['up'], effects: [{ attr: 'threat', d: -20 }] },
         { key: 'negotiated', publicKey: null, name: '在壓力下談判改變管轄', branch: 'change', sev: 0, w: 0.15, tags: ['down'], effects: [{ attr: 'threat', d: 10 }, { flag: 'fStraitChange', v: true }, { attr: 'gpuRent', d: 30, noMod: true }] },
@@ -2725,6 +2783,7 @@ const WORLD3 = {
       knownAtWhy: '核爆當天全世界知道',
       pSrcOut: 'scenario',
       desc: '當事方：交戰的一方。在衝突中使用核武；收場只分示威性引爆或對軍事、城市目標使用',
+      blurb: '衝突中有人動用核武，全球市場陷入極端避險。',
       outcomes: [
         { key: 'demo', publicKey: null, name: '示威性引爆（海上、無人區）', branch: 'use', sev: 0, w: 0.6, tags: ['down'], effects: [{ attr: 'threat', d: 40 }, { flag: 'fNuclear', v: true }, { attr: 'vol', d: 50, noMod: true }] },
         { key: 'strike', publicKey: null, name: '對軍事或城市目標使用', branch: 'use', sev: 1, w: 0.4, tags: ['down'], effects: [{ attr: 'threat', d: 70 }, { flag: 'fNuclear', v: true }, { attr: 'vol', d: 75, noMod: true }] } ],
@@ -2743,6 +2802,7 @@ const WORLD3 = {
       knownAtWhy: '法案通過或生效當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：美國、歐盟或中國的立法與主管機關。前沿 AI 的訓練或部署規範表決或生效；收場看大幅限制、溫和規範、否決或延後，或放寬既有限制',
+      blurb: '主要經濟體對前沿 AI 立法表決或生效，AI 產業的發展空間可能被重新劃定。',
       outcomes: [
         { key: 'strict', publicKey: null, name: '大幅限制（許可、暫停、算力上限）', branch: 'restrict', sev: 1, w: 0.4, tags: ['down'], effects: [{ attr: 'aiUsage', d: -15, noMod: true }, { attr: 'aiHeat', d: -15, noMod: true }] },
         { key: 'mild', publicKey: null, name: '溫和規範（揭露、評測）', branch: 'restrict', sev: 0, w: 0.3, tags: ['down'], effects: [{ attr: 'aiUsage', d: -5, noMod: true }, { attr: 'aiHeat', d: -5, noMod: true }] },
@@ -2760,6 +2820,7 @@ const WORLD3 = {
       knownAtWhy: '產油設施或航道受阻的消息當天傳出',
       pSrcOut: 'scenario',
       desc: '當事方：產油國、航道與設施（含非國家行為者攻擊航運，例如 2023-12 起紅海）。減產、航道或設施受襲使原油價格一個月內大漲；收場看漲 25–40%、漲 40% 以上，或很快被備用產能與儲備補上',
+      blurb: '原油供給突然受阻，油價急漲，推高通膨並壓抑消費。',
       outcomes: [
         { key: 'spike', publicKey: null, name: '油價一個月漲 25–40%', branch: 'spike', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'oil', d: 30 }] },
         { key: 'spikeBig', publicKey: null, name: '油價一個月漲 40% 以上', branch: 'spike', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'oil', d: 50 }] },
@@ -2775,6 +2836,7 @@ const WORLD3 = {
       knownAtWhy: '價格本身就是公開讀數，當天收盤可見',
       pSrcOut: 'scenario',
       desc: '當事方：產油國與全球需求。增產價格戰或需求崩落使原油價格一個月內大跌；收場看跌 25–40%、跌 40% 以上，或產油國減產止跌',
+      blurb: '原油供過於求或需求崩落，油價大跌，能源股受壓、通膨降溫。',
       outcomes: [
         { key: 'slump', publicKey: null, name: '油價一個月跌 25–40%', branch: 'slump', sev: 0, w: 0.7, tags: ['flat'], effects: [{ attr: 'oil', d: -35 }] },
         { key: 'crash', publicKey: null, name: '油價跌 40% 以上（價格戰或需求崩潰）', branch: 'slump', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'oil', d: -55 }] },
@@ -2790,6 +2852,7 @@ const WORLD3 = {
       knownAtWhy: '封城或大災的消息當天公開；對就業的影響要等月資料',
       pSrcOut: 'scenario',
       desc: '當事方：疫病或天災，與各國政府的封控。經濟活動大範圍停擺；收場只分區域性停擺數週，或全球停擺（2020 級）。復工另由 reopening 表示',
+      blurb: '疫病或重大天災讓經濟活動大範圍停擺，景氣與企業獲利急凍。',
       outcomes: [
         { key: 'regional', publicKey: null, name: '區域性停擺，數週恢復', branch: 'shock', sev: 0, w: 0.6, tags: ['down'], effects: [{ attr: 'jobless', d: 15 }, { attr: 'oil', d: -10 }] },
         { key: 'global', publicKey: null, name: '全球停擺', branch: 'shock', sev: 1, w: 0.4, tags: ['down'], effects: [{ attr: 'jobless', d: 40 }, { attr: 'oil', d: -30 }] } ],
@@ -2805,6 +2868,7 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；消息在發生日之後第一個開盤前已知',
       pSrcOut: 'scenario',
       desc: '當事方：政府、企業與勞工。疫病、天災或大停電之後的復工；收場看快速回補、緩慢恢復，或再度停擺。fired() 不退場，所以頻率由讀記憶 shockRun 的條件撐：衝擊剛發生時約每年 3 次，半衰期 90 曆日後退回 0.3',
+      blurb: '停擺之後開始復工重建，景氣能否回溫要看恢復的速度。',
       outcomes: [
         { key: 'fast', publicKey: null, name: '快速復工，就業回補', branch: 'rebound', sev: 1, w: 0.5, tags: ['up'], effects: [{ attr: 'jobless', d: -15 }] },
         { key: 'slow', publicKey: null, name: '緩慢恢復', branch: 'rebound', sev: 0, w: 0.4, tags: ['up'], effects: [{ attr: 'jobless', d: -8 }] },
@@ -2820,6 +2884,7 @@ const WORLD3 = {
       pWhy: '事件規格第 4 版（裁定 250、258–263）：上升與下降的大小兩級，每一級寫成一個確切的公告值（Astra 第 51 則：對外文字要給同一個數，不能拿區間的代表值當實際揭露；第 1 版的區間名稱與 0.15 作廢）：失業率 ±0.1、±0.4，物價年增率 ±0.2、±0.6（判斷：公告以 0.1 為單位，小的那一級取最常見的值，大的那一級取代表值）。其他幅度的公告（例如失業率 ＋0.2）在這個世界裡歸到最近的一級，是已知的粗化。T1b 換成屬性單位：失業率 1 個百分點＝20、物價年增率 1 個百分點＝12.5，所以小、大兩級的差是 6 與 5，過下限 5（腳本查）。對外的公告幅度就是 Δ（Astra 第 47 則第 2 點 `announcedDelta`），世界狀態被 0／100 截掉的部分另存診斷（照引擎規格）。 ｜舊依據（第 3 版以前；其中的數字已被上面的新權重與發生率取代，留作歷史）：裁定 169：結果是讀數本身怎麼動。資料：FRED UNRATE，參考月 2000-01 到 2026-10；算法：這一期減上一期（都是公布的 0.1 位），大於 0 上升、等於 0 持平、小於 0 下降；2025-10 沒有資料，前後兩期跳過；程式 handover/2026-11-19/w4-freq.py。結果：319 期，上升 100（0.313）、持平 85（0.266）、下降 134（0.420），上升與下降的中位數都是 0.1 個百分點。這是各種景氣下的平均頻率，不是中性起點的頻率（研究筆記（d）的偏差，照實寫）。效果大小：0.1 個百分點＝map 2 分；起點 22：上升 d 3 ≈ +2.3 分，下降 d −9 ≈ −2.0 分。pSrcOut：可能被影響——推的狀態 jobless 的依賴集合含 M 裡的 tradeBarrier、strain、oil 等 5 個（docs/world-math.md 11.3：Dep(e) ∩ M ≠ ∅），必填；填 scenario：世界算的機率對外標代入情境，不標 market',
       pSrcOut: 'scenario',
       desc: '當事方：美國勞工統計局。每月公布失業率；收場是失業率對上一期的變動。五個權重加總 0.999，是現行三類權重（0.313、0.266、0.42，FRED 2000-01 到 2026-10 共 319 期的升、平、降頻率）捨到三位小數的結果，不改；權重是相對值，引擎歸一（統籌裁定 294）',
+      blurb: '美國公布就業報告，失業率的升降牽動對景氣與降息的預期。',
       dates: ['2026-12-04', '2027-01-08', '2027-02-05', '2027-03-05', '2027-04-02', '2027-05-07', '2027-06-04', '2027-07-02', '2027-08-06', '2027-09-03', '2027-10-08', '2027-11-05', '2027-12-03'],
       dateSrc: [{ dates: ['2026-12-04', '2027-01-08', '2027-02-05', '2027-03-05', '2027-04-02', '2027-05-07', '2027-06-04', '2027-07-02', '2027-08-06', '2027-09-03', '2027-10-08', '2027-11-05', '2027-12-03'], doc: 'BLS, Schedule of Releases for The Employment Situation（參考月 2026-11 到 2027-11，每次 08:30 ET）', url: 'https://www.bls.gov/schedule/news_release/empsit.htm' }],
       occursAt: ['2026-12-04T13:30Z', '2027-01-08T13:30Z', '2027-02-05T13:30Z', '2027-03-05T13:30Z', '2027-04-02T12:30Z', '2027-05-07T12:30Z', '2027-06-04T12:30Z', '2027-07-02T12:30Z', '2027-08-06T12:30Z', '2027-09-03T12:30Z', '2027-10-08T12:30Z', '2027-11-05T12:30Z', '2027-12-03T13:30Z'],
@@ -2843,6 +2908,7 @@ const WORLD3 = {
       pWhy: '事件規格第 4 版（裁定 250、258–263）：上升與下降的大小兩級，每一級寫成一個確切的公告值（Astra 第 51 則：對外文字要給同一個數，不能拿區間的代表值當實際揭露；第 1 版的區間名稱與 0.15 作廢）：失業率 ±0.1、±0.4，物價年增率 ±0.2、±0.6（判斷：公告以 0.1 為單位，小的那一級取最常見的值，大的那一級取代表值）。其他幅度的公告（例如失業率 ＋0.2）在這個世界裡歸到最近的一級，是已知的粗化。T1b 換成屬性單位：失業率 1 個百分點＝20、物價年增率 1 個百分點＝12.5，所以小、大兩級的差是 6 與 5，過下限 5（腳本查）。對外的公告幅度就是 Δ（Astra 第 47 則第 2 點 `announcedDelta`），世界狀態被 0／100 截掉的部分另存診斷（照引擎規格）。 ｜舊依據（第 3 版以前；其中的數字已被上面的新權重與發生率取代，留作歷史）：裁定 169：結果是讀數本身怎麼動。資料：FRED CPIAUCNS（未季調指數），用它算每月的 12 個月變動、四捨五入到 0.1，參考月 2000-01 到 2026-10；算法：這一期減上一期，大於 0 上升、等於 0 持平、小於 0 下降；2025-10 沒有資料，碰到它的期跳過；程式 handover/2026-11-19/w4-freq.py（算出 2026-09 為 3.7%，與 BLS 公布相同）。結果：318 期，上升 145（0.456）、持平 34（0.107）、下降 139（0.437），上升與下降的中位數都是 0.3 個百分點。這是各種情形下的平均頻率，不是中性起點的頻率。效果大小：0.3 個百分點＝map 3.75 分；起點 46.3：上升 d 7 ≈ +3.8 分，下降 d −8 ≈ −3.7 分。pSrcOut：可能被影響——推的狀態 cpiTrend 的依賴集合含 M 裡的 tradeBarrier、jobless、oil 等 6 個（docs/world-math.md 11.3：Dep(e) ∩ M ≠ ∅），必填；填 scenario：世界算的機率對外標代入情境，不標 market',
       pSrcOut: 'scenario',
       desc: '當事方：美國勞工統計局。每月公布 CPI；收場是總指數 12 個月年增率對上一期的變動（核心與能源分項方向相反的不另成收場）',
+      blurb: '美國公布消費者物價，通膨的走向影響利率預期與股債表現。',
       dates: ['2026-12-10', '2027-01-13', '2027-02-11', '2027-03-10', '2027-04-13', '2027-05-12', '2027-06-10', '2027-07-14', '2027-08-11', '2027-09-14', '2027-10-14', '2027-11-10', '2027-12-10'],
       dateSrc: [{ dates: ['2026-12-10', '2027-01-13', '2027-02-11', '2027-03-10', '2027-04-13', '2027-05-12', '2027-06-10', '2027-07-14', '2027-08-11', '2027-09-14', '2027-10-14', '2027-11-10', '2027-12-10'], doc: 'BLS, Schedule of Releases for the Consumer Price Index（參考月 2026-11 到 2027-11，每次 08:30 ET）', url: 'https://www.bls.gov/schedule/news_release/cpi.htm' }],
       occursAt: ['2026-12-10T13:30Z', '2027-01-13T13:30Z', '2027-02-11T13:30Z', '2027-03-10T13:30Z', '2027-04-13T12:30Z', '2027-05-12T12:30Z', '2027-06-10T12:30Z', '2027-07-14T12:30Z', '2027-08-11T12:30Z', '2027-09-14T12:30Z', '2027-10-14T12:30Z', '2027-11-10T13:30Z', '2027-12-10T13:30Z'],
@@ -2872,6 +2938,7 @@ const WORLD3 = {
       knownAtWhy: '大停電當天公開；對就業的影響要等月資料',
       pSrcOut: 'scenario',
       desc: '當事方：北美或歐洲的電網、太陽風暴或攻擊者。高壓電網大範圍損壞；收場只分區域停電數天到兩週，或大範圍停電數週以上。復工另由 reopening 表示',
+      blurb: '大範圍電網損壞造成長時間停電，生產與資料中心運作受衝擊。',
       outcomes: [
         { key: 'regional', publicKey: null, name: '區域停電數天到兩週', branch: 'outage', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'jobless', d: 5 }, { attr: 'gpuRent', d: 10, noMod: true }] },
         { key: 'continental', publicKey: null, name: '大範圍停電數週以上', branch: 'outage', sev: 1, w: 0.3, tags: ['down'], effects: [{ attr: 'jobless', d: 15 }, { attr: 'gpuRent', d: 20, noMod: true }] } ],
@@ -2885,6 +2952,7 @@ const WORLD3 = {
       knownAtWhy: '聯準會臨時決定以新聞稿公布，當天可見',
       pSrcOut: 'scenario',
       desc: '當事方：聯準會（換匯額度含其他央行）。例會之外的降息，或推出緊急放款、換匯、購債工具；收場看只開工具、臨時降息，或大幅降息到零',
+      blurb: '聯準會在例會之外臨時出手救市，用降息或放款穩住金融市場。',
       outcomes: [
         { key: 'facility', publicKey: null, name: '緊急流動性工具（不降息）', branch: 'facility', w: 0.5, tags: ['up', 'rescue'], effects: [{ attr: 'fedStance', d: -20 }, { flag: 'fRescue', v: true }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '向聯準會緊急工具借款的銀行與交易商', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
         { key: 'cut', publicKey: null, name: '臨時降息 50 基點', branch: 'cut', sev: 0, w: 0.35, tags: ['up', 'rescue'], effects: [{ attr: 'fedStance', dRead: -50 }, { flag: 'fRescue', v: true }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '以短期利率融資的銀行、企業與槓桿部位', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
@@ -2900,6 +2968,7 @@ const WORLD3 = {
       pWhy: '事件規格第 4 版（裁定 250、258–263）：拆成升、降各兩級。`fedDir` 兩個條件的勝算比 30 是判斷（有序 probit 的係數不能直接當 β；N1）：x 從 −1 到 ＋1，β＝ln 30 ÷ 2≈1.70，作用上限 1.70，在 `cond_max` 2.3 之內。`vol` 那一條帶 N2 的註記。可調的數 n_e＝(5−1)＋3＋5＝12，剛好到上限（T5b），所以 L3（一次升或降多少）不寫條件、記例外；原本想寫的兩條（升 50 讀 `cpiTrend`、降 50 讀 `strain`，限制一、二都過）留在這裡，給之後放寬上限或把 `hold` 的 Δ＝0 不算可調的數時用。 ｜舊依據（第 3 版以前；其中的數字已被上面的新權重與發生率取代，留作歷史）：參照群：2000–2025 年的排定例會，每年 8 次 × 26 年＝208 次（分母用排定會議數，不用維基表的列數，表漏列很多不動的會議）。升息 39 次（0.19；核對憑記憶數到 40，差一次未核）；降息 34 次扣掉 7 次臨時會議（2001-01-03、2001-04-18、2001-09-17、2008-01-22、2008-10-08、2020-03-03、2020-03-15，那是 emergencyEase 的事）＝27 次（0.13）；其餘不動 142 次（0.68）。次數是網頁讀取工具對維基表數的〔二手〕。中性起點時照這個比例，之後由表（通膨、失業、資金壓力 → 聯準會）推。效果：一碼＝25 基點＝map 上 8.3 分；從靜止值 50 算 d ±17。pSrcOut：可能被影響——推的狀態 fedStance 的依賴集合含 M 裡的 strain、jobless、cpiTrend（docs/world-math.md 11.3：Dep(e) ∩ M ≠ ∅），必填；填 scenario：世界算的機率對外標代入情境，不標 market',
       pSrcOut: 'scenario',
       desc: '當事方：聯邦公開市場委員會。每次例會決定目標利率；收場是目標區間上限的變動',
+      blurb: '聯準會例會公布利率決策，直接影響資金成本與股債價格。',
       outlook: null,
       dates: ['2026-12-09', '2027-01-27', '2027-03-17', '2027-04-28', '2027-06-09', '2027-07-28', '2027-09-15', '2027-10-27', '2027-11-17'],
       dateSrc: [{ dates: ['2026-12-09', '2027-01-27', '2027-03-17', '2027-04-28', '2027-06-09', '2027-07-28', '2027-09-15', '2027-10-27', '2027-11-17'], doc: '聯準會 FOMC 會議日程（2026 年 12 月 8–9 日；2027 年 1/26–27、3/16–17、4/27–28、6/8–9、7/27–28、9/14–15、10/26–27、11/16–17，頁上寫「tentative until confirmed at the meeting immediately preceding it」；10/26–27 那一列另標「Monetary Policy Strategy Meeting」）；決議日取兩天會議的第二天，聲明 14:00 ET', url: 'https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm' }],
@@ -2925,6 +2994,7 @@ const WORLD3 = {
       pWhy: '事件規格第 4 版（裁定 250、258–263）：設計頁列的「機率不隨任何狀態變」的兩個事件之一，現在有三個條件（所有效果都是 `noMod`，表推不到它，所以讀什麼都不受限制二擋；限制一：`vol` 6 → 3、`dollar` 5 → 3 都在接線上）。加了「降息或重啟寬鬆」一類（三次收場列全裡有兩次列了）。`reading` 照裁定 272 用 `{qty, unit, delta}`（政策利率的變動）；`before` 不寫（`delta` 與 `before`／`after` 不可並存），`tool` 拿掉（要不要加 `tool` 欄，統籌在問 Astra）。 ｜舊依據（第 3 版以前；其中的數字已被上面的新權重與發生率取代，留作歷史）：裁定 114：日本央行升息用排定事件表示。參照群：2024-03 到 2026-10 的例會約 22 次（每年 8 次 × 2.75 年），升息 6 次（2024-03、2024-07、2025-01、2025-12、2026-06、2026-09）〔二手，搜尋摘要，2025-01 那次是本檔補的、沒核到原文〕＝0.27；其餘維持 0.73，沒有降息。日本的政策沒有自己的狀態，效果全部沿接線 3 → 5 推槓桿與美元、帶 noMod，所以它的機率不隨世界狀態變（交件寫明）。效果大小是判斷：參考 2024 年 8 月套利平倉，槓桿往下 15%、美元略弱。pSrcOut：不在可能被影響那一類——效果全帶 noMod，推的狀態是空集合，沒有前置條件，所以 Dep(e) ∩ M 是空的（docs/world-math.md 11.3）；照規則可以不填，填的是預設值 scenario',
       pSrcOut: 'scenario',
       desc: '當事方：日本銀行政策委員會。每次會議決定政策利率；收場是政策利率的變動，或政策框架的調整。世界裡沒有日本的狀態，效果沿 3 → 5 推槓桿與美元。framework 收場（結束負利率、殖利率曲線控制）涉及多種工具、不能唯一指認單一公開量，照 Astra 第 54 則省略 reading（只發文字）；它對套利部位的作用照升息 25 基點寫，是判斷。維持與重啟寬鬆的收場政策利率不變，reading.delta 填 0',
+      blurb: '日本央行公布政策決議，牽動日圓與全球套利資金的流向。',
       dates: ['2026-12-18', '2027-01-22', '2027-03-18', '2027-04-28', '2027-06-11', '2027-07-22', '2027-09-22', '2027-10-29', '2027-12-17'],
       dateSrc: [{ dates: ['2026-12-18', '2027-01-22', '2027-03-18', '2027-04-28', '2027-06-11', '2027-07-22', '2027-09-22', '2027-10-29', '2027-12-17'], doc: '日本銀行 Monetary Policy Meetings 日程（2026-12-17、18；2027 年 1/21–22、3/17–18、4/27–28、6/10–11、7/21–22、9/21–22、10/28–29、12/16–17）；決議日取第二天', url: 'https://www.boj.or.jp/en/mopo/mpmsche_minu/index.htm' }],
       occursAt: ['2026-12-18T06:00Z', '2027-01-22T06:00Z', '2027-03-18T06:00Z', '2027-04-28T06:00Z', '2027-06-11T06:00Z', '2027-07-22T06:00Z', '2027-09-22T06:00Z', '2027-10-29T06:00Z', '2027-12-17T06:00Z'],
@@ -2952,6 +3022,7 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；公告在發生日當天、收盤時點為準',
       pSrcOut: 'scenario',
       desc: '當事方：美國總統與政府、聯準會理事會、法院與參議院。政府試圖撤換理事或主席、公開要求降息；收場看被法院或參議院擋下、壓力持續但制度守住，或撤換成功、政策被認為受控。新事件（第 4 版，裁定 261：2025-08 試圖免除理事；對美國資產的信心 usDoubt 的往上與往下）。撤換成功（captured）之後不再開這個情勢，也不補事後修復的收拾：理事與主席的任期在模型期間內不會再換；信心的回復靠 usDoubt 的回落與其他事件的往下收場',
+      blurb: '聯準會的獨立性受到政治挑戰，市場開始擔心利率政策被干預。',
       outcomes: [
         { key: 'rebuffed', publicKey: null, name: '被法院或參議院擋下，獨立性守住', branch: 'rebuffed', w: 0.45, tags: ['up'], effects: [{ attr: 'usDoubt', d: -10, noMod: true }] },
         { key: 'pressure', publicKey: null, name: '壓力持續或人事讓步（席次被換、聯準會對政府讓步），制度形式未變', branch: 'erode', sev: 0, w: 0.4, tags: ['down'], effects: [{ attr: 'usDoubt', d: 10, noMod: true }] },
@@ -2968,6 +3039,7 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；公告在發生日當天、收盤時點為準',
       pSrcOut: 'scenario',
       desc: '當事方：美國國會與政府。紓困、刺激或減稅法案的表決；收場看大規模紓困、一般刺激，或卡關。新事件（過去十年漏掉的：2020 CARES、2021 ARPA；2008 TARP 與 ARRA）',
+      blurb: '美國推出財政紓困或刺激法案，能撐住景氣，但也可能推升債務疑慮。',
       outcomes: [
         { key: 'reliefBig', publicKey: null, name: '大規模紓困（衰退中）', branch: 'relief', sev: 1, w: 0.3, tags: ['up', 'rescue'], effects: [{ attr: 'jobless', d: -25, noMod: true }, { attr: 'usDoubt', d: 5, noMod: true }] },
         { key: 'stimulus', publicKey: null, name: '一般刺激或減稅', branch: 'relief', sev: 0, w: 0.4, tags: ['up'], effects: [{ attr: 'jobless', d: -10, noMod: true }] },
@@ -2985,6 +3057,7 @@ const WORLD3 = {
       knownAtWhy: '發表即公開',
       pSrcOut: 'scenario',
       desc: '當事方：OpenAI、Anthropic、Google、Meta 等前沿實驗室。發表新一代模型；收場看能力跳級、改變格局、進步有限，或低於宣稱',
+      blurb: '主要實驗室發表新一代前沿模型，市場重新評估 AI 的實力與商機。',
       outcomes: [
         { key: 'leap', publicKey: null, name: '能力明顯跳級，採用加速', branch: 'leap', sev: 0, w: 0.45, tags: ['up'], effects: [{ attr: 'aiUsage', d: 15 }] },
         { key: 'leapBig', publicKey: null, name: '改變格局，新應用爆發', branch: 'leap', sev: 1, w: 0.1, tags: ['up'], effects: [{ attr: 'aiUsage', d: 30 }] },
@@ -3002,6 +3075,7 @@ const WORLD3 = {
       knownAtWhy: '發表即公開；市場可能隔幾天才反應，那是價格層的事',
       pSrcOut: 'scenario',
       desc: '當事方：前沿實驗室與挑戰者（含中國的實驗室、開源社群）。訓練或推論成本低很多的模型出現（含競爭者追上、開源追平引發的價格戰）；收場看算力需求被重估、重創算力題材、降價帶來更多用量，或市場消化',
+      blurb: '低成本或高效率的模型問世，市場開始懷疑算力需求是否被高估。',
       outcomes: [
         { key: 'shock', publicKey: null, name: '算力需求被重估，租價大跌', branch: 'shock', sev: 0, w: 0.4, tags: ['down'], effects: [{ attr: 'gpuRent', d: -25 }, { attr: 'aiUsage', d: 5 }] },
         { key: 'shockBig', publicKey: null, name: '重創算力題材', branch: 'shock', sev: 1, w: 0.1, tags: ['down'], effects: [{ attr: 'gpuRent', d: -45 }, { attr: 'aiUsage', d: 10 }] },
@@ -3018,6 +3092,7 @@ const WORLD3 = {
       knownAtWhy: '公司公告或財報電話會議公開',
       pSrcOut: 'scenario',
       desc: '當事方：微軟、Alphabet、亞馬遜、Meta。財報以外的下修或延後消息（取消租約、暫停專案的報導；財報裡的資本支出由 cloudCapex 表示）；收場看小幅下修、大幅削減，或管理層重申計畫',
+      blurb: '大型雲端廠在財報之外檢討 AI 投資，算力供應鏈的訂單前景蒙上陰影。',
       outcomes: [
         { key: 'trim', publicKey: null, name: '小幅下修、延後、轉成租賃或取消部分租約', branch: 'cut', sev: 0, w: 0.55, tags: ['down'], effects: [{ attr: 'buildout', d: -15 }] },
         { key: 'slash', publicKey: null, name: '大幅削減', branch: 'cut', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'buildout', d: -35 }] },
@@ -3032,6 +3107,7 @@ const WORLD3 = {
       knownAtWhy: '供應商公告或報價公開',
       pSrcOut: 'scenario',
       desc: '當事方：台積電、記憶體廠與 AI 晶片買方。先進封裝、高頻寬記憶體，或資料中心的電力與併網瓶頸造成的供需變化；收場看交期拉長、嚴重短缺，或新產能開出而緩解',
+      blurb: '先進封裝或記憶體的供需出現變化，晶片的交期與價格跟著起伏。',
       outcomes: [
         { key: 'tight', publicKey: null, name: '交期拉長、漲價', branch: 'tight', sev: 0, w: 0.6, tags: ['flat'], effects: [{ attr: 'gpuRent', d: 20 }] },
         { key: 'severe', publicKey: null, name: '嚴重短缺，出貨受限', branch: 'tight', sev: 1, w: 0.15, tags: ['flat'], effects: [{ attr: 'gpuRent', d: 40 }, { attr: 'aiUsage', d: -5 }] },
@@ -3044,6 +3120,7 @@ const WORLD3 = {
       pWhy: '事件規格第 4 版（裁定 250、258–263）：Δ 的兩級（4、12 個百分點）是判斷；`eventspec-freq-2.md` 第 26 號只查到 2025 年 1–10 月年增率的量級（中位數約 ＋36%），沒有逐期變動的分布。 ｜舊依據（第 3 版以前；其中的數字已被上面的新權重與發生率取代，留作歷史）：裁定 169：結果是讀數本身怎麼動。本專案沒有台積電月營收的歷史序列（data/ 只有股價），歷史頻率算不出，標判斷：上升、下降各 0.45，持平（三個月平均年增率變動在正負 1 個百分點內）0.1；形狀參考 CPI 年增率算出的 0.456／0.107／0.437（不同序列，只是參考）。效果大小：一個月約讓三個月平均動 3 個百分點（map 一個百分點＝1 分，起點 75.9：上升 d 12 ≈ +2.9 分，下降 d −4 ≈ −3.0 分）。pSrcOut：可能被影響——推的狀態 aiUsage 的依賴集合含 M 裡的 tradeBarrier、jobless、gpuRent（docs/world-math.md 11.3：Dep(e) ∩ M ≠ ∅），必填；填 scenario：世界算的機率對外標代入情境，不標 market',
       pSrcOut: 'scenario',
       desc: '當事方：台積電。每月公布上月營收；收場是三個月平均年增率對上一期的變動',
+      blurb: '台積電公布月營收，市場從中觀察 AI 晶片需求的熱度。',
       dates: ['2026-12-10', '2027-01-08', '2027-02-10', '2027-03-10', '2027-04-09', '2027-05-10', '2027-06-10', '2027-07-09', '2027-08-10', '2027-09-10', '2027-10-08', '2027-11-10', '2027-12-10'],
       dateSrc: [{ dates: ['2026-12-10', '2027-01-08'], doc: '台積電投資人關係財務行事曆：TSMC Monthly Sales - November 2026（2026-12-10）、December 2026（2027-01-08）；2027 年 2 月以後的日期頁上還沒有，所以只排這兩次', url: 'https://investor.tsmc.com/english/financial-calendar' }, { dates: ['2027-02-10', '2027-03-10', '2027-04-09', '2027-05-10', '2027-06-10', '2027-07-09', '2027-08-10', '2027-09-10', '2027-10-08', '2027-11-10', '2027-12-10'], doc: '具名日期假設 twMonthlyRevenue 的規則（事件規格第 4 版，裁定 262）：每月 10 日公布上月營收，10 日是週末時取之前最後一個週一到週五；不是公司公布的日程' }],
       dateAssume: { '2027-02-10': 'twMonthlyRevenue', '2027-03-10': 'twMonthlyRevenue', '2027-04-09': 'twMonthlyRevenue', '2027-05-10': 'twMonthlyRevenue', '2027-06-10': 'twMonthlyRevenue', '2027-07-09': 'twMonthlyRevenue', '2027-08-10': 'twMonthlyRevenue', '2027-09-10': 'twMonthlyRevenue', '2027-10-08': 'twMonthlyRevenue', '2027-11-10': 'twMonthlyRevenue', '2027-12-10': 'twMonthlyRevenue' },
@@ -3066,6 +3143,7 @@ const WORLD3 = {
       pWhy: '事件規格第 4 版（裁定 250、258–263）：新事件，說明在事件規格第 4 版該事件的 desc。pSrcOut：填 scenario；依賴集合未重算（交核對）',
       pSrcOut: 'scenario',
       desc: '當事方：輝達。每季公布營收與下一季營收指引；收場是下一季營收指引相對本季營收的成長（公告值）。世界裡沒有輝達營收的狀態，收場帶只對外的公開量 reading（同 bojDecision 的做法，〔待定〕，交 Astra），效果推 AI 需求與題材熱度',
+      blurb: '輝達公布季度財報與財測，是 AI 晶片需求最受矚目的風向球。',
       dates: ['2027-02-24', '2027-05-26', '2027-08-25', '2027-11-17'],
       dateSrc: [{ dates: ['2027-02-24', '2027-05-26', '2027-08-25', '2027-11-17'], doc: '事件規格第 4 版（裁定 262）：日期是具名日期假設 nvdaQuarterlyRule，不是公司公布的日程；規則與過去的實際日期見 knownAtAssume.nvdaQuarterlyRule.rule' }],
       dateAssume: { '2027-02-24': 'nvdaQuarterlyRule', '2027-05-26': 'nvdaQuarterlyRule', '2027-08-25': 'nvdaQuarterlyRule', '2027-11-17': 'nvdaQuarterlyRule' },
@@ -3085,6 +3163,7 @@ const WORLD3 = {
       pWhy: '事件規格第 4 版（裁定 250、258–263）：新事件，說明在事件規格第 4 版該事件的 desc。pSrcOut：填 scenario；依賴集合未重算（交核對）',
       pSrcOut: 'scenario',
       desc: '當事方：微軟、Alphabet、亞馬遜、Meta。每季財報公布資本支出；收場是四家合計資本支出年增率對上一季的變動（公告值，百分點）。這就是 buildout 的定期公布；buildout 的 lagRelease 改指到這個事件（取代裁定 212 的 usQuarterly10Q 假設）。權重〔判斷、對稱、無依據〕：沒有歷史分布可依，不傾斜；資本支出的方向來自表（起點 buildout 的推力 B＝0.80），不是權重',
+      blurb: '四大雲端廠公布季度資本支出，透露 AI 投資還在加速還是放緩。',
       dates: ['2027-02-04', '2027-04-29', '2027-07-29', '2027-10-28'],
       dateSrc: [{ dates: ['2027-02-04', '2027-04-29', '2027-07-29', '2027-10-28'], doc: '事件規格第 4 版（裁定 262）：日期是具名日期假設 hyperscalerCapexRule，不是公司公布的日程；規則與過去的實際日期見 knownAtAssume.hyperscalerCapexRule.rule' }],
       dateAssume: { '2027-02-04': 'hyperscalerCapexRule', '2027-04-29': 'hyperscalerCapexRule', '2027-07-29': 'hyperscalerCapexRule', '2027-10-28': 'hyperscalerCapexRule' },
@@ -3107,6 +3186,7 @@ const WORLD3 = {
       pWhy: '事件規格第 4 版（裁定 250、258–263）：新事件，說明在事件規格第 4 版該事件的 desc。pSrcOut：填 scenario；依賴集合未重算（交核對）',
       pSrcOut: 'scenario',
       desc: '當事方：台積電。每季法說公布下一季營收指引；收場是下一季營收指引中值相對本季的成長（公告值）。世界裡沒有台積電季度指引的狀態，帶只對外的 reading（〔待定〕，交 Astra），效果推 AI 需求',
+      blurb: '台積電召開季度法說會，對下一季的展望左右半導體類股。',
       dates: ['2027-01-21', '2027-04-15', '2027-07-15', '2027-10-21'],
       dateSrc: [{ dates: ['2027-01-21', '2027-04-15', '2027-07-15', '2027-10-21'], doc: '事件規格第 4 版（裁定 262）：日期是具名日期假設 tsmcCallRule，不是公司公布的日程；規則與過去的實際日期見 knownAtAssume.tsmcCallRule.rule' }],
       dateAssume: { '2027-01-21': 'tsmcCallRule', '2027-04-15': 'tsmcCallRule', '2027-07-15': 'tsmcCallRule', '2027-10-21': 'tsmcCallRule' },
@@ -3128,6 +3208,7 @@ const WORLD3 = {
       knownAtWhy: '公司公告、財測或月營收公布即公開',
       pSrcOut: 'scenario',
       desc: '當事方：台積電、輝達與其他 AI 晶片供應商、它們的客戶。排定的財報、法說、月營收以外的訂單轉弱消息（客戶砍單、供應鏈調查、產業報導；排定公告由 nvdaEarnings、tsmcQuarterly、tsmcMonthly 表示）；收場看小幅下修、大幅下修（庫存調整），或一次性因素',
+      blurb: 'AI 晶片訂單在財報之外傳出轉弱，供應鏈股價承壓。',
       outcomes: [
         { key: 'soft', publicKey: null, name: '小幅下修', branch: 'cut', sev: 0, w: 0.5, tags: ['down'], effects: [{ attr: 'aiUsage', d: -8 }] },
         { key: 'deep', publicKey: null, name: '大幅下修（庫存調整）', branch: 'cut', sev: 1, w: 0.2, tags: ['down'], effects: [{ attr: 'aiUsage', d: -20 }] },
@@ -3143,6 +3224,7 @@ const WORLD3 = {
       knownAtWhy: '財報或公司公告公開',
       pSrcOut: 'scenario',
       desc: '當事方：微軟、Alphabet、亞馬遜、Meta。財報以外的加碼公告（新資料中心計畫、合資、長期算力合約；財報裡的資本支出由 cloudCapex 表示）；收場看上修、大幅上修，或上修但市場質疑回報',
+      blurb: '大型雲端廠在財報之外加碼 AI 投資，算力需求的題材再度升溫。',
       outcomes: [
         { key: 'raise', publicKey: null, name: '上修', branch: 'raise', sev: 0, w: 0.6, tags: ['up'], effects: [{ attr: 'buildout', d: 15 }] },
         { key: 'raiseBig', publicKey: null, name: '大幅上修（年增再加速）', branch: 'raise', sev: 1, w: 0.2, tags: ['up'], effects: [{ attr: 'buildout', d: 30 }] },
@@ -3160,6 +3242,7 @@ const WORLD3 = {
       knownAtWhy: '設這個旗標的條件本身就是公司或主管機關的公告，公告當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：台積電與主管機關；原因不限（地震、颱風、大停電、缺水、封鎖、檢疫、攻擊）。先進製程或封裝出貨連續中斷五個交易日以上、佔全球一半以上；收場只分中斷一到三週，或一個月以上。恢復另由 shipResume 表示',
+      blurb: '台灣先進晶片出貨中斷，下游科技業面臨缺料。',
       outcomes: [
         { key: 'short', publicKey: null, name: '中斷一到三週後復工', branch: 'halt', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'aiUsage', d: -10 }, { attr: 'gpuRent', d: 25 }, { flag: 'fShipBlock', v: true }] },
         { key: 'long', publicKey: null, name: '中斷一個月以上', branch: 'halt', sev: 1, w: 0.3, tags: ['down'], effects: [{ attr: 'aiUsage', d: -25 }, { attr: 'gpuRent', d: 45 }, { flag: 'fShipBlock', v: true }] } ],
@@ -3175,6 +3258,7 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；消息在發生日之後第一個開盤前已知',
       pSrcOut: 'scenario',
       desc: '當事方：台積電、主管機關與航運。出貨中斷之後的恢復；收場看全面恢復、部分恢復，或恢復後再中斷。新事件（裁定 250 第 1 條：限制解除、重建；也補 docs/world-states.md §2.1 第 4 條「出貨有沒有恢復」沒有讀數的缺口的一部分）',
+      blurb: '先進晶片恢復出貨，科技供應鏈的缺料壓力逐步紓解。',
       outcomes: [
         { key: 'full', publicKey: null, name: '全面恢復', branch: 'full', w: 0.6, tags: ['up'], effects: [{ attr: 'gpuRent', d: -30 }, { attr: 'aiUsage', d: 15 }] },
         { key: 'partial', publicKey: null, name: '部分恢復', branch: 'partial', w: 0.3, tags: ['up'], effects: [{ attr: 'gpuRent', d: -15 }, { attr: 'aiUsage', d: 5 }] },
@@ -3192,6 +3276,7 @@ const WORLD3 = {
       knownAtWhy: '事件規格第 4 版寫明 knownAtRule：nextUsOpen',
       pSrcOut: 'scenario',
       desc: '當事方：台積電、台灣政府、客戶與海外廠（美國、日本、德國的新廠）。台海衝突中島內晶片設施遭攻擊、出貨中斷之後，先進晶片的供給怎麼部分恢復；收場看未受損產線部分復工、分段恢復到可觀比例、海外產能加速補位，或遲遲無法復工。只在 shipHaltStrait.strike 之後開（裁定 299）；恢復幅度明顯小於 shipResume（實體損毀不會全面恢復）；fShipBlock 照定義不退場。L1 讀記憶 conflictRun（錨點 S06、S10 是登記過的處境，和 shipResume、armedClash 相同）；其餘層沒有條件，由表帶。管轄易手（fStraitChange）之後不開，和 shipResume 相同',
+      blurb: '台灣晶片設施遭攻擊後開始恢復產能，供應能補回多少是關鍵。',
       outcomes: [
         { key: 'partialRestart', publicKey: null, name: '未受損的產線部分復工出貨（產能優先分配給少數客戶或政府指定的用途也算）', branch: 'restart', sev: 0, w: 0.35, tags: ['up'], effects: [{ attr: 'gpuRent', d: -8 }, { attr: 'aiUsage', d: 5 }] },
         { key: 'staged', publicKey: null, name: '分段恢復到可觀比例', branch: 'restart', sev: 1, w: 0.15, tags: ['up'], effects: [{ attr: 'gpuRent', d: -15 }, { attr: 'aiUsage', d: 5 }] },
@@ -3210,6 +3295,7 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；消息在發生日之後第一個開盤前已知',
       pSrcOut: 'scenario',
       desc: '當事方：主管機關、AI 開發商與使用者。AI 系統失控事故與緊急限制之後，主管機關解除暫停或放寬限制；收場看補上防護後全面恢復、有條件部分恢復，或限制延長成長期規範。新事件（無背景 Sonnet 審查 B.5：義大利 2023 年禁令約一個月解除、波音 737 MAX 停飛後復飛）',
+      blurb: 'AI 事故後的暫停部署解除，AI 產業能否回到原本軌道受到關注。',
       outcomes: [
         { key: 'resumed', publicKey: null, name: '補上防護後全面恢復部署', branch: 'resumed', w: 0.5, tags: ['up'], effects: [{ attr: 'aiUsage', d: 15 }] },
         { key: 'partial', publicKey: null, name: '有條件部分恢復', branch: 'partial', w: 0.35, tags: ['up'], effects: [{ attr: 'aiUsage', d: 5 }] },
@@ -3228,6 +3314,7 @@ const WORLD3 = {
       knownAtWhy: '商轉公告即公開',
       pSrcOut: 'scenario',
       desc: '當事方：新型能源、通用機器人或軌道算力的開發商與客戶。商業合約、量產交貨或併網發電；收場看跨過門檻、多項同時跨過，或宣布後延期',
+      blurb: '機器人、自駕等實體技術逼近商轉門檻，能否真的跨過決定相關題材的熱度。',
       outcomes: [
         { key: 'crossed', publicKey: null, name: '跨過商轉門檻', branch: 'cross', sev: 0, w: 0.6, tags: ['up'], effects: [{ attr: 'buildout', d: 15 }, { flag: 'fBreakthrough', v: true }, { attr: 'aiHeat', d: 20, noMod: true }] },
         { key: 'crossedBig', publicKey: null, name: '多項同時跨過，訂單湧入', branch: 'cross', sev: 1, w: 0.15, tags: ['up'], effects: [{ attr: 'buildout', d: 30 }, { flag: 'fBreakthrough', v: true }, { attr: 'aiHeat', d: 30, noMod: true }] },
@@ -3246,6 +3333,7 @@ const WORLD3 = {
       knownAtWhy: '事故由公司、主管機關或媒體公開',
       pSrcOut: 'scenario',
       desc: '當事方：一個高階 AI 系統的開發商、使用者與主管機關。沒有授權下造成大規模實體或金融損害，主管機關緊急限制；收場分三級：事故受控、多國暫停高階模型、無法完全關閉',
+      blurb: 'AI 系統發生失控事故，監管收緊，AI 類股面臨重新定價。',
       outcomes: [
         { key: 'contained', publicKey: null, name: '事故造成損害但受控，主管機關限制後補上防護', branch: 'accident', sev: 0, w: 0.55, tags: ['down'], effects: [{ attr: 'aiUsage', d: -10 }, { flag: 'fAiLoss', v: true }, { attr: 'vol', d: 15, noMod: true }] },
         { key: 'severe', publicKey: null, name: '多國緊急暫停高階模型部署', branch: 'accident', sev: 1, w: 0.35, tags: ['down'], effects: [{ attr: 'aiUsage', d: -30 }, { flag: 'fAiLoss', v: true }, { attr: 'vol', d: 40, noMod: true }] },
@@ -3260,6 +3348,7 @@ const WORLD3 = {
       knownAtWhy: '拆倉的價格衝擊當天可見；部位多大事後才知道',
       pSrcOut: 'scenario',
       desc: '當事方：以保證金或回購融資的槓桿基金、券商客戶與自營部位。追繳、被迫賣出；收場看有序去槓桿、連鎖平倉，或有人接手',
+      blurb: '槓桿部位遭到追繳，被迫拆倉的賣壓讓價格短時間急跌。',
       outcomes: [
         { key: 'orderly', publicKey: null, name: '有序去槓桿，數日內平息', branch: 'deleverage', sev: 0, w: 0.6, tags: ['down'], effects: [{ attr: 'leverage', d: -20 }], funding: { terms: [], background: [{ quantityId: 'vixClose', unit: '點', src: 'data_vix' }, { quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '以保證金或回購融資的槓桿基金與券商客戶', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', ifState: 'vix < 25', maxDays: null, src: 'own' } } },
         { key: 'cascade', publicKey: null, name: '連鎖平倉', branch: 'deleverage', sev: 1, w: 0.3, tags: ['down'], effects: [{ attr: 'leverage', d: -40 }, { clock: 'strain', d: 1 }], funding: { terms: [], background: [{ quantityId: 'vixClose', unit: '點', src: 'data_vix' }, { quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '以保證金或回購融資的槓桿基金與券商客戶', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', ifState: 'vix < 25', maxDays: null, src: 'own' } } },
@@ -3274,6 +3363,7 @@ const WORLD3 = {
       knownAtWhy: '主管機關接管或公司公告後公開',
       pSrcOut: 'scenario',
       desc: '當事方：銀行或類銀行機構（含交易所、貨幣基金）、存款人、主管機關。擠兌、倒閉或接管；收場看單一機構被接管、多家連鎖，或公告收購注資而未倒',
+      blurb: '金融機構出現擠兌或倒閉，市場擔心風險在金融體系內擴散。',
       outcomes: [
         { key: 'contained', publicKey: null, name: '單一機構被接管，存款保障', branch: 'run', sev: 0, w: 0.55, tags: ['down'], effects: [{ clock: 'strain', d: 1 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '銀行與類銀行機構的短期負債（存款、貨幣基金、交易所客戶資產）', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', maxDays: null, src: 'own' } } },
         { key: 'systemic', publicKey: null, name: '多家連鎖', branch: 'run', sev: 1, w: 0.2, tags: ['down'], effects: [{ clock: 'strain', d: 2 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '銀行與類銀行機構的短期負債（存款、貨幣基金、交易所客戶資產）', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', maxDays: null, src: 'own' } } },
@@ -3289,6 +3379,7 @@ const WORLD3 = {
       knownAtWhy: '違約或重整申請公開',
       pSrcOut: 'scenario',
       desc: '當事方：大型企業、私募信用基金、放款銀行（含 AI 新雲端廠與資料中心的債）。指標性違約；收場看個案違約、擴散到同類資產，或被同業收購',
+      blurb: '指標性企業或私募信用發生違約，信用市場的信心受到考驗。',
       outcomes: [
         { key: 'isolated', publicKey: null, name: '個案違約，損失可控', branch: 'default', sev: 0, w: 0.55, tags: ['down'], effects: [{ attr: 'leverage', d: -10 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '高收益債與私募信用的借款企業', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'creditReopen.reopen', maxDays: null, src: 'own' } } },
         { key: 'spread', publicKey: null, name: '擴散到同類資產', branch: 'default', sev: 1, w: 0.35, tags: ['down'], effects: [{ attr: 'leverage', d: -20 }, { clock: 'strain', d: 1 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '高收益債與私募信用的借款企業', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'creditReopen.reopen', maxDays: null, src: 'own' } } },
@@ -3303,6 +3394,7 @@ const WORLD3 = {
       knownAtWhy: '換匯利差與美元指數當天可見',
       pSrcOut: 'scenario',
       desc: '當事方：境外銀行與企業、聯準會與各國央行。境外美元融資緊縮；收場看短缺、嚴重短缺，或換匯額度很快化解',
+      blurb: '美國以外的美元資金吃緊，新興市場與全球資金面承受壓力。',
       outcomes: [
         { key: 'squeeze', publicKey: null, name: '美元短缺', branch: 'squeeze', sev: 0, w: 0.5, tags: ['down'], effects: [{ attr: 'dollar', d: 15 }], funding: { terms: [], background: [{ quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外銀行與企業的美元融資', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'dollarSqueeze.swapLines', ifState: 'dxy < 100', maxDays: null, src: 'own' } } },
         { key: 'squeezeBig', publicKey: null, name: '嚴重短缺，資金市場凍結', branch: 'squeeze', sev: 1, w: 0.3, tags: ['down'], effects: [{ attr: 'dollar', d: 30 }, { clock: 'strain', d: 1 }], funding: { terms: [], background: [{ quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外銀行與企業的美元融資', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'dollarSqueeze.swapLines', ifState: 'dxy < 100', maxDays: null, src: 'own' } } },
@@ -3318,6 +3410,7 @@ const WORLD3 = {
       knownAtWhy: '美元指數當天收盤可見',
       pSrcOut: 'scenario',
       desc: '當事方：外匯市場與各國央行。美元指數明顯走強；收場看走強、急升，或很快回吐',
+      blurb: '美元明顯走強，資金回流美國，非美資產與商品承壓。',
       outcomes: [
         { key: 'rally', publicKey: null, name: '美元走強', branch: 'rally', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'dollar', d: 15 }], funding: { terms: [], background: [{ quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外銀行與企業的美元融資', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'dollarSqueeze.swapLines', ifState: 'dxy < 100', maxDays: null, src: 'own' } } },
         { key: 'surge', publicKey: null, name: '美元急升（資金躲回美國資產）', branch: 'rally', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'dollar', d: 30 }, { attr: 'usDoubt', d: -5 }], funding: { terms: [], background: [{ quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外銀行與企業的美元融資', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'dollarSqueeze.swapLines', ifState: 'dxy < 100', maxDays: null, src: 'own' } } },
@@ -3333,6 +3426,7 @@ const WORLD3 = {
       knownAtWhy: '美元指數當天收盤可見',
       pSrcOut: 'scenario',
       desc: '當事方：外匯市場與跨境資金。美元指數明顯走弱、資金回流非美市場；收場看走弱、急貶，或很快回吐',
+      blurb: '美元明顯走弱，資金流向美國以外的市場。',
       outcomes: [
         { key: 'ease', publicKey: null, name: '美元走弱，資金回流', branch: 'ease', sev: 0, w: 0.7, tags: ['up'], effects: [{ attr: 'dollar', d: -15 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外借美元的企業與新興市場借款人（美元走弱減輕償債）', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
         { key: 'slide', publicKey: null, name: '美元急貶', branch: 'ease', sev: 1, w: 0.1, tags: ['flat'], effects: [{ attr: 'dollar', d: -30 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外借美元的企業與新興市場借款人（美元急貶）', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
@@ -3349,6 +3443,7 @@ const WORLD3 = {
       knownAtWhy: '只改不公開的槓桿部位，紀錄不對外（裁定 111）',
       pSrcOut: 'scenario',
       desc: '當事方：套利與賣波動的槓桿部位。平靜期部位擴大；收場只分一般加碼與部位擁擠。紀錄永不公開（knownAtRule: null，照舊）',
+      blurb: '市場槓桿部位持續累積，平靜之下的脆弱程度跟著升高。',
       outcomes: [
         { key: 'build', publicKey: null, name: '槓桿加碼', branch: 'build', sev: 0, w: 0.7, tags: ['up'], effects: [{ attr: 'leverage', d: 15 }] },
         { key: 'crowd', publicKey: null, name: '部位擁擠', branch: 'build', sev: 1, w: 0.3, tags: ['up'], effects: [{ attr: 'leverage', d: 30 }] } ],
@@ -3366,6 +3461,7 @@ const WORLD3 = {
       knownAtWhy: '拍賣結果與殖利率當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：美國財政部、公債交易商、聯準會。拍賣認購不佳或次級市場價差擴大；收場看市場自行消化、失序、嚴重失序，或聯準會買債迅速止血',
+      blurb: '美國公債市場承壓，殖利率劇烈波動，牽動所有資產的定價基準。',
       outcomes: [
         { key: 'absorbed', publicKey: null, name: '拍賣不佳但市場自行消化', branch: 'absorbed', w: 0.3, tags: ['flat'], effects: [] },
         { key: 'disorder', publicKey: null, name: '公債市場失序', branch: 'disorder', sev: 0, w: 0.4, tags: ['down'], effects: [{ clock: 'strain', d: 1 }, { attr: 'dollar', d: -15 }, { attr: 'usDoubt', d: 15 }, { attr: 'vol', d: 30, noMod: true }], funding: { terms: [], background: [{ quantityId: 'vixClose', unit: '點', src: 'data_vix' }], subject: { who: '美國公債交易商與以公債作擔保的槓桿部位', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'treasuryDisorder.fedBuys', maxDays: null, src: 'own' } } },
@@ -3385,6 +3481,7 @@ const WORLD3 = {
       knownAtWhy: '脫鉤與贖回暫停當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：市值前幾大的穩定幣發行商、持有人、準備資產的託管銀行。脫鉤、贖回暫停；收場看數日內恢復掛鉤、崩潰，或波及短期公債與銀行',
+      blurb: '大型穩定幣遭到擠兌，壓力可能外溢到短期公債與銀行。',
       outcomes: [
         { key: 'repeg', publicKey: null, name: '數日內恢復掛鉤', branch: 'repeg', w: 0.5, tags: ['flat'], effects: [], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '穩定幣持有人與準備資產的託管銀行', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
         { key: 'collapse', publicKey: null, name: '崩潰', branch: 'collapse', sev: 0, w: 0.35, tags: ['down'], effects: [{ clock: 'strain', d: 1 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '銀行與類銀行機構的短期負債（存款、貨幣基金、交易所客戶資產）', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', maxDays: null, src: 'own' } } },
@@ -3402,6 +3499,7 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；公告在發生日當天、收盤時點為準',
       pSrcOut: 'scenario',
       desc: '當事方：發債企業、信用市場投資人、聯準會的工具。救援之後發債窗口重開、利差收斂；收場看收斂、大幅收斂，或二次緊縮。新事件（裁定 250 第 1 條：資金回流）',
+      blurb: '資金壓力之後信用市場重新開放，企業恢復發債，風險情緒回溫。',
       outcomes: [
         { key: 'reopen', publicKey: null, name: '發債窗口重開，利差收斂', branch: 'reopen', sev: 0, w: 0.5, tags: ['up'], effects: [{ clock: 'strain', d: -1 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '高收益債與私募信用的借款企業（發債窗口重開）', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
         { key: 'reopenBig', publicKey: null, name: '利差大幅收斂', branch: 'reopen', sev: 1, w: 0.2, tags: ['up'], effects: [{ clock: 'strain', d: -2 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '高收益債與私募信用的借款企業（利差大幅收斂）', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
@@ -3418,6 +3516,7 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；公告在發生日當天、收盤時點為準',
       pSrcOut: 'scenario',
       desc: '當事方：美國國會、政府、財政部與信評機構。撥款到期、債務上限或信評審查；收場看最後一刻解決、政府停擺數週、主權降評，或技術性違約恐慌。新事件（過去十年漏掉的：2018–19、2025 停擺；2023 債務上限；2023、2025 降評）',
+      blurb: '美國陷入撥款或債務上限僵局，政府停擺與評等調降的風險升高。',
       outcomes: [
         { key: 'resolved', publicKey: null, name: '最後一刻解決', branch: 'resolved', w: 0.5, tags: ['flat'], effects: [] },
         { key: 'shutdown', publicKey: null, name: '政府停擺數週', branch: 'shutdown', w: 0.3, tags: ['flat'], effects: [{ attr: 'usDoubt', d: 5 }, { attr: 'vol', d: 5, noMod: true }] },
@@ -3434,6 +3533,7 @@ const WORLD3 = {
       knownAtWhy: 'VIX 收盤即公開',
       pSrcOut: 'scenario',
       desc: '當事方：美股與選擇權市場。VIX 單日漲五成以上；收場看暴衝後回落，或進入高波動期',
+      blurb: '市場出現單日恐慌，恐慌指數急升，股價大幅震盪。',
       outcomes: [
         { key: 'spike', publicKey: null, name: '單日暴衝後回落', branch: 'spike', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'vol', d: 30 }] },
         { key: 'regime', publicKey: null, name: '進入高波動期', branch: 'spike', sev: 1, w: 0.3, tags: ['down'], effects: [{ attr: 'vol', d: 50 }] } ],
@@ -3448,6 +3548,7 @@ const WORLD3 = {
       knownAtWhy: 'VIX 收盤即公開',
       pSrcOut: 'scenario',
       desc: '當事方：美股與選擇權市場。VIX 從 15 以上跌到 15 以下；收場看一般回穩，或進入很深的低波動期',
+      blurb: '市場進入低波動的平靜期，風險偏好回升。',
       outcomes: [
         { key: 'calm', publicKey: null, name: '回穩', branch: 'calm', sev: 0, w: 0.7, tags: ['up'], effects: [{ attr: 'vol', d: -30 }] },
         { key: 'deepCalm', publicKey: null, name: '很深的低波動期（VIX 12 以下）', branch: 'calm', sev: 1, w: 0.3, tags: ['up'], effects: [{ attr: 'vol', d: -50 }] } ],
@@ -3462,6 +3563,7 @@ const WORLD3 = {
       knownAtWhy: '疑慮由公開報導或分析引發',
       pSrcOut: 'scenario',
       desc: '當事方：AI 類股的投資人、分析師與公司。對 AI 投資回報出現普遍疑慮；收場看疑慮、重挫，或被下一份財報化解',
+      blurb: '市場對 AI 能否賺錢產生疑慮，AI 類股相對走弱。',
       outcomes: [
         { key: 'doubt', publicKey: null, name: '疑慮，AI 類股相對走弱', branch: 'doubt', sev: 0, w: 0.55, tags: ['down'], effects: [{ attr: 'aiHeat', d: -15 }] },
         { key: 'rout', publicKey: null, name: '重挫', branch: 'doubt', sev: 1, w: 0.2, tags: ['down'], effects: [{ attr: 'aiHeat', d: -35 }] },
@@ -3476,6 +3578,7 @@ const WORLD3 = {
       knownAtWhy: '由公開消息引發',
       pSrcOut: 'scenario',
       desc: '當事方：AI 類股的投資人與公司。AI 類股相對大盤明顯上漲；收場看重燃、狂熱，或很快熄火',
+      blurb: 'AI 題材重新點燃，資金湧回 AI 相關類股。',
       outcomes: [
         { key: 'rally', publicKey: null, name: '重燃，AI 類股相對走強', branch: 'rally', sev: 0, w: 0.55, tags: ['up'], effects: [{ attr: 'aiHeat', d: 15 }] },
         { key: 'meltUp', publicKey: null, name: '狂熱', branch: 'rally', sev: 1, w: 0.2, tags: ['up'], effects: [{ attr: 'aiHeat', d: 35 }] },
@@ -3494,6 +3597,7 @@ const WORLD3 = {
       knownAtWhy: '掛牌後的股價當天收盤可見',
       pSrcOut: 'scenario',
       desc: '當事方：一家估值千億美元以上的 AI 公司、承銷商與投資人。上市或上市計畫；收場看大漲（上市窗口重開）、守住發行價、跌破或延後，或撤回上市。id 沿用（舊名「大型 AI 公司上市失利」改成情勢的名稱）',
+      blurb: '大型 AI 公司上市，掛牌表現成為市場對 AI 熱度的溫度計。',
       outcomes: [
         { key: 'success', publicKey: null, name: '上市大漲，窗口重開', branch: 'success', w: 0.35, tags: ['up'], effects: [{ attr: 'aiHeat', d: 15 }] },
         { key: 'steady', publicKey: null, name: '守住發行價', branch: 'steady', w: 0.25, tags: ['flat'], effects: [] },
@@ -3779,7 +3883,7 @@ function walker(seed,knobs){ let S=eng.start(W,knobs,seed), q=null; const rec=[]
 // the same seed and the same scheduled outs give every random event and recovery again (draws are keyed by event and day).
 // fork = {prefix, seed, after}: a path opened from a landing share: the first `after` scheduled decisions (and the random events up to the
 // next one) are drawn with the seed `prefix` of the game it was opened from, everything later with the seed `seed` of the run that was counted.
-function walker3(seed,knobs,fork){ let S=w3.start(W,knobs), q=null, decided=0, ds=fork&&fork.after>0?fork.prefix:fork?fork.seed:seed; const rec=[], before=[];
+function walker3(seed,knobs,fork){ let S=w3.start(W,knobs,k=>u01(fork&&fork.after>0?fork.prefix:fork?fork.seed:seed,k)), q=null, decided=0, ds=fork&&fork.after>0?fork.prefix:fork?fork.seed:seed; const rec=[], before=[];
   const dseed=()=>fork?(decided>=fork.after?fork.seed:fork.prefix):seed;
   function settle(){ const S0=S, a=w3.advance(W,S,knobs,k=>u01(ds,k));
     for(const r of a.records){ if(r.type!=='decide'||r.out<0) continue; before.push(S0); rec.push(Object.assign({},r,{auto:true,sched:false,ch:null})); }
@@ -4002,7 +4106,7 @@ function overviewFrom(S,recs,knobs,base,N,from,gameSeed){ N=capN(N); let R;
 // from today (the start state of these knobs), N runs from base seed `seed`; kept per setting so switching back and forth does not recompute
 const OVC=new Map();
 function overview(o){ const knobs=Object.assign({},o.knobs||{}), N=capN(o.N||(IS3?DEFN3:1000)), seed=o.seed===undefined?1:o.seed|0, key=JSON.stringify([knobs,N,seed]);
-  if(!OVC.has(key)){ if(OVC.size>12) OVC.delete(OVC.keys().next().value); OVC.set(key,overviewFrom(IS3?w3.start(W,knobs):eng.start(W,knobs,seed),[],knobs,seed,N,'start',seed)); } return OVC.get(key); }
+  if(!OVC.has(key)){ if(OVC.size>12) OVC.delete(OVC.keys().next().value); OVC.set(key,overviewFrom(IS3?w3.start(W,knobs,k=>u01(seed,k)):eng.start(W,knobs,seed),[],knobs,seed,N,'start',seed)); } return OVC.get(key); }
 // change from `before` to `ov`, in share points; noise = within two standard errors of the difference of two independent shares (sampling, not the change)
 function diff(ov,before){ if(!before) return null; const se=(p,n,q,m)=>Math.sqrt(p*(1-p)/n+q*(1-q)/m), one=(p,q)=>{ const d=p-q; return {d,noise:Math.abs(d)<2*se(p,ov.N,q,before.N)}; };
   const pb={}; for(const x of before.rows) pb[x.id]=x.p; const byId={}; for(const x of ov.rows) byId[x.id]=one(x.p,pb[x.id]||0);
@@ -4045,7 +4149,7 @@ function reportOf(G,C,pv,upto,knobs,seed,v){ const done=!C.pending(), L=C.landin
     let tEnd=-1; for(let t=0;t<upto;t++) if(stageOfDate(DATES[t])===g) tEnd=t;
     const pi=tEnd<0?-1:IS3?PDATES.indexOf(DATES[tEnd]):tEnd;   // the row of the price series: matched by date in world3 mode
     return {name,rows,date:tEnd<0?null:DATES[tEnd],px:pi<0?null:WF.core.map(([k,nm,id])=>{ const r=v.series(id).rows[pi]; return {k,name:nm,v:r.close,chg:r.sinceAnchor,lastTradeDate:r.lastTradeDate,status:r.status}; })}; });   // the layer's row at the stage end (sinceAnchor: against the starting close)
-  const S0=IS3?w3.start(W,knobs):eng.start(W,knobs,seed), S=C.state(), clocks=WF.clocks.filter(c=>S.clocks[c.id]!==S0.clocks[c.id]).map(c=>({name:c.name,from:lvName(c.id,S0.clocks[c.id]),to:lvName(c.id,S.clocks[c.id])}));
+  const S0=IS3?w3.start(W,knobs,k=>u01(seed,k)):eng.start(W,knobs,seed), S=C.state(), clocks=WF.clocks.filter(c=>S.clocks[c.id]!==S0.clocks[c.id]).map(c=>({name:c.name,from:lvName(c.id,S0.clocks[c.id]),to:lvName(c.id,S.clocks[c.id])}));
   const cnt={chosen:0,rolled:0,auto:0,fork:0}; for(const x of lg) cnt[x.how]++;
   const ov=done&&L?overview({knobs,N:1000,seed:1}):null, row=ov?ov.rows.find(x=>x.id===L.id):null;
   return {done,landing:L?{id:L.id,name:L.name,lv:L.lv,fam:L.fam}:null,seed,code:G.code(),n:dec.length,cnt,l10,low:dec.filter(r=>r.p<0.25).length,
@@ -4143,6 +4247,8 @@ const CGX={
    for(let i=0;i<16;i++){ let u=(i/16+t*(t<.45?.6:.27))%1, x=W*(.06+u*.88); if(t>.5&&x>W*.5-gap/2-10&&x<W*.5+gap/2+10) x=W*.5-gap/2-12-i%4*14; c.fillStyle='rgba(240,244,250,.9)'; c.fillRect(x-5,f(x)-3,10,6); } if(t>.5){ c.strokeStyle='#ff6a4d'; c.lineWidth=3; c.beginPath(); c.moveTo(W*.5-8,H*.38); c.lineTo(W*.5+8,H*.62); c.moveTo(W*.5+8,H*.38); c.lineTo(W*.5-8,H*.62); c.stroke(); } },
  domino(c,t,W,H,rs,sm){ c.fillStyle='#120c0e'; c.fillRect(0,0,W,H); const n=22, y=H*.7; c.fillStyle='rgba(220,210,210,.25)'; c.fillRect(W*.05,y,W*.9,2); for(let i=0;i<n;i++){ const a=sm(i*.04,i*.04+.1,t)*1.25, x=W*(.08+i*.039), h=H*.22; c.save(); c.translate(x,y); c.rotate(a); c.fillStyle=a>.05?'rgba(200,70,60,.9)':'rgba(235,232,228,.9)'; c.fillRect(-4,-h,8,h); c.restore(); } }
 };
+// landings of the third-format world (world3.js): each uses the existing sequence of the closest landing of the second-format world (same family and tier; nothing new drawn)
+Object.assign(CGK,{nuclearUse:'nuke',eastAsiaWar:'war',straitChange:'isle',aiLossOfControl:'rogue',physicalLeap:'sun',supplyCut:'chain',creditCrisis:'domino',aiBust:'bubble',rescueRebound:'vee',stagflationSqueeze:'gauge',aiBoom:'grid',tightSupply:'slots',rateGrind:'sand',capexCut:'crane',cheapCompute:'tags',tradeWall:'gate',recessionDrift:'sand',rotation:'shift',steadyGrowth:'ship'});
 const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；會前趕談投資協議。","ant_d1":"承銷價區間 70–78 美元，史上第二大的首次公開發行。","ipo":"11/19 掛牌。區間 70–78 美元、認購 6–7 倍、260 億基石不鎖倉；巨型 IPO 四週內跌破發行價基準率 4/10。","yen":"2024/8 的平倉曾讓全球科技股單週急跌。","twvote":"九合一選舉與核電公投同日；視為 2028 前哨。","data":"10 月 CPI 月增 0.4%，核心連三月 0.3%；非農 16.5 萬。","spcx_lock":"掛牌時只有約 5% 股份流通，屆滿後內部人與早期股東可以賣出。","fed12":"市場對升 2 碼定價 1–9%；Waller 稱可考慮升 2 碼。","meta_model":"程式化廣告是模型最早變現的地方，數字會同時反映在所有廣告平台。","gov":"Kalshi 對 12 月關門定價約 44%。","ant_cover":"承銷商研究部門在緘默期後起評。","copper":"變壓器、電纜與銅的交期是電氣化的實體瓶頸。","retail_h":"零售與電商的全年最大檔期。","mfg":"科技業以外的工廠景氣。","janflow":"BofA 11 月調查：經理人減碼科技幅度為 2006 年以來最大。","memory":"高頻寬記憶體是 AI 伺服器的先行指標。","tw_trade":"232 條款半導體關稅與對等關稅的最終稅率。","tsmc":"3 奈米預期缺到 2028；最早公布的全年資本支出與漲價訊號。","bank_q":"信用成本與資本市場業務的第一手數字。","uspol":"白宮與國會僵到預算和人事都過不了的情況。政府停擺會拖住撥款、補助與監管決定。","xasset":"比特幣約 6.5 萬美元、黃金約 3,866 美元（11 月中）。","tax":"新會期的稅務法案。","coup":"龍頭實驗室內部的權力衝突。核心團隊一走，產品時程與客戶合約都跟著不確定。","lab":"Character.AI 10 月破產文件顯示算力成本遠高於營收。","space":"每公斤入軌成本決定衛星網路與在軌設施的經濟性。","asml_ord":"設備訂單領先晶圓廠資本支出兩到三季。","deepfake":"假造的官員談話在市場上被當真。看的是查證要多久、跌掉的能收回多少。","rare_ban":"前提：關係不在緩和狀態。","fed1":"德銀預期 12 月、1 月、3 月連升；高盛預期 3 月再升。","tesla_q":"電動車、儲能與自駕授權。","cloud":"Q3：Azure +48%、Google Cloud +103%、AWS +39%；微軟積壓訂單 6,770 億美元。","apple":"台灣供應鏈權重最高的單一客戶。","vol":"短天期選擇權的部位集中在同一邊，一旦被迫平倉會放大當天的漲跌。","guide":"共識約 +28%；10 月底四家皆稱增加；Q3 合計自由現金流轉負。","amd_ai":"輝達以外的加速器供應。","ev":"電池組成本是運輸電氣化與電網儲能的共同門檻。","jgb":"前提：美國仍在升息。","spcx_q":"衛星網路用戶數、每戶營收與發射次數。","depr":"大廠把伺服器折舊年限拉長到 5–6 年；空方認為實際壽命 2–3 年。","ceo":"11/12 創辦人離任，財務長代理；獨立調查尚無結論。11/17 盤後財報的營收、獲利、財測皆優於預期。類似案例遴選中位數 3–7 個月。","aero":"交付量是工業類股最大的單一變數。","cpi1":"年初調價效應，通常是全年最容易偏熱的一份報告。","buyback":"四大廠第三季合計自由現金流轉負。","cable":"海底電纜與雲端機房是跨國連線的實體基礎。斷了之後，亞洲對外頻寬與線上服務直接受影響。","asic":"前提：大廠仍在投資。","round":"結果受 Anthropic 掛牌表現牽動。","gemini":"對話式介面分走傳統搜尋流量的速度，決定入口的定價權。","software":"11/17 Salesforce 單日跌 9%，市場擔心 AI 侵蝕席次收入。","redsea":"前提：能源不在寬鬆狀態。","tw_export":"1–2 月合併看，排除春節影響。","sovai":"中東、日本、歐盟各有已宣布的國家級算力計畫。","igissue":"聯準會估先進運算相關公開債務逾 1.1 兆美元。","asml":"先進製程的曝光機只有一家供應商。它的廠區出事，全球擴產時程一起延後。","ant_q":"營收成長、毛利與算力合約的揭露。","nvq4":"本季財測約 1,300 億美元；供應承諾 5,180 億美元。","jp_reform":"回購、交叉持股解除與外資流向。","robot1":"第一步：成本與產能達標。","ransom":"晶圓代工廠被勒索軟體鎖住產線。停工的週數直接變成晶片缺口。","fusion1":"第一步：原型電廠連續淨輸出。","us_tw":"美國對台軍售與官員互訪的規模，以及對岸怎麼回應。","pharma":"醫療是科技以外最大的成長類股。","etf":"前提：市場已進入恐慌。","npc":"成長目標與財政赤字率。","jobs2":"10 月非農 16.5 萬。","congress":"參院有暫停興建資料中心與自備電力法案；聯邦立法須過否決權；35 州已有限制。","health_pol":"政府給付標準影響整個醫療類股。","beijing":"北京領導層是否換人、換上來的路線偏開放還是偏強硬。","aws":"已簽約未認列的合約，以及機房實際通電的速度。","avgo":"大廠自研晶片的進度指標。","contam":"製程材料出問題會讓整批晶片報廢。影響看流入幾家廠、多久才發現。","mideast":"美伊 6 月臨時協議；荷莫茲通行恢復但有船隻遇襲；布蘭特約 92 美元。","neo":"CoreWeave 2027 年底前到期 106 億美元、現金 41 億；CDS 曾達 1,194bp。","algo":"發生後會接到「降價後的用量」。","fed3":"高盛：3 月再升 1 碼，2027/12 才降息。","kr_export":"記憶體出口與股東回饋政策。","volcano":"大型噴發的火山灰會讓航空停飛、影響收成。","idx_add":"大型新股何時進入主要指數、流通比例怎麼算。","boj":"USD/JPY 159。","crypto":"大型交易所或穩定幣出事，會不會從加密市場傳到其他資產。","split":"前提：政策已轉為設限。","gpurent":"雲端 GPU 時租是供需最直接的價格。","iot":"手機、個人電腦與工業感測器的汰換週期。","quake":"台灣與日本的先進製程和材料廠都在地震帶上。強震後看停工多久。","tradewar":"前提：地緣已升到「衝突升高」。","cre":"到期高峰與區域銀行的曝險。","oai_s1":"秘密遞件後是否公開文件，以及文件裡的數字。","fiscal":"新國會的第一個預算決議。","labor":"碼頭、汽車與航空的集體協約到期。","tw_fund":"外資 2026 年累計賣超近 3.1 兆元。","cnfin":"中國地方債、中小銀行與人民幣匯率的壓力會不會一次爆開。","trade":"先進晶片 25% 關稅，資料中心用途豁免；對中遠端存取管制據報定案中。","grand":"前提：關係已進入緩和。","robotaxi":"無安全員里程與每英里成本。","circ":"晶片商投資客戶、客戶再回頭下單的結構。","pandemic":"新的傳染病是否擴散到需要封控。封控會同時打到供應鏈與消費。","china":"2025/1 低價模型發布曾讓輝達單日市值蒸發近 6,000 億美元。","scs":"菲律賓與美國有共同防禦條約，是台海以外最容易擦槍走火的地方。","cuda":"前提：政策不在扶持狀態。","orbit1":"前提：大廠仍在加碼，而地面電力吃緊。","reshoring":"建廠、設備與電力設施的訂單。","tsmc1":"全年營收成長與資本支出區間。","jevons":"價格下降後，總支出是增是減取決於需求彈性。","swf":"前提：資本支出已放慢。","mna":"大廠收購實驗室或新雲端業者的交易，以及主管機關放不放行。","pe_exit":"積壓多年的未上市資產能否變現。","trumpxi":"11 月深圳會後的互訪與協議落實。","drought":"晶圓廠用水量大。水庫見底時，限水會先輪到工業用水。","eu_fiscal":"德國帶頭的投資計畫能否落地。","jobs":"裁員被歸因於 AI 之後，輿論與政治壓力升到什麼程度。","intel":"先進製程取得外部大客戶與否。","fr_elect":"2027 年 4 月第一輪、5 月第二輪。","fallout":"聯準會估先進運算相關公開債務逾 1.1 兆美元，表外承諾逾 2 兆；大型銀行曝險近 1 兆。","leak":"頂級模型的權重被偷走並公開。領先者的技術優勢與安全管制同時受損。","ai_doubt":"美銀 11 月調查：38% 經理人認為企業過度投資，為紀錄；52% 預期半年內有大廠砍支出。","fed4":"聯準會 4 月的利率決定與會後說法。","q1cap":"驗證 1 月指引是否兌現。","gdp1":"第一季的經濟成長率，是全年景氣的第一個實際數字。","solar":"強烈的太陽活動會損壞衛星，並讓高緯度地區的電網跳脫。","indpak":"印度是全球資訊服務外包的重鎮。邊境衝突升高會中斷這些服務。","refund":"長債供給與期限結構。","nuclear":"小型反應爐審批與電網擴建。","opensrc":"前提：中國晶片已自主量產或模型突破。","earn":"標普 500 預估本益比 17.7 倍，為三年低點。","eu_left":"聯合政府的組成決定歐洲能否維持共同立場。","copyright":"法院怎麼判訓練資料的版權，決定模型公司要不要為資料付費。","bank":"前提：已經出現違約。","cpi2":"4 月的物價數字，影響市場對利率路徑的看法。","humanoid":"通用型機器人在產線的實際工時。","calquake":"多數科技大廠的總部與一部分資料中心在加州。","odm":"鴻海、廣達、緯穎的 AI 伺服器出貨。","twlife":"前提：美國停止升息，美元轉弱。","ant_lock":"掛牌後約 180 天，員工與早期投資人可以賣出。","relocate":"手機與伺服器組裝往印度、越南、墨西哥移動的進度。","gulf":"前提：中東戰事已經再起、能源進入危機。","retail_q":"客流、毛利與庫存。","rating":"甲骨文與新雲端業者的負債比率。","tw_pol":"總預算、朝野關係與 2028 布局。","qc":"量子電腦是否公開示範破解現行的加密方法。","pla":"共軍在台灣周邊演習的規模。","umbrella":"前提：關係不在緩和狀態。","cowos":"AI 晶片出貨的實際瓶頸。","nvq1":"驗證 2 月財測。","utility":"監管機關是否讓資料中心負擔電網擴建。","battery":"固態電池與新型太陽能電池能不能走出實驗室、開始量產。","sc":"室溫超導的實驗結果能不能被其他實驗室重做出來。","computex":"下一代 AI 晶片平台的時程與規格。","bottleneck":"3 奈米預期缺到 2028；伯恩斯坦估 35–40% 已宣布資料中心容量有延後或取消風險。","machine":"德、日、韓出口型工廠的訂單。","opec":"布蘭特約 92 美元。","dcfire":"前提：大廠仍在高速興建。","captax":"前提：政策不在扶持狀態。","korea":"南韓供應全球多數高頻寬記憶體。","agents":"企業實際用了多少代理型 AI：大幅擴散，還是多數停在試點。","spill":"進行中的衝突是否波及航運、能源，或延伸到台海。","storm":"再保費率與墨西哥灣能源設施的風險。","kessler":"前提：地緣已升到「衝突升高」。","nimby":"前提：能源不在寬鬆狀態。","em":"前提：美國利率維持高檔。","fed6":"聯準會 6 月的決定，加上委員對未來利率的預估（點陣圖）。","tech":"11 月上旬兩家實驗室發布新一代模型。","agi":"系統能否不經人手完成跨日工作，由獨立機構評測。","drug":"由 AI 設計的藥物能不能通過第三期臨床試驗。","nukeasia":"前提：美國縮減防衛承諾。","korea2":"前提：朝鮮半島已發生衝突。","cyber":"針對金融結算系統或電網的攻擊。","power":"州層級暫停令增加。","housing":"利率敏感度最高的內需部門。","scotus":"會期結束前的判決集中期。","france":"前提：美國仍在升息。","luxury":"奢侈品、航空與免稅的需求。","megafail":"前提：需求轉弱或資金凍結。","oai_ipo":"2026 年 6 月已秘密遞件；執行長排除 2026 年掛牌，財務長說 2027 年會是上市公司。","science":"能源或運算的研究有沒有出現足以改變格局的結果。","gulf_cap":"主權基金把石油收入轉成資料中心與模型股權。","gps":"交易所與電網都靠衛星訊號對時。對時出錯，兩邊會同時出問題。","ukr":"11/10–11 阿布達比會談：換俘，無停火。","travel":"服務消費占經濟的最大宗。","photon":"用光來運算的晶片能不能量產，並把推論的耗電降下來。","crash_resp":"歷史上科技多頭中的升息，唯一明確反彈出現在聯準會暗示暫停之後。","elec":"資料中心用電推升區域電價。","tw_start":"前提：地緣已升到「衝突升高」。","ust":"前提：利率仍在高檔。","bank_q2":"信用循環的期中檢查。","medscandal":"前提：AI 已被大量採用。","debt":"財政部估 2027 年中前觸頂；多數策略師預期妥協。","tsmc2":"下半年需求能見度。","jp_law":"前提：台海已有軍事行動。日本是否認定事態危及存立，決定美軍能否使用基地。","tw_resp":"決定衝突是區域事件還是大國對抗。","tw_div":"台股除息旺季的填息情形，以及高股息 ETF 換股帶來的買賣壓。","appease":"前提：台海已有軍事行動，美日尚未直接介入。","infra_fall":"前提：雲端、衛星或海纜已受重創。","ust2":"前提：美債標售失敗。","twpower":"核電公投 11/28 與選舉同日。","cn_stim":"政治局會議對消費與地產的定調。","mines":"前提：台海已有軍事行動。戰爭險一旦撤出，航運比軍艦先停。","insure":"前提：興建仍在進行。","rogue1":"前提：模型能力已跳躍，或部署需求強勁。","q2cap":"大廠首次談 2028 年方向。","food":"聖嬰與反聖嬰對收成的影響。","eu_ai":"高風險系統義務的適用時點。","heat":"前提：能源已偏緊。","prod_stats":"AI 是否進入總體數字。","earn2":"標普 500 企業第二季的獲利與下半年展望。","us_cn":"前提：美日已介入台海。","jobs3":"7 月的就業報告：新增就業與失業率。","rogue2":"前提：已發生自主 AI 事故。","tw_server":"出口統計裡的 AI 與自動化。","distant":"前提：美中已直接交戰。在麻六甲與龍目海峽攔截，比在近海作戰代價低。","eu_ru":"前提：地緣已升到「衝突升高」。","pacific":"前提：美中已直接交戰。公開兵推以侷限在台灣周邊為基準。","goldrush":"前提：地緣升高或再通膨。","spcx_follow":"衛星網路業務分拆，或母公司再發新股。","bioinc":"用 AI 輔助合成的病原體從實驗室外洩。","smallcap":"大型股以外的市場寬度。","finwar":"前提：大國交戰或台灣易主。外匯存底、清算系統與美債都是武器。","tw_end":"台海戰事怎麼收場。有沒有外力介入、行動規模多大，結局差很多。","russia":"前提：大國已直接交戰。","nvq2":"輝達第二季的營收與下一季財測。","robot2":"前提：量產達標，且需求與資金撐得住。","requisition":"前提：美中已直接交戰。","jhole":"聯準會主席在年度央行研討會上的談話，常被當成政策轉向的訊號。","strat_bomb":"前提：美中已直接交戰。","japan_war":"前提：地面戰已進入有人居住的島嶼。","thirds":"前提：美中已直接交戰。印度、中東與東南亞的立場決定戰爭的經濟範圍。","fusion2":"前提：原型驗證成功。完全商轉不可能在 2027 年內完成，這裡是預期的改變。","sea_dc":"算力需求往電價與土地較便宜的地區外溢。","strike_bj":"前提：美中已直接交戰。","siege":"前提：封鎖或戰事持續超過一個月。","atro_resp":"前提：發生大規模傷害平民的事件。","tw_fab":"前提：台灣易主。","antitrust":"搜尋、雲端與應用商店的救濟措施。","strike":"前提：社會已出現反彈。","space2":"從發射走向訂閱與在軌服務的轉折。","cpi3":"8 月的物價數字，9 月利率會議前的最後一份通膨報告。","us_home":"前提：本土或跨洋後勤樞紐遭到攻擊。","nuke":"前提：大國已直接交戰。","oai_msft":"算力供應與營收分成的重議。","prod":"美銀調查：38% 經理人認為企業過度投資。","biotech":"大藥廠專利到期前的收購潮。","exodus":"前提：台海已有軍事行動。","autosci":"前提：模型能力已經跳躍。","bj_after":"前提：一方的指揮中樞失能。","fedh2":"高盛：2027/12 開始降息。","agent_work":"大型企業的成本與產出數字。","unconv":"前提：美中已直接交戰。","nuke_tgt":"前提：戰術核武已被使用。","dollar":"前提：高利率或再通膨。","selfdrive":"主要國家是否全面開放無人駕駛上路。","rotate":"11 月全球股票基金流入以歐洲為主；美銀調查 36% 看好非美股票為 2027 最佳資產。","shipping":"實體經濟的流量。","peace":"前提：沒有升高中的衝突。","occupation":"前提：台灣易主。","orbit2":"前提：示範衛星成功。","telecom":"網路設備與光纖的需求。","macro4":"製造業指數、消費與信用卡違約率。","tsmc3":"2028 年資本支出的第一個說法。","ubi":"前提：社會已反彈，且生產力效益明確。","strait":"台海的緊張程度：平穩、灰色地帶施壓，或走到封鎖。","migration":"服務業與營建的人力來源。","cn21":"人事與對台路線。","cloud3":"雲端大廠第三季的營收與資本支出，是上修還是下修。","elect28":"2028 年選戰裡 AI 是不是主要議題，占上風的是產業派還是管制派。","tw_domestic":"金融、航運、營建與內需的獲利。","earn3":"標普 500 企業第三季的獲利與全年展望。","easing":"前提：已停止升息且通膨降溫。","endwar":"前提：大國交戰且未動用核武。多數戰爭以停火線而非和約結束。","aftermath":"過去三次資本支出見頂，供應商股價跌幅中位數約六成（僅三例）。","nvq3":"輝達第三季的營收與下一季財測。","tw28":"2028 年總統選舉的參選態勢，以及主要人選的兩岸路線。","retail_h2":"2027 年的消費收尾。","melt":"標普 500 預估本益比 17.7 倍，為三年低點。","yearend":"退休金與目標日期基金的股債調整。","wild":"資安、天災、金融機構倒閉、政變。","fed12b":"聯準會年底的決定，以及對 2028 年的利率預估。"};
 // Page layer of index2.html ("river" structure): one chart (real bars, this run's bars, the "now" line, quantile bands of the runs from here, landing shares)
 // and three focal lengths (now / this run / all outcomes). It only shows view data from the adapter (A2) and never calls the engine.
