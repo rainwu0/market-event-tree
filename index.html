@@ -123,6 +123,7 @@ tr.mk small{color:var(--dim);font-size:11.5px;margin-left:8px}
 .land:hover,.land[aria-pressed=true]{background:var(--desk2)} .land i{width:10px;height:10px;border-radius:2px}
 .land .bar{grid-column:2/-1;height:4px;background:var(--c5);border-radius:2px;overflow:hidden} .land .bar u{display:block;height:100%}
 .pop{position:fixed;z-index:8;width:min(440px,calc(100vw - 16px));background:var(--desk2);border:1px solid var(--rule);border-radius:6px;padding:14px 16px 12px;box-shadow:0 14px 34px rgba(0,0,0,.55)} .pop h2{margin:0 0 4px;font-size:14px;color:var(--txt)} .pop .packs{margin-top:10px} .pop .note{margin:10px 0 0} .pop .chip:disabled{opacity:.45;cursor:default} .assume[aria-expanded=true]{border-color:var(--lamp);color:var(--txt)}
+.next.auto{position:relative;overflow:hidden} .next.auto::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:currentColor;opacity:.65;transform-origin:left;animation:autonext 3s linear forwards} @keyframes autonext{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 .packs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:18px 0 0;font-size:13px;color:var(--dim)}
 .ffs{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
 .endrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:8px 14px;border-top:1px solid var(--prule);border-bottom:1px solid var(--prule);padding:12px 0;margin:4px 0 12px}
@@ -2306,7 +2307,7 @@ const WORLD2={"start":"2026-11-19","end":"2027-12-31","clocks":{"rate":{"name":"
 // (docs/world-math.md 10.2 shadow value; ruling 115). 'mark' adds a label to the landing name when its 'if' holds at year end.
 // knownAtRule null = the event's record is never public (ruling 111).
 const WORLD3 = {
-  format: 3, layer: 'world', id: 'ai-markets', version: '3.1.0-eventspec4',
+  format: 3, layer: 'world', id: 'ai-markets', version: '3.2.0-scenario',
   start: '2026-11-18', end: '2027-12-31', calendar: 'weekdays',
   modelStart: { at: '2026-11-18T14:30Z', local: '2026-11-18 09:30 America/New_York',
     rule: '起點只用這個時刻之前已公開的讀數；之後才公布或修訂的另列（裁定 76）' },
@@ -2712,8 +2713,7 @@ const WORLD3 = {
       cond: [
         { layer: 'L2', target: 'reclosed', read: { state: 'threat' }, anchor: { lo: { x: -0.0989, situ: 'S28（2021-11-08：低利率下的題材與新上市熱潮）；threat 讀數 80.22' }, hi: { x: 1, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；threat 讀數 318.93' }, or: 1.8 }, mech: '整體地緣風險仍高時，重開的航道更容易再被打斷' } ] },
     // Seq 4 (b), scenario pack scnConflict. Every scenario event: rate is per year at the neutral start, times the scnFreq knob.
-    { id: 'shipHaltStrait', name: '台海衝突使台灣先進晶片出貨中斷', kind: 'random', group: 'geo', system: 1, rate: 0.05, max: 1,
-      rateKnob: 'scnFreq',
+    { id: 'shipHaltStrait', name: '台海衝突使台灣先進晶片出貨中斷', kind: 'random', group: 'geo', system: 1, max: 1,
       if: 'scnConflict',
       ifWhy: '劇本開關：只在使用者打開「區域衝突擴大」時可能發生；開了之後的機率照表走',
       grade: 'judgement',
@@ -2724,7 +2724,9 @@ const WORLD3 = {
       pSrcOut: 'scenario',
       desc: '當事方：中國與台灣（美日介入與否不限）。對台灣動用武力（攔截、扣押、封鎖、攻擊）使先進製程或封裝出貨連續中斷五個交易日以上、佔全球一半以上；收場看數週內放行的檢疫、長期封鎖，或對設施的攻擊',
       blurb: '台海衝突讓台灣先進晶片出貨中斷，科技供應鏈面臨斷料。',
+      scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
         { key: 'quarantine', publicKey: null, name: '海上檢疫或部分封鎖，數週內放行', branch: 'blockade', sev: 0, w: 0.5, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 30 }, { flag: 'fShipBlock', v: true }, { attr: 'gpuRent', d: 30, noMod: true }, { attr: 'aiUsage', d: -15, noMod: true }, { attr: 'vol', d: 20, noMod: true }] },
         { key: 'blockade', publicKey: null, name: '全面封鎖，長期中斷', branch: 'blockade', sev: 1, w: 0.4, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 45 }, { flag: 'fShipBlock', v: true }, { attr: 'gpuRent', d: 50, noMod: true }, { attr: 'aiUsage', d: -30, noMod: true }, { attr: 'vol', d: 35, noMod: true }] },
         { key: 'strike', publicKey: null, name: '對島內設施的攻擊', branch: 'attack', w: 0.1, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 50 }, { flag: 'fShipBlock', v: true }, { attr: 'gpuRent', d: 60, noMod: true }, { attr: 'aiUsage', d: -35, noMod: true }, { attr: 'vol', d: 40, noMod: true }] } ],
@@ -2733,10 +2735,9 @@ const WORLD3 = {
         { layer: 'L1', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 0.7 }, mech: '全球市場大亂時，發動方也承受不起再加一個衝擊' },
         { layer: 'L2', target: 'attack', read: { state: 'hostility' }, anchor: { lo: { x: 0.333333, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；hostility 讀數 1' }, hi: { x: 0.666667, situ: 'S10（2024-08-05：日圓套利平倉，VIX 單日暴衝；6 月仁愛礁有人受傷）；hostility 讀數 2' }, or: 1.8 }, mech: '已在動用武力那一級時，更可能直接攻擊而不只是封鎖' },
         { layer: 'L3', target: 'blockade', read: { state: 'threat' }, anchor: { lo: { x: 0.0297, situ: 'S06（2018-12-24：升息加縮表，聖誕前夕股市谷底）；threat 讀數 105.94' }, hi: { x: 1, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；threat 讀數 318.93' }, or: 1.5 }, mech: '整體地緣風險高時，封鎖更可能拖成長期' } ] },
-    { id: 'farWarWide', name: '東亞以外的戰事擴大到多個大國並威脅能源要道', kind: 'random', group: 'geo', system: 1, rate: 0.07, max: 1,
-      rateKnob: 'scnFreq',
-      if: 'scnConflict && fired(farWar) >= 1',
-      ifWhy: '劇本開關，加上這條路徑上已經發生過 farWar（東亞以外的戰爭爆發）：沒有戰爭就談不上擴大，這是能不能發生的開關（核對 verify-W4b-2；裁定 170）。依裁定 186，fired 只數已公開的次數；farWar 的公開時點是 nextUsOpen，要先公開才算',
+    { id: 'farWarWide', name: '東亞以外的戰事擴大到多個大國並威脅能源要道', kind: 'random', group: 'geo', system: 1, max: 1,
+      if: 'scnConflict',
+      ifWhy: '劇本開關，加上這條路徑上已經發生過 farWar（東亞以外的戰爭爆發）：沒有戰爭就談不上擴大，這是能不能發生的開關（核對 verify-W4b-2；裁定 170）。依裁定 186，fired 只數已公開的次數；farWar 的公開時點是 nextUsOpen，要先公開才算 ／事件規格第 4 版把 if 改成：scnConflict',
       grade: 'judgement',
       psrc: 'own',
       pWhy: '事件規格第 4 版（裁定 250、258–263）：補 `escort`「護航下局部通行」（三次收場列全都列了；效果介於沒事與中斷之間：威脅 ＋20、油價 ＋15）。情勢名稱從「切斷能源要道」改成「威脅能源要道」；發生率 0.05 → 0.07，中斷的兩種 0.7 × 0.07 ≈ 0.05，等於原來。 ｜舊依據（第 3 版以前；其中的數字已被上面的新權重與發生率取代，留作歷史）：裁定 167 的加碼版本，和預設的 farWar 不重複計：farWar 是一場戰爭爆發；這一個是另一件事——戰事擴大到兩個以上的大國直接參戰，而且荷莫茲或紅海這類能源要道實際中斷。1945 年後沒有東亞以外的大國直接交戰，沒有參考群；判斷：已有 farWar 發生並公開的路徑上，擴大的年率 0.05，只在劇本打開時有效。pSrcOut：可能被影響——推的狀態 threat 的依賴集合含 M 裡的 hostility、tradeBarrier（docs/world-math.md 11.3：Dep(e) ∩ M ≠ ∅），必填；填 scenario：世界算的機率對外標代入情境，不標 market',
@@ -2745,7 +2746,9 @@ const WORLD3 = {
       pSrcOut: 'scenario',
       desc: '當事方：兩個以上直接參戰的大國。一條主要能源航道受阻；收場看護航下局部通行、中斷數週，或中斷數月以上',
       blurb: '東亞以外的戰事擴大到多個大國，能源要道受威脅，油價與運費上揚。',
+      scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none', requires: 'farWar' },
       outcomes: [
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
         { key: 'escort', publicKey: null, name: '護航下局部通行，運費與保險長期偏高', branch: 'escort', w: 0.3, tags: ['down'], effects: [{ attr: 'threat', d: 20 }, { attr: 'oil', d: 15, noMod: true }, { attr: 'vol', d: 10, noMod: true }] },
         { key: 'closure', publicKey: null, name: '航道中斷數週', branch: 'closure', sev: 0, w: 0.45, tags: ['down'], effects: [{ attr: 'threat', d: 40 }, { attr: 'oil', d: 35, noMod: true }, { attr: 'vol', d: 25, noMod: true }] },
         { key: 'closureLong', publicKey: null, name: '航道中斷數月以上', branch: 'closure', sev: 1, w: 0.25, tags: ['down'], effects: [{ attr: 'threat', d: 60 }, { attr: 'oil', d: 60, noMod: true }, { attr: 'vol', d: 40, noMod: true }] } ],
@@ -2791,8 +2794,7 @@ const WORLD3 = {
         { layer: 'L1', read: { mem: 'conflictRun' }, anchor: { lo: { x: -0.9, situ: 'S06（2018-12-24：升息加縮表，聖誕前夕股市谷底）；記憶 conflictRun 的折現和照記憶定義手算，x＝-0.9' }, hi: { x: 1, situ: 'S10（2024-08-05：日圓套利平倉，VIX 單日暴衝；6 月仁愛礁有人受傷）；記憶 conflictRun 的折現和照記憶定義手算，x＝1' }, or: 2 }, mech: '升級鏈越長，核門檻越可能被跨過' },
         { layer: 'L3', target: 'strike', read: { state: 'threat' }, anchor: { lo: { x: 0.0297, situ: 'S06（2018-12-24：升息加縮表，聖誕前夕股市谷底）；threat 讀數 105.94' }, hi: { x: 1, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；threat 讀數 318.93' }, or: 1.5 }, mech: '風險越高，使用越可能不只是示威' } ] },
     // Seq 4 (b), scenario pack scnSociety, system 1 (world situation and society).
-    { id: 'aiRestrictLaw', name: '主要經濟體的前沿 AI 立法表決或生效', kind: 'random', group: 'geo', system: 1, rate: 0.25, max: 2,
-      rateKnob: 'scnFreq',
+    { id: 'aiRestrictLaw', name: '主要經濟體的前沿 AI 立法表決或生效', kind: 'random', group: 'geo', system: 1, max: 1,
       if: 'scnSociety',
       ifWhy: '劇本開關：只在使用者打開「企業與社會變局」時可能發生',
       grade: 'judgement',
@@ -2803,7 +2805,9 @@ const WORLD3 = {
       pSrcOut: 'scenario',
       desc: '當事方：美國、歐盟或中國的立法與主管機關。前沿 AI 的訓練或部署規範表決或生效；收場看大幅限制、溫和規範、否決或延後，或放寬既有限制',
       blurb: '主要經濟體對前沿 AI 立法表決或生效，AI 產業的發展空間可能被重新劃定。',
+      scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
         { key: 'strict', publicKey: null, name: '大幅限制（許可、暫停、算力上限）', branch: 'restrict', sev: 1, w: 0.4, tags: ['down'], effects: [{ attr: 'aiUsage', d: -15, noMod: true }, { attr: 'aiHeat', d: -15, noMod: true }] },
         { key: 'mild', publicKey: null, name: '溫和規範（揭露、評測）', branch: 'restrict', sev: 0, w: 0.3, tags: ['down'], effects: [{ attr: 'aiUsage', d: -5, noMod: true }, { attr: 'aiHeat', d: -5, noMod: true }] },
         { key: 'rejected', publicKey: null, name: '被否決、延後表決，或通過但生效日在模型期間之後（本期沒有效果）', branch: 'rejected', w: 0.2, tags: ['flat'], effects: [] },
@@ -2927,8 +2931,7 @@ const WORLD3 = {
         { layer: 'L3', target: 'upBig', read: { state: 'oil' }, anchor: { lo: { x: -0.75, situ: 'S24（2016-01-20：油價谷底，高收益債能源違約壓力）；oil 讀數 27.88' }, hi: { x: 0.883, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；oil 讀數 127.98' }, or: 2 }, mech: '油價高時能源直接推高物價，年增率一次跳得多' },
         { layer: 'L3', target: 'downBig', read: { state: 'jobless' }, anchor: { lo: { x: -0.28, situ: 'S13（2019-12-20：平靜，美中第一階段協議將簽）；jobless 讀數 3.5' }, hi: { x: 1, situ: 'S03（2011-08-08：美國被降評等後第一個交易日）；jobless 讀數 9.1' }, or: 2 }, mech: '失業高、需求弱時物價一次降得多' } ] },
     // Seq 4 (b), scenario pack scnNature, system 2.
-    { id: 'gridOutage', name: '大範圍電網損壞造成長時間停電', kind: 'random', group: 'econ', system: 2, rate: 0.02, max: 1,
-      rateKnob: 'scnFreq',
+    { id: 'gridOutage', name: '大範圍電網損壞造成長時間停電', kind: 'random', group: 'econ', system: 2, max: 1,
       if: 'scnNature',
       ifWhy: '劇本開關：只在使用者打開「自然與基礎設施事故」時可能發生',
       grade: 'judgement',
@@ -2939,7 +2942,9 @@ const WORLD3 = {
       pSrcOut: 'scenario',
       desc: '當事方：北美或歐洲的電網、太陽風暴或攻擊者。高壓電網大範圍損壞；收場只分區域停電數天到兩週，或大範圍停電數週以上。復工另由 reopening 表示',
       blurb: '大範圍電網損壞造成長時間停電，生產與資料中心運作受衝擊。',
+      scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
         { key: 'regional', publicKey: null, name: '區域停電數天到兩週', branch: 'outage', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'jobless', d: 5 }, { attr: 'gpuRent', d: 10, noMod: true }] },
         { key: 'continental', publicKey: null, name: '大範圍停電數週以上', branch: 'outage', sev: 1, w: 0.3, tags: ['down'], effects: [{ attr: 'jobless', d: 15 }, { attr: 'gpuRent', d: 20, noMod: true }] } ],
       cond: [
@@ -3303,8 +3308,7 @@ const WORLD3 = {
       cond: [
         { layer: 'L2', target: 'extended', read: { state: 'threat' }, anchor: { lo: { x: -0.0989, situ: 'S28（2021-11-08：低利率下的題材與新上市熱潮）；threat 讀數 80.22' }, hi: { x: 1, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；threat 讀數 318.93' }, or: 0.6 }, mech: '地緣競爭激烈時各國較快恢復部署，不願長期自我設限' } ] },
     // Seq 4 (b), scenario pack scnScience, system 4.
-    { id: 'physicalCommercial', name: '實體技術跨過商轉門檻', kind: 'random', group: 'ai', system: 4, rate: 0.07, max: 1,
-      rateKnob: 'scnFreq',
+    { id: 'physicalCommercial', name: '實體技術跨過商轉門檻', kind: 'random', group: 'ai', system: 4, max: 1,
       if: 'scnScience',
       ifWhy: '劇本開關：只在使用者打開「科學與工程突破」時可能發生',
       grade: 'judgement',
@@ -3315,15 +3319,16 @@ const WORLD3 = {
       pSrcOut: 'scenario',
       desc: '當事方：新型能源、通用機器人或軌道算力的開發商與客戶。商業合約、量產交貨或併網發電；收場看跨過門檻、多項同時跨過，或宣布後延期',
       blurb: '機器人、自駕等實體技術逼近商轉門檻，能否真的跨過決定相關題材的熱度。',
+      scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
         { key: 'crossed', publicKey: null, name: '跨過商轉門檻', branch: 'cross', sev: 0, w: 0.6, tags: ['up'], effects: [{ attr: 'buildout', d: 15 }, { flag: 'fBreakthrough', v: true }, { attr: 'aiHeat', d: 20, noMod: true }] },
         { key: 'crossedBig', publicKey: null, name: '多項同時跨過，訂單湧入', branch: 'cross', sev: 1, w: 0.15, tags: ['up'], effects: [{ attr: 'buildout', d: 30 }, { flag: 'fBreakthrough', v: true }, { attr: 'aiHeat', d: 30, noMod: true }] },
         { key: 'delayed', publicKey: null, name: '宣布後延期，或過度宣傳後退潮', branch: 'delayed', w: 0.25, tags: ['flat'], effects: [] } ],
       cond: [
         { layer: 'L2', target: 'delayed', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 2 }, mech: '市場動盪時客戶與資金方延後簽約' },
         { layer: 'L3', target: 'crossedBig', read: { state: 'aiHeat' }, anchor: { lo: { x: -0.3425, situ: 'S09（2022-10-12：美元與殖利率高點；晶片出口管制剛宣布）；aiHeat 讀數 -13.7' }, hi: { x: 0.51, situ: 'S21（2025-10-29：輝達市值創高，AI 題材重燃（決議日前））；aiHeat 讀數 20.4' }, or: 1.8 }, mech: '題材熱時資金追進，多個專案同時推進' } ] },
-    { id: 'aiAccident', name: 'AI 系統失控事故', kind: 'random', group: 'ai', system: 4, rate: 0.03, max: 1,
-      rateKnob: 'scnFreq',
+    { id: 'aiAccident', name: 'AI 系統失控事故', kind: 'random', group: 'ai', system: 4, max: 1,
       if: 'scnScience',
       ifWhy: '劇本開關：只在使用者打開「科學與工程突破」時可能發生',
       grade: 'judgement',
@@ -3334,7 +3339,9 @@ const WORLD3 = {
       pSrcOut: 'scenario',
       desc: '當事方：一個高階 AI 系統的開發商、使用者與主管機關。沒有授權下造成大規模實體或金融損害，主管機關緊急限制；收場分三級：事故受控、多國暫停高階模型、無法完全關閉',
       blurb: 'AI 系統發生失控事故，監管收緊，AI 類股面臨重新定價。',
+      scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
         { key: 'contained', publicKey: null, name: '事故造成損害但受控，主管機關限制後補上防護', branch: 'accident', sev: 0, w: 0.55, tags: ['down'], effects: [{ attr: 'aiUsage', d: -10 }, { flag: 'fAiLoss', v: true }, { attr: 'vol', d: 15, noMod: true }] },
         { key: 'severe', publicKey: null, name: '多國緊急暫停高階模型部署', branch: 'accident', sev: 1, w: 0.35, tags: ['down'], effects: [{ attr: 'aiUsage', d: -30 }, { flag: 'fAiLoss', v: true }, { attr: 'vol', d: 40, noMod: true }] },
         { key: 'uncontained', publicKey: null, name: '無法完全關閉', branch: 'accident', sev: 2, w: 0.1, tags: ['down'], effects: [{ attr: 'aiUsage', d: -50 }, { flag: 'fAiLoss', v: true }, { attr: 'vol', d: 60, noMod: true }] } ],
@@ -3450,8 +3457,7 @@ const WORLD3 = {
       cond: [
         { layer: 'L3', target: 'crowd', read: { state: 'aiHeat' }, anchor: { lo: { x: -0.3425, situ: 'S09（2022-10-12：美元與殖利率高點；晶片出口管制剛宣布）；aiHeat 讀數 -13.7' }, hi: { x: 0.51, situ: 'S21（2025-10-29：輝達市值創高，AI 題材重燃（決議日前））；aiHeat 讀數 20.4' }, or: 1.8 }, mech: '題材熱時資金擠進同一批部位' } ] },
     // Seq 4 (b), scenario pack scnMoney, system 5.
-    { id: 'treasuryDisorder', name: '美國公債市場承壓（拍賣不佳或價差擴大）', kind: 'random', group: 'credit', system: 5, rate: 0.07, max: 1,
-      rateKnob: 'scnFreq',
+    { id: 'treasuryDisorder', name: '美國公債市場承壓（拍賣不佳或價差擴大）', kind: 'random', group: 'credit', system: 5, max: 1,
       if: 'scnMoney',
       ifWhy: '劇本開關：只在使用者打開「貨幣與信用秩序動搖」時可能發生',
       grade: 'judgement',
@@ -3462,7 +3468,9 @@ const WORLD3 = {
       pSrcOut: 'scenario',
       desc: '當事方：美國財政部、公債交易商、聯準會。拍賣認購不佳或次級市場價差擴大；收場看市場自行消化、失序、嚴重失序，或聯準會買債迅速止血',
       blurb: '美國公債市場承壓，殖利率劇烈波動，牽動所有資產的定價基準。',
+      scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
         { key: 'absorbed', publicKey: null, name: '拍賣不佳但市場自行消化', branch: 'absorbed', w: 0.3, tags: ['flat'], effects: [] },
         { key: 'disorder', publicKey: null, name: '公債市場失序', branch: 'disorder', sev: 0, w: 0.4, tags: ['down'], effects: [{ clock: 'strain', d: 1 }, { attr: 'dollar', d: -15 }, { attr: 'usDoubt', d: 15 }, { attr: 'vol', d: 30, noMod: true }], funding: { terms: [], background: [{ quantityId: 'vixClose', unit: '點', src: 'data_vix' }], subject: { who: '美國公債交易商與以公債作擔保的槓桿部位', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'treasuryDisorder.fedBuys', maxDays: null, src: 'own' } } },
         { key: 'disorderBig', publicKey: null, name: '嚴重失序，連公債都賣不出去', branch: 'disorder', sev: 1, w: 0.15, tags: ['down'], effects: [{ clock: 'strain', d: 2 }, { attr: 'dollar', d: -30 }, { attr: 'usDoubt', d: 30 }, { attr: 'vol', d: 45, noMod: true }], funding: { terms: [], background: [{ quantityId: 'vixClose', unit: '點', src: 'data_vix' }], subject: { who: '美國公債交易商與以公債作擔保的槓桿部位', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'treasuryDisorder.fedBuys', maxDays: null, src: 'own' } } },
@@ -3470,8 +3478,7 @@ const WORLD3 = {
       cond: [
         { layer: 'L2', target: 'backstop', read: { mem: 'rescueRun' }, anchor: { lo: { x: 0.01, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；記憶 rescueRun 的折現和照記憶定義手算，x＝0.01' }, hi: { x: 1, situ: 'S07（2020-03-16：新冠疫情，聯準會降到零利率）；記憶 rescueRun 的折現和照記憶定義手算，x＝1' }, or: 2 }, mech: '聯準會剛出手過，買債的工具與先例都在' },
         { layer: 'L3', target: 'disorderBig', read: { state: 'fedStance' }, anchor: { lo: { x: -0.333333, situ: 'S26（2024-09-20：聯準會降息 50 基點後）；fedStance 讀數 -50' }, hi: { x: 1, situ: 'S31（2022-09-27：英國公債危機，美元指數高點）；fedStance 讀數 150' }, or: 1.8 }, mech: '緊縮中縮表、交易商資產負債表緊，失序更嚴重' } ] },
-    { id: 'stablecoinRun', name: '大型穩定幣擠兌', kind: 'random', group: 'credit', system: 5, rate: 0.3, max: 1,
-      rateKnob: 'scnFreq',
+    { id: 'stablecoinRun', name: '大型穩定幣擠兌', kind: 'random', group: 'credit', system: 5, max: 1,
       if: 'scnMoney',
       ifWhy: '劇本開關：只在使用者打開「貨幣與信用秩序動搖」時可能發生',
       grade: 'judgement',
@@ -3482,7 +3489,9 @@ const WORLD3 = {
       pSrcOut: 'scenario',
       desc: '當事方：市值前幾大的穩定幣發行商、持有人、準備資產的託管銀行。脫鉤、贖回暫停；收場看數日內恢復掛鉤、崩潰，或波及短期公債與銀行',
       blurb: '大型穩定幣遭到擠兌，壓力可能外溢到短期公債與銀行。',
+      scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
         { key: 'repeg', publicKey: null, name: '數日內恢復掛鉤', branch: 'repeg', w: 0.5, tags: ['flat'], effects: [], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '穩定幣持有人與準備資產的託管銀行', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
         { key: 'collapse', publicKey: null, name: '崩潰', branch: 'collapse', sev: 0, w: 0.35, tags: ['down'], effects: [{ clock: 'strain', d: 1 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '銀行與類銀行機構的短期負債（存款、貨幣基金、交易所客戶資產）', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', maxDays: null, src: 'own' } } },
         { key: 'contagion', publicKey: null, name: '波及短期公債與銀行', branch: 'collapse', sev: 1, w: 0.15, tags: ['down'], effects: [{ clock: 'strain', d: 2 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '銀行與類銀行機構的短期負債（存款、貨幣基金、交易所客戶資產）', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', maxDays: null, src: 'own' } } } ],
@@ -3586,8 +3595,7 @@ const WORLD3 = {
       cond: [
         { layer: 'L3', target: 'meltUp', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 1, situ: 'S02（2008-10-10：雷曼倒閉後一個月，全球股市崩跌，聯準會 10-08 緊急降息）；strain 讀數 16' }, or: 0.5 }, mech: '資金壓力高時漲勢很難變成狂熱' } ] },
     // Seq 4 (b), scenario pack scnSociety, system 6.
-    { id: 'aiListingFlop', name: '大型 AI 公司上市', kind: 'random', group: 'mood', system: 6, rate: 0.5, max: 1,
-      rateKnob: 'scnFreq',
+    { id: 'aiListingFlop', name: '大型 AI 公司上市', kind: 'random', group: 'mood', system: 6, max: 1,
       if: 'scnSociety',
       ifWhy: '劇本開關：只在使用者打開「企業與社會變局」時可能發生',
       grade: 'judgement',
@@ -3598,7 +3606,9 @@ const WORLD3 = {
       pSrcOut: 'scenario',
       desc: '當事方：一家估值千億美元以上的 AI 公司、承銷商與投資人。上市或上市計畫；收場看大漲（上市窗口重開）、守住發行價、跌破或延後，或撤回上市。id 沿用（舊名「大型 AI 公司上市失利」改成情勢的名稱）',
       blurb: '大型 AI 公司上市，掛牌表現成為市場對 AI 熱度的溫度計。',
+      scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
         { key: 'success', publicKey: null, name: '上市大漲，窗口重開', branch: 'success', w: 0.35, tags: ['up'], effects: [{ attr: 'aiHeat', d: 15 }] },
         { key: 'steady', publicKey: null, name: '守住發行價', branch: 'steady', w: 0.25, tags: ['flat'], effects: [] },
         { key: 'flop', publicKey: null, name: '跌破發行價三成或延後', branch: 'flop', sev: 0, w: 0.3, tags: ['down'], effects: [{ attr: 'vol', d: 10 }, { attr: 'aiHeat', d: -20 }] },
@@ -4272,7 +4282,8 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
   var sg = function (p, d) { return (p >= 0 ? '+' : '−') + Math.abs(p).toFixed(d == null ? 1 : d) + '%'; };
   var md = function (d) { return d.slice(5).replace('-', '/'); };
   var esc = function (t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
-  // the world file's description of an event is written for the people who maintain it; the page shows only the plain sentences
+  // The line under an event's headline is the world file's blurb (one sentence written for the reader). Until the adapter passes it on, the
+  // description stands in: it is written for the people who maintain the world, so the page shows only its plain sentences
   // (pieces with internal names, rulings or weights are left out)
   var INNER = /權重|裁定|引擎|統籌|歸一|world|docs|FRED|新事件|[a-z]+[A-Z][a-z]|buildout|max \d|§|〔/;
   function plain(d) { if (!d) return ''; var s = String(d).split(/(?<=[。；])/).filter(function (x) { return !INNER.test(x); }).join('').replace(/[；，、\s]+$/, '');
@@ -4285,12 +4296,12 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
   var revealed = false, busy = false, focal = 'now', sel = 'spx', hl = null, fold = true, pick = false, pgrp = 'idx', pq = '', pins = [];
   var newSeed = function () { return (Math.random() * 2147483646 | 0) + 1; };
   function sync() { LOG = G.log(); pendC = null; }
-  function begin(g) { G = g || A2.play({ seed: seed, knobs: knobs, stop: null }); sync(); revealed = false; shown = null; lastQ = prevSt = null; cgShown = false; hl = null; ranged = null; }
+  function begin(g) { clearTimeout(autoT); autoT = null; G = g || A2.play({ seed: seed, knobs: knobs, stop: null }); sync(); revealed = false; shown = null; lastQ = prevSt = null; cgShown = false; hl = null; ranged = null; }
   var done = function () { return G.done() && !revealed; };
   function Q(ids) { var o = {}; ids.forEach(function (id) { try { var q = G.quotes([id])[0]; o[id] = { v: q.close, chg: q.sinceAnchor, name: q.name }; } catch (e) { } }); return o; }
   var vis = function () { return FOCUS.map(function (f) { return f[0]; }).concat(pins); };
   function pend() { if (pendC) return pendC; var q = G.pending(); if (!q) return null;
-    return pendC = { note: plain(q.desc) || (typeof EVNOTE !== 'undefined' && EVNOTE[q.ev]) || '', date: q.date, stage: q.stage, name: q.name, types: q.types, grade: q.gradeName || '', psrc: q.psrc, expect: q.expect,
+    return pendC = { note: q.blurb || plain(q.desc) || (typeof EVNOTE !== 'undefined' && EVNOTE[q.ev]) || '', date: q.date, stage: q.stage, name: q.name, types: q.types, grade: q.gradeName || '', psrc: q.psrc, expect: q.expect,
       options: q.options.map(function (o) { return { name: o.name, p: o.cp, delta: (o.delta || []).filter(function (d) { return !story(d); }), price: o.price, off: !!o.off, rest: !!o.rest, mods: o.mods || [] }; }) }; }
   // landing shares from here: the start uses the adapter's overview (1000 runs), later steps its forecast (300 runs); both are kept by the adapter
   var fc = function () { return LOG.length ? G.forecast(300) : A2.overview({ knobs: knobs, N: 1000, seed: 1 }); };
@@ -4481,7 +4492,7 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
       e.options.map(function (o, j) {
         return '<button class="opt' + (o.rest ? ' rest' : '') + (revealed ? (j === r.j ? ' won' : ' lost') : o.off ? ' lost' : '') + '" data-opt="' + j + '"' + (o.off && !revealed ? ' disabled' : '') + ' title="點這一列：直接選這個結果"><span class="k">' + (j + 1) + '</span><span class="t">' + esc(o.name) + '</span><span class="p">' + (o.off ? '—' : Math.round(o.p * 100) + '%') + '</span><span class="c"><span>' + (o.delta.length ? o.delta.map(function (d) { return esc(d).replace(/→(.+)$/, ' → <b>$1</b>'); }).join('；') : '世界現況不變') + '</span>' + chips(o) + '</span></button>';
       }).join('') +
-      '<div class="act">' + (revealed ? '<button class="next" data-next="1"><kbd>Enter</kbd>下一則</button>' : '<button class="roll" data-roll="1"><kbd>空白鍵</kbd>擲骰</button>') + (LOG.length ? '<button class="ghost" data-back="1"><kbd>←</kbd>退一步</button>' : '') + '<span class="ffs"><button class="ghost" data-ff="stage">擲完這一季</button><button class="ghost" data-ff="end">一路擲到年底</button></span></div>' +
+      '<div class="act">' + (revealed ? '<button class="next' + (autoT ? ' auto' : '') + '" data-next="1"><kbd>Enter</kbd>下一則</button>' : '<button class="roll" data-roll="1"><kbd>空白鍵</kbd>擲骰</button>') + (LOG.length ? '<button class="ghost" data-back="1"><kbd>←</kbd>退一步</button>' : '') + '<span class="ffs"><button class="ghost" data-ff="stage">擲完這一季</button><button class="ghost" data-ff="end">一路擲到年底</button></span></div>' +
       (why ? '<details class="why"><summary>這幾個機率怎麼來的</summary>' + why + '</details>' : '') + '</article>';
   }
   function market(k) {
@@ -4536,8 +4547,10 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
   // the special scripts open in place under the header button (same chips as before); the frequency choice has its place here and waits for the engine
   var popOpen = false;
   function packPop() {
-    var el = $('#packpop'), btn = $('#assume'), P = A2.WF.packs; btn.hidden = !P.length; if (!P.length) popOpen = false; btn.setAttribute('aria-expanded', popOpen); el.hidden = !popOpen; if (!popOpen) return;
-    el.innerHTML = '<h2>特殊劇本</h2><div class="packs">' + P.map(function (p) { return '<button class="chip" data-pack="' + esc(p.knob) + '" aria-pressed="' + !!knobs[p.knob] + '">' + esc(p.name) + '</button>'; }).join('') + '</div>';
+    var el = $('#packpop'), btn = $('#assume'), P = A2.WF.packs, FQ = A2.WF.freq || null;   // freq: {knob, options: [{v, name}]} when the world has a frequency choice
+    btn.hidden = !P.length; if (!P.length) popOpen = false; btn.setAttribute('aria-expanded', popOpen); el.hidden = !popOpen; if (!popOpen) return;
+    el.innerHTML = '<h2>特殊劇本</h2><div class="packs">' + P.map(function (p) { return '<button class="chip" data-pack="' + esc(p.knob) + '" aria-pressed="' + !!knobs[p.knob] + '">' + esc(p.name) + '</button>'; }).join('') + '</div>' +
+      (FQ ? '<div class="packs">頻率：' + FQ.options.map(function (o) { return '<button class="chip" data-freq="' + esc(o.v) + '" aria-pressed="' + ((knobs[FQ.knob] || FQ.options[0].v) === o.v) + '">' + esc(o.name) + '</button>'; }).join('') + '</div>' : '');
     var r = btn.getBoundingClientRect(), w = el.offsetWidth; el.style.top = Math.round(r.bottom + 6) + 'px'; el.style.left = Math.round(Math.max(8, Math.min(r.left, window.innerWidth - w - 8))) + 'px';
   }
   function render(prevState) {
@@ -4554,6 +4567,8 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
   var redraw = function () { render(revealed ? prevSt : null); };
 
   // ---------- actions ----------
+  // after an outcome is shown the page goes on to the next event by itself in three seconds; any step the reader takes first cancels the wait
+  var AUTO = 3000, autoT = null, stopAuto = function () { clearTimeout(autoT); autoT = null; };
   async function decide(j) {   // j === undefined: the dice decide; otherwise the reader picks outcome j
     if (busy || revealed || G.done() || focal !== 'now') return; var e = pend(); if (j !== undefined && (!e.options[j] || e.options[j].off)) return; busy = true;
     lastQ = Q(vis()); prevSt = G.state();
@@ -4563,21 +4578,23 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
     if (e.rolled.dice) { var mk = $('#mark'); mk.classList.add('on'); mk.getBoundingClientRect(); mk.style.left = (e.rolled.dice - .5) + '%';
       await tween(900, function (x) { $('#markn').textContent = Math.max(1, Math.round(e.rolled.dice * x)); }); await wait(220); }
     revealed = true; render(prevSt); river();
+    stopAuto(); autoT = setTimeout(function wake() { autoT = null; if (!revealed || focal !== 'now') return; if (busy) { autoT = setTimeout(wake, 200); return; } next(); }, AUTO);
+    var nb = document.querySelector('[data-next]'); if (nb) nb.classList.add('auto');
     var rail = $('#grid').querySelector('.rail:last-of-type');
     await tween(900, function (x) { var tmp = document.createElement('div'); tmp.innerHTML = market(x); var a = rail && rail.querySelector('table'); if (a) a.innerHTML = tmp.querySelector('table').innerHTML; });
     busy = false; var nx = document.querySelector('[data-next]'); if (nx) nx.focus({ preventScroll: true });
   }
   function playEnd() { var E = G.ending(), k = typeof CGK !== 'undefined' && CGK[E.id]; if (!k || typeof playCG === 'undefined') { toast('這個落點沒有演出。'); return; } var q = Q(['spx', 'sox', 'twii']); playCG(k, { title: E.name, stats: ['spx', 'sox', 'twii'].map(function (x) { return q[x].name + ' ' + sg(q[x].chg * 100, 0); }).join('　·　') }); }
   function arrive() { if (done() && !cgShown) { cgShown = true; if (!document.hidden && !reduce) playEnd(); } }
-  function ff(kind) { if (busy || G.done()) return; revealed = false; shown = null; var n0 = LOG.length; if (kind === 'end') G.rollEnd(); else G.rollStage(); sync(); lastQ = prevSt = null; render(); river(); toast('往前擲了 ' + (LOG.length - n0) + ' 則' + (G.done() ? '，到年底了' : '')); arrive(); }
-  function next() { if (busy || !revealed) return; revealed = false; shown = null; render(); river(); var s = $('#sheet'); if (s) s.classList.add('swap'); arrive(); }
-  function back() { if (busy || !LOG.length) return; revealed = false; shown = null; G.undo(); sync(); lastQ = prevSt = null; cgShown = false; render(); river(); }
-  function setFocal(f) { focal = f; hl = null; redraw(); river(); window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' }); }
+  function ff(kind) { if (busy || G.done()) return; stopAuto(); revealed = false; shown = null; var n0 = LOG.length; if (kind === 'end') G.rollEnd(); else G.rollStage(); sync(); lastQ = prevSt = null; render(); river(); toast('往前擲了 ' + (LOG.length - n0) + ' 則' + (G.done() ? '，到年底了' : '')); arrive(); }
+  function next() { if (busy || !revealed) return; stopAuto(); revealed = false; shown = null; render(); river(); var s = $('#sheet'); if (s) s.classList.add('swap'); arrive(); }
+  function back() { if (busy || !LOG.length) return; stopAuto(); revealed = false; shown = null; G.undo(); sync(); lastQ = prevSt = null; cgShown = false; render(); river(); }
+  function setFocal(f) { stopAuto(); focal = f; hl = null; redraw(); river(); window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' }); }
   function restart(g) { begin(g); focal = g ? focal : 'now'; render(); river(); }
 
   document.addEventListener('click', function (ev) {
     if (popOpen && !ev.target.closest('#packpop,#assume')) { popOpen = false; packPop(); }
-    var t = ev.target.closest('[data-focal],[data-ins],[data-fam],[data-land],[data-roll],[data-next],[data-back],[data-reset],[data-new],[data-load],[data-opt],[data-fold],[data-pick],[data-grp],[data-pin],[data-pack],[data-ind],[data-unit],[data-swap],[data-home],[data-ff],[data-cg],#bmain,#bback,#bmore,#assume'); if (!t) return; var d = t.dataset;
+    var t = ev.target.closest('[data-focal],[data-ins],[data-fam],[data-land],[data-roll],[data-next],[data-back],[data-reset],[data-new],[data-load],[data-opt],[data-fold],[data-pick],[data-grp],[data-pin],[data-pack],[data-freq],[data-ind],[data-unit],[data-swap],[data-home],[data-ff],[data-cg],#bmain,#bback,#bmore,#assume'); if (!t) return; var d = t.dataset;
     if (d.pin) { var j = pins.indexOf(d.pin); j >= 0 ? pins.splice(j, 1) : pins.push(d.pin); if (j >= 0 && sel === d.pin) sel = 'spx'; redraw(); river(); ev.stopPropagation(); }
     else if (d.focal) setFocal(d.focal);
     else if (d.unit) { unit = d.unit; redraw(); river(); }
@@ -4598,6 +4615,7 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
     else if (d.pick) { pick = !pick; if (focal !== 'now') focal = 'now'; redraw(); }
     else if (d.grp) { pgrp = d.grp; pq = ''; redraw(); }
     else if (t.id === 'assume') { popOpen = !popOpen; packPop(); }
+    else if (d.freq) { var fq = A2.WF.freq; if (LOG.length && !confirm('換假設會讓這一局從頭開始。要換嗎？')) return; knobs[fq.knob] = +d.freq; begin(); render(); river(); }
     else if (d.pack) { if (LOG.length && !confirm('換假設會讓這一局從頭開始。要換嗎？')) return; if (knobs[d.pack]) delete knobs[d.pack]; else knobs[d.pack] = 1; begin(); render(); river(); }
     else if (t.id === 'bmain') { focal !== 'now' ? setFocal('now') : done() ? setFocal('run') : revealed ? next() : decide(); }
     else if (t.id === 'bmore') setFocal(focal === 'all' ? 'run' : 'all');
