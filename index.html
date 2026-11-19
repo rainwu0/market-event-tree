@@ -11,6 +11,7 @@
   --desk:#101518; --desk2:#182026; --desk3:#0c1012; --rule:#27323a; --dim:#8696a0; --txt:#dfe6e8; --lamp:#d9b25c;
   --paper:#efe8d8; --paper2:#e2d9c4; --ink:#1b1a17; --ink2:#5b564b; --prule:#c9bfa6; --stamp:#b23a2b;
   --c1:#15130d; --c2:#2e7d4f; --c3:#c0392b; --c4:#aab6bb; --c5:#2a353c; --c6:#93a3ab; --c7:#fff4; --c8:#0009; --c9:#0000; --c10:#fff; --c11:#fff7; --c12:#000d; --c13:#c5cfd3; --grid:#161d22; --ma20:#e0a640; --ma60:#a79ff0; --mute:#888888; --white:#e9edf0;
+  --ou1:#a9c4d6; --ou2:#2c5d86; --od1:#e3bd8f; --od2:#a6501d; --oflat:#b5ae9e; --orest:#d8d1c1; --oa:#27485a; --ob:#cdd6d3; --h0:#6f93aa; --h1:#d9b25c; --h2:#d98a3d; --h3:#d0503f;
   --up:#e0564a; --dn:#3fae78; --g0:#4f9a6c; --g1:#6f93aa; --g2:#c9973a; --g3:#c45a4e;
   --serif:"Noto Serif TC","Source Han Serif TC","Songti TC","PMingLiU",serif;
   --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
@@ -63,8 +64,10 @@ body.us .up{color:var(--dn)} body.us .dn{color:var(--up)} body.us .opt .c b.up{c
 .grid{display:grid;grid-template-columns:270px minmax(0,1fr) 330px;gap:24px;padding:8px 22px 90px;align-items:start;max-width:1500px;margin:0 auto}
 .rail h2{font:500 11.5px var(--serif);letter-spacing:.3em;color:var(--dim);margin:0 0 8px;display:flex;justify-content:space-between;gap:8px} .rail h2 span{letter-spacing:0;font-family:var(--sans)}
 /* world board */
-.ck{display:grid;grid-template-columns:76px 1fr;gap:2px 8px;align-items:center;padding:4px 8px;border-radius:3px;font-size:13px;color:var(--c4)}
+.ck{display:grid;grid-template-columns:8.5em 1fr;gap:2px 8px;align-items:center;padding:4px 8px;border-radius:3px;font-size:13px;color:var(--c4)}
 .ck .pips{display:flex;gap:3px} .ck .pips i{flex:1;height:6px;border-radius:1px;background:var(--c5)} .ck .pips i.on{background:var(--c6)}
+.ck .pips i.on.h0{background:var(--h0)} .ck .pips i.on.h1{background:var(--h1)} .ck .pips i.on.h2{background:var(--h2)} .ck .pips i.on.h3{background:var(--h3)} .ck .lv.h0{color:var(--h0)} .ck .lv.h1{color:var(--h1)} .ck .lv.h2{color:var(--h2)} .ck .lv.h3{color:var(--h3)}
+.attr i u.h0{background:var(--h0)} .attr i u.h1{background:var(--h1)} .attr i u.h2{background:var(--h2)} .attr i u.h3{background:var(--h3)}
 .ck .lv{grid-column:2;font-size:12.5px;color:var(--txt)} .ck .lv s{color:var(--dim);margin-right:6px}
 .ck.hot{outline:1px dashed #d9b25c88} .ck.hot .pips i.on{background:var(--lamp)}
 .ck.chg{background:var(--desk2);outline:1px solid var(--lamp);animation:flash 1s ease-out} .ck.chg .pips i.on{background:var(--lamp);box-shadow:0 0 6px var(--lamp)}
@@ -85,13 +88,13 @@ body.us .up{color:var(--dn)} body.us .dn{color:var(--up)} body.us .opt .c b.up{c
 .stamp small{display:block;font:500 11px var(--mono);letter-spacing:.04em;margin-top:2px}
 @keyframes stamp{from{transform:rotate(-7deg) scale(1.9);opacity:0}to{transform:rotate(-7deg) scale(1);opacity:.92}}
 .pbar{position:relative;display:flex;height:14px;border:1px solid var(--ink);margin:0 0 4px}
-.pbar i{display:block;border-right:1px solid var(--ink);background:var(--paper2)} .pbar i:last-of-type{border:0}
+.pbar i{display:block;border-right:1px solid var(--ink);background:var(--oc,var(--paper2))} .pbar i:last-of-type{border:0}
 .mark{position:absolute;top:-9px;bottom:-9px;left:0;width:2px;background:var(--ink);transition:left var(--t-roll) cubic-bezier(.12,.7,.2,1);opacity:0} .mark.on{opacity:1}
 .mark b{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font:700 13px var(--mono);background:var(--ink);color:var(--paper);padding:1px 6px;border-radius:2px}
 .pticks{position:relative;display:flex;justify-content:space-between;font:11px var(--mono);color:var(--ink2);margin-bottom:12px}
 .opt{display:grid;grid-template-columns:30px 1fr auto;gap:2px 12px;align-items:baseline;padding:11px 4px;border-top:1px solid var(--prule);transition:opacity .35s,background .35s;width:100%;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;color:inherit}
 .opt:hover{background:#0000000a} .opt.lost{opacity:.3} .opt.won{background:#0000000d}
-.opt .k{font:500 12.5px var(--mono);border:1px solid var(--ink2);border-radius:3px;text-align:center;color:var(--ink2)}
+.opt .k{font:500 12.5px var(--mono);border:1px solid var(--oc,var(--ink2));border-radius:3px;text-align:center;color:var(--ot,var(--paper));background:var(--oc,var(--ink2))}
 .opt .t{font:700 20px/1.3 var(--serif)} .opt.rest .t{font-weight:500;color:var(--ink2)}
 .opt .p{font:500 24px/1 var(--mono);font-variant-numeric:tabular-nums}
 .opt .c{grid-column:2/-1;font-size:13px;color:var(--ink2);display:flex;flex-wrap:wrap;gap:3px 14px} .opt .c b{color:var(--ink);font-weight:700}
@@ -809,6 +812,162 @@ const MARKET_DATA={"version":"2026-11-18.4","cutoff":"2026-11-18","anchors":{"00
   const api = Object.freeze({ create });
   if (node) module.exports = api;
   else scope.MarketPath = api;
+})(globalThis);
+globalThis.POLICY_EQUITY={"quantityId":"fedStance","unit":"基點","factor":"eq","logPctPerUnit":-0.04,"grade":"文獻近似","scope":"聯邦基金目標利率公告意外對美股大盤的平均反應，以局部線性對數百分點近似；情境機率作為市場預期是模擬假設。","source":"https://www.federalreserve.gov/pubs/feds/2004/200416abs.html"};
+(function (scope) {
+'use strict';
+const node = typeof module !== 'undefined' && module.exports;
+
+// Input is the receiver-filtered, availability-ordered prefix, not the world log.
+function stateImpacts(prefix, exposures) {
+  const levels = new Map(), seen = new Set(), effects = [];
+  for (const release of prefix.releases) {
+    const key = JSON.stringify([release.releaseId, release.revision]);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const period = release.observedPeriod?.to;
+    if (!period) continue;
+    for (const {quantityId, unit, after} of release.observations || []) {
+      if (!Object.hasOwn(exposures, quantityId) || !Number.isFinite(after)) continue;
+      const exposure = exposures[quantityId];
+      if (unit !== exposure.unit || !Number.isFinite(exposure.logPctPerUnit)) {
+        throw new Error('Incompatible pricing exposure for ' + quantityId);
+      }
+      const previous = levels.get(quantityId);
+      if (previous && period < previous.period) continue;
+      levels.set(quantityId, {period, after});
+      if (!previous || after === previous.after) continue;
+      effects.push({releaseId: release.releaseId, revision: release.revision,
+        availableAt: release.availableAt, quantityId, factor: exposure.factor,
+        logPct: (after - previous.after) * exposure.logPctPerUnit});
+    }
+  }
+  return effects;
+}
+
+function announcementSurprise(release) {
+  const event = release.event, outlook = event?.outlook;
+  if (!Array.isArray(outlook?.outcomes) || !Number.isFinite(event.announcedDelta) ||
+      !event.quantityId || !event.unit || !(Date.parse(outlook.asOf) < Date.parse(release.knownAt))) return null;
+  let probability = 0, expectation = 0;
+  const keys = new Set();
+  for (const outcome of outlook.outcomes) {
+    if (!outcome.outcomeKey || keys.has(outcome.outcomeKey) || outcome.quantityId !== event.quantityId ||
+        outcome.unit !== event.unit || !Number.isFinite(outcome.announcedDelta) ||
+        !Number.isFinite(outcome.p) || outcome.p < 0 || outcome.p > 1) return null;
+    keys.add(outcome.outcomeKey);
+    probability += outcome.p;
+    expectation += outcome.p * outcome.announcedDelta;
+  }
+  if (Math.abs(probability - 1) > 1e-9 || !keys.has(event.outcomeKey)) return null;
+  return event.announcedDelta - expectation;
+}
+
+const policyExposure = node ? require('./policy-equity.json') : scope.POLICY_EQUITY;
+if (!policyExposure) throw new Error('StatePricing needs the policy exposure data');
+function policyEquityImpact(release) {
+  if (release.event?.quantityId !== policyExposure.quantityId ||
+      release.event.unit !== policyExposure.unit) return null;
+  const surprise = announcementSurprise(release);
+  if (surprise === null) return null;
+  return {releaseId: release.releaseId, revision: release.revision, availableAt: release.availableAt,
+    factor: policyExposure.factor, surprise, unit: policyExposure.unit,
+    logPct: surprise * policyExposure.logPctPerUnit, source: policyExposure.source};
+}
+
+// Sessions contain only tradable regular sessions for this instrument.
+function reactionSlot(availableAt, sessions) {
+  if (availableAt == null) return null;
+  const time = Date.parse(availableAt);
+  if (!Number.isFinite(time) || !/(?:Z|[+-]\d\d:\d\d)$/.test(availableAt)) {
+    throw new RangeError('Expected release time with UTC offset');
+  }
+  const session = sessions.findIndex(s => time <= Date.parse(s.closeAt));
+  if (session < 0) return null;
+  return {session, phase: time <= Date.parse(sessions[session].openAt) ? 'open' : 'intraday'};
+}
+
+function policySessionImpacts(prefix, sessions) {
+  const prior = new Map(), moves = [];
+  for (const release of prefix.releases) {
+    const last = prior.get(release.releaseId);
+    if (last && release.revision <= last.revision) continue;
+    const impact = policyEquityImpact(release);
+    if (!impact) continue;
+    const slot = reactionSlot(impact.availableAt, sessions);
+    if (!slot) continue;
+    prior.set(release.releaseId, impact);
+    const logPct = impact.logPct - (last?.logPct ?? 0);
+    if (logPct !== 0) moves.push({...impact, ...slot, logPct});
+  }
+  return moves;
+}
+
+// Baseline quotes exclude this channel. Carry its cumulative repricing forward.
+function policyQuotes(bars, moves) {
+  const atOpen = new Float64Array(bars.length), intraday = new Float64Array(bars.length);
+  for (const {session, phase, logPct} of moves) {
+    if (!Number.isInteger(session) || session < 0 || session >= bars.length ||
+        !['open', 'intraday'].includes(phase) || !Number.isFinite(logPct)) {
+      throw new RangeError('Invalid policy session impact');
+    }
+    (phase === 'open' ? atOpen : intraday)[session] += logPct;
+  }
+  let cumulative = 0;
+  return bars.map((bar, i) => {
+    cumulative += atOpen[i];
+    const open = bar.o * Math.exp(cumulative / 100);
+    cumulative += intraday[i];
+    return {open, close: bar.c * Math.exp(cumulative / 100)};
+  });
+}
+
+const api = Object.freeze({stateImpacts, announcementSurprise, policyEquityImpact, reactionSlot, policySessionImpacts, policyQuotes});
+if (node) module.exports = api;
+else scope.StatePricing = api;
+})(globalThis);
+(function (scope) {
+'use strict';
+
+function instant(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d\d-\d\dT\d\d:\d\d(?::\d\d(?:\.\d{1,3})?)?(?:Z|[+-]\d\d:\d\d)$/.test(value) ||
+      !Number.isFinite(Date.parse(value))) throw new Error('Expected an ISO timestamp with UTC offset');
+  return Date.parse(value);
+}
+
+// receiptFor looks up a public message and its revision in the receiver's register.
+function receivedPrefix(catalogue, asOf, receiptFor) {
+  const cutoff = instant(asOf);
+  if (![1, 2].includes(catalogue.version) || instant(catalogue.asOf) < cutoff) {
+    throw new Error('Source catalogue must cover the requested cutoff');
+  }
+  const visible = new Map();
+  for (const release of catalogue.releases) {
+    if (release.knownAt == null || instant(release.knownAt) > cutoff) continue;
+    const receivedAt = receiptFor(release);
+    if (receivedAt == null) continue;
+    const time = Math.max(instant(release.knownAt), instant(receivedAt));
+    if (time > cutoff) continue;
+    const key = JSON.stringify([release.releaseId, release.revision]);
+    const entry = {...release, receivedAt, availableAt: new Date(time).toISOString()};
+    if (entry.kind === 'event' && entry.event) {
+      entry.event = {...entry.event};
+      for (const field of ['outcomeKey', 'announcedDelta', 'quantityId', 'unit', 'funding', 'outlook']) {
+        entry.event[field] ??= null;
+      }
+    }
+    if (visible.has(key) && JSON.stringify(visible.get(key)) !== JSON.stringify(entry)) {
+      throw new Error('Conflicting copies of a public release revision');
+    }
+    visible.set(key, entry);
+  }
+  const releases = [...visible.values()].sort((a,b) => instant(a.availableAt) - instant(b.availableAt) ||
+    (a.releaseId < b.releaseId ? -1 : a.releaseId > b.releaseId ? 1 : a.revision - b.revision));
+  return {version: catalogue.version, asOf, releases};
+}
+const api = Object.freeze({receivedPrefix});
+if (typeof module !== 'undefined' && module.exports) module.exports = api;
+else scope.World3Market = api;
 })(globalThis);
 // Second engine (docs/spec-v2.md, first revision). Runs in Node and in the browser; no dependencies.
 // World state = clocks + bounded attributes + flags. An event outcome has three kinds of effect only: move a clock, move an attribute, move prices
@@ -1824,7 +1983,7 @@ const world3=(function(){
   const drawOf=(draw,who)=>{ if(typeof draw==='function') return draw; if(typeof draw==='number'&&isFinite(draw)) return keyDraw(draw); throw new Error(who+': give draw(key) or a seed (the engine does not pick its own)'); };
   // to the next scheduled decision (or the path end), drawing the random items and passing the day ends
   function advance(W,S,knobs,draw,ports){ const d=drawOf(draw,'advance'), records=[]; let st=S;
-    for(;;){ const pr=portsAt(ports,st.day), P=pendingLite(W,st,knobs,pr); if(P.type==='pathEnd'||(P.type==='decide'&&P.kind==='scheduled')) return {state:st,records,pending:pending(W,st,knobs,pr)};
+    for(;;){ const pr=portsAt(ports,st.day), P=pendingLite(W,st,knobs,pr); if(P.type==='pathEnd'||(P.type==='decide'&&(P.kind==='scheduled'||P.scenarioDay!==undefined||P.requiredBy!==undefined))) return {state:st,records,pending:pending(W,st,knobs,pr)};   // ruling 327: a scenario start (and the event it requires) is the player's decision too
       const r=step(W,st,knobs,P.type==='decide'?{u:d('world|'+P.key)}:undefined,pr); st=r.state; records.push(r.record); } }
   // the whole path; o.trace keeps every record, o.daily the state after each day end, o.ports = {port: value} or a function of the day
   function run(W,knobs,draw,o){ o=o||{}; const d=drawOf(draw,'run'); let S=start(W,knobs,d); const records=[], trace=o.trace?[]:null, daily=o.daily?[]:null;
@@ -2538,12 +2697,13 @@ const WORLD3 = {
       knownAtWhy: '演習多在開始當天由官方或媒體公布',
       pSrcOut: 'scenario',
       desc: '當事方：中國對台灣，或中、美、日、韓、北韓、菲律賓之間。爭點：主權與航行。大規模演習、封鎖演練、動員或飛彈試射；收場看它按期結束、延長、擦槍走火，或之後重啟對話',
+      label: '東亞大規模武力展示',
       blurb: '東亞出現大規模軍演或武力展示，市場開始替地緣風險加價。',
       outcomes: [
-        { key: 'ended', publicKey: null, name: '演習按期結束', branch: 'end', w: 0.7, tags: ['down'], effects: [{ clock: 'hostility', min: 1 }, { attr: 'threat', d: 15 }] },
-        { key: 'prolonged', publicKey: null, name: '延長或常態化（封鎖演練、常駐巡邏）', branch: 'escalate', sev: 0, w: 0.15, tags: ['down'], effects: [{ clock: 'hostility', min: 1 }, { attr: 'threat', d: 20 }] },
-        { key: 'incident', publicKey: null, name: '演習中擦槍走火（碰撞、扣押）', branch: 'escalate', sev: 1, w: 0.05, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 35 }] },
-        { key: 'talks', publicKey: null, name: '演習後雙方重啟對話', branch: 'talk', w: 0.1, tags: ['flat'], effects: [{ clock: 'hostility', min: 1 }, { attr: 'threat', d: 5 }] } ],
+        { key: 'talks', publicKey: null, name: '演習後雙方重啟對話', label: '演習後重啟對話', branch: 'talk', w: 0.1, tags: ['flat'], effects: [{ clock: 'hostility', min: 1 }, { attr: 'threat', d: 5 }] },
+        { key: 'ended', publicKey: null, name: '演習按期結束', label: '演習按期結束', branch: 'end', w: 0.7, tags: ['down'], effects: [{ clock: 'hostility', min: 1 }, { attr: 'threat', d: 15 }] },
+        { key: 'prolonged', publicKey: null, name: '延長或常態化（封鎖演練、常駐巡邏）', label: '演習延長或常態化', branch: 'escalate', sev: 0, w: 0.15, tags: ['down'], effects: [{ clock: 'hostility', min: 1 }, { attr: 'threat', d: 20 }] },
+        { key: 'incident', publicKey: null, name: '演習中擦槍走火（碰撞、扣押）', label: '演習中擦槍走火', branch: 'escalate', sev: 1, w: 0.05, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 35 }] } ],
       cond: [
         { layer: 'L1', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 0.7 }, mech: '市場與資金大亂時，各方承受不起再加一個衝擊，大型演習較少' },
         { layer: 'L2', target: 'escalate', read: { mem: 'conflictRun' }, anchor: { lo: { x: -0.9, situ: 'S06（2018-12-24：升息加縮表，聖誕前夕股市谷底）；記憶 conflictRun 的折現和照記憶定義手算，x＝-0.9' }, hi: { x: 1, situ: 'S10（2024-08-05：日圓套利平倉，VIX 單日暴衝；6 月仁愛礁有人受傷）；記憶 conflictRun 的折現和照記憶定義手算，x＝1' }, or: 2 }, mech: '最近升級越多（已到動用武力那一類事件累積），演習越容易延長或走火' },
@@ -2557,12 +2717,13 @@ const WORLD3 = {
       knownAtWhy: '交火與傷亡通常當天由當事國公布',
       pSrcOut: 'scenario',
       desc: '當事方：東亞國家之間（含海警、民兵船）。爭點：島礁、海域、邊界。交火、攻擊、扣押、撞擊造成傷亡或擊沉擊落；收場看各自收手、連續報復、擴大成多日交火，或立刻談判。不動武的經濟與外交報復不在這個情勢（由 tariffUp 的對手反制表示）',
+      label: '東亞國家間交火',
       blurb: '東亞國家之間發生交火或攻擊，避險情緒升溫，亞洲股市承壓。',
       outcomes: [
-        { key: 'contained', publicKey: null, name: '單次交火後各自收手', branch: 'contain', w: 0.6, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 20 }] },
-        { key: 'spiral', publicKey: null, name: '連續報復', branch: 'escalate', sev: 0, w: 0.2, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 35 }] },
-        { key: 'spiralBig', publicKey: null, name: '擴大成多日的有限衝突', branch: 'escalate', sev: 1, w: 0.05, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 60 }] },
-        { key: 'talk', publicKey: null, name: '交火後立即談判、恢復熱線', branch: 'talk', w: 0.15, tags: ['flat'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 10 }] } ],
+        { key: 'talk', publicKey: null, name: '交火後立即談判、恢復熱線', label: '交火後立即談判', branch: 'talk', w: 0.15, tags: ['flat'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 10 }] },
+        { key: 'contained', publicKey: null, name: '單次交火後各自收手', label: '單次交火後收手', branch: 'contain', w: 0.6, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 20 }] },
+        { key: 'spiral', publicKey: null, name: '連續報復', label: '連續報復', branch: 'escalate', sev: 0, w: 0.2, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 35 }] },
+        { key: 'spiralBig', publicKey: null, name: '擴大成多日的有限衝突', label: '擴大成多日有限衝突', branch: 'escalate', sev: 1, w: 0.05, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 60 }] } ],
       cond: [
         { layer: 'L1', read: { mem: 'conflictRun' }, anchor: { lo: { x: -0.9, situ: 'S06（2018-12-24：升息加縮表，聖誕前夕股市谷底）；記憶 conflictRun 的折現和照記憶定義手算，x＝-0.9' }, hi: { x: 1, situ: 'S10（2024-08-05：日圓套利平倉，VIX 單日暴衝；6 月仁愛礁有人受傷）；記憶 conflictRun 的折現和照記憶定義手算，x＝1' }, or: 2.5 }, mech: '最近升級越多，前線越緊、規則越鬆，下一次交火越容易' },
         { layer: 'L1', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 0.7 }, mech: '市場與資金大亂時，各方較少主動挑起實際衝突' },
@@ -2577,10 +2738,11 @@ const WORLD3 = {
       knownAtWhy: '開戰當天全世界知道',
       pSrcOut: 'scenario',
       desc: '當事方：中、美、日、台、南北韓之間。持續的國家間交戰；收場只分規模（海空有限交戰或全面交戰）；戰爭怎麼結束（短期停火、停火線凍結、斡旋協議、一方政權更迭或退出、轉成長期封鎖與經濟戰）另由 warCeasefire 表示',
+      label: '東亞大國直接交戰',
       blurb: '東亞大國直接開戰，全球市場進入避險，供應鏈與晶片首當其衝。',
       outcomes: [
-        { key: 'limited', publicKey: null, name: '海空有限交戰', branch: 'war', sev: 0, w: 0.7, tags: ['down'], effects: [{ clock: 'hostility', set: 3 }, { attr: 'threat', d: 40 }, { flag: 'fWar', v: true }] },
-        { key: 'full', publicKey: null, name: '全面交戰（攻擊本土與基地）', branch: 'war', sev: 1, w: 0.3, tags: ['down'], effects: [{ clock: 'hostility', set: 3 }, { attr: 'threat', d: 70 }, { flag: 'fWar', v: true }, { attr: 'dollar', d: 10, noMod: true }] } ],
+        { key: 'limited', publicKey: null, name: '海空有限交戰', label: '海空有限交戰', branch: 'war', sev: 0, w: 0.7, tags: ['down'], effects: [{ clock: 'hostility', set: 3 }, { attr: 'threat', d: 40 }, { flag: 'fWar', v: true }] },
+        { key: 'full', publicKey: null, name: '全面交戰（攻擊本土與基地）', label: '全面交戰', branch: 'war', sev: 1, w: 0.3, tags: ['down'], effects: [{ clock: 'hostility', set: 3 }, { attr: 'threat', d: 70 }, { flag: 'fWar', v: true }, { attr: 'dollar', d: 10, noMod: true }] } ],
       cond: [
         { layer: 'L1', read: { mem: 'conflictRun' }, anchor: { lo: { x: -0.9, situ: 'S06（2018-12-24：升息加縮表，聖誕前夕股市谷底）；記憶 conflictRun 的折現和照記憶定義手算，x＝-0.9' }, hi: { x: 1, situ: 'S10（2024-08-05：日圓套利平倉，VIX 單日暴衝；6 月仁愛礁有人受傷）；記憶 conflictRun 的折現和照記憶定義手算，x＝1' }, or: 2 }, mech: '一連串升級之後，誤判與報復鏈讓直接交戰更可能' },
         { layer: 'L1', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 0.8 }, mech: '市場與資金大亂時，各方較少選擇開戰（影響比對小型挑釁弱）' },
@@ -2595,12 +2757,13 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；消息在發生日之後第一個開盤前已知',
       pSrcOut: 'scenario',
       desc: '當事方：交戰各方與斡旋的第三方。東亞大國交戰之後的停火談判；收場看停火線凍結（含無和約的長期僵持）、第三方斡旋的協議、一方政權更迭或退出，或談判破裂。破裂之後可以再談（max 3），停了就不再開',
+      label: '交戰後停火或談判',
       blurb: '東亞戰事走向停火或談判，結果決定風險能退到什麼程度。',
       outcomes: [
-        { key: 'truce', publicKey: null, name: '停火，停火線凍結（無和約的長期僵持也算）', branch: 'truce', w: 0.6, tags: ['up'], effects: [{ attr: 'threat', d: -30 }, { clock: 'hostility', d: -1 }] },
-        { key: 'settlement', publicKey: null, name: '第三方斡旋，簽署協議', branch: 'deal', w: 0.2, tags: ['up'], effects: [{ attr: 'threat', d: -45 }, { clock: 'hostility', d: -1 }] },
-        { key: 'collapse', publicKey: null, name: '談判破裂，戰事延續（含轉成長期封鎖與經濟戰）', branch: 'fail', w: 0.15, tags: ['down'], effects: [{ attr: 'threat', d: 10 }] },
-        { key: 'regimeEnd', publicKey: null, name: '一方政權更迭或退出戰爭而停戰', branch: 'regimeEnd', w: 0.05, tags: ['flat'], effects: [{ attr: 'threat', d: -25 }, { clock: 'hostility', d: -1 }] } ],
+        { key: 'settlement', publicKey: null, name: '第三方斡旋，簽署協議', label: '第三方斡旋簽協議', branch: 'deal', w: 0.2, tags: ['up'], effects: [{ attr: 'threat', d: -45 }, { clock: 'hostility', d: -1 }] },
+        { key: 'truce', publicKey: null, name: '停火，停火線凍結（無和約的長期僵持也算）', label: '停火，戰線凍結', branch: 'truce', w: 0.6, tags: ['up'], effects: [{ attr: 'threat', d: -30 }, { clock: 'hostility', d: -1 }] },
+        { key: 'regimeEnd', publicKey: null, name: '一方政權更迭或退出戰爭而停戰', label: '政權更迭而停戰', branch: 'regimeEnd', w: 0.05, tags: ['flat'], effects: [{ attr: 'threat', d: -25 }, { clock: 'hostility', d: -1 }] },
+        { key: 'collapse', publicKey: null, name: '談判破裂，戰事延續（含轉成長期封鎖與經濟戰）', label: '談判破裂，戰事延續', branch: 'fail', w: 0.15, tags: ['down'], effects: [{ attr: 'threat', d: 10 }] } ],
       cond: [
         { layer: 'L1', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 1, situ: 'S02（2008-10-10：雷曼倒閉後一個月，全球股市崩跌，聯準會 10-08 緊急降息）；strain 讀數 16' }, or: 1.8 }, mech: '資金與信用壓力高時，交戰各方與盟友承受不起長期戰事，更快談停火' },
         { layer: 'L2', target: 'fail', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 0.6 }, mech: '市場持續動盪時，各方對破局的承受度低，談判較少破裂' } ] },
@@ -2612,12 +2775,13 @@ const WORLD3 = {
       knownAtWhy: '行政命令與公告當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：美國與主要貿易對手（對手的反制管制也算，例如稀土、鎵鍺）。宣布或威脅提高關稅、擴大晶片與設備出口管制；收場看照實施、全面加碼、延後豁免或被法院擋下、或換成協議',
+      label: '關稅或出口管制加碼',
       blurb: '關稅或出口管制加碼，貿易與科技供應鏈的成本與不確定性上升。',
       outcomes: [
-        { key: 'imposed', publicKey: null, name: '照宣布實施（含晶片與設備出口管制）', branch: 'impose', sev: 0, w: 0.45, tags: ['down'], effects: [{ clock: 'tradeBarrier', d: 1 }, { attr: 'threat', d: 5 }, { attr: 'aiUsage', d: -5, noMod: true }] },
-        { key: 'imposedBig', publicKey: null, name: '全面加碼（多國、多品項）', branch: 'impose', sev: 1, w: 0.1, tags: ['down'], effects: [{ clock: 'tradeBarrier', d: 2 }, { attr: 'threat', d: 10 }, { attr: 'aiUsage', d: -10, noMod: true }, { attr: 'usDoubt', d: 10, noMod: true }] },
-        { key: 'deferred', publicKey: null, name: '延後、豁免、縮小或被法院擋下', branch: 'deferred', w: 0.3, tags: ['flat'], effects: [] },
-        { key: 'traded', publicKey: null, name: '對手讓步，換成協議', branch: 'deal', w: 0.15, tags: ['up'], effects: [{ attr: 'threat', d: -5 }] } ],
+        { key: 'traded', publicKey: null, name: '對手讓步，換成協議', label: '對手讓步換協議', branch: 'deal', w: 0.15, tags: ['up'], effects: [{ attr: 'threat', d: -5 }] },
+        { key: 'deferred', publicKey: null, name: '延後、豁免、縮小或被法院擋下', label: '延後、豁免或縮小', branch: 'deferred', w: 0.3, tags: ['flat'], effects: [] },
+        { key: 'imposed', publicKey: null, name: '照宣布實施（含晶片與設備出口管制）', label: '照宣布實施', branch: 'impose', sev: 0, w: 0.45, tags: ['down'], effects: [{ clock: 'tradeBarrier', d: 1 }, { attr: 'threat', d: 5 }, { attr: 'aiUsage', d: -5, noMod: true }] },
+        { key: 'imposedBig', publicKey: null, name: '全面加碼（多國、多品項）', label: '全面加碼', branch: 'impose', sev: 1, w: 0.1, tags: ['down'], effects: [{ clock: 'tradeBarrier', d: 2 }, { attr: 'threat', d: 10 }, { attr: 'aiUsage', d: -10, noMod: true }, { attr: 'usDoubt', d: 10, noMod: true }] } ],
       cond: [
         { layer: 'L1', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 0.6 }, mech: '股市與債市大亂時，施政者少丟新的關稅威脅' },
         { layer: 'L2', target: 'deferred', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 2.5 }, mech: '宣布之後市場大亂，施政者延後或豁免（2025-04-09 公債失序後暫停 90 天）' },
@@ -2631,12 +2795,13 @@ const WORLD3 = {
       knownAtWhy: '協議與公告當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：美國與主要貿易對手。談判期限屆滿或峰會；收場看部分協議或休兵、全面協議、延長談判，或破局加碼',
+      label: '貿易談判期限或峰會',
       blurb: '貿易談判來到期限或峰會，談成能讓市場鬆一口氣，破局則再添壓力。',
       outcomes: [
-        { key: 'partial', publicKey: null, name: '部分協議、休兵或單方面下調關稅（含框架協議但執行不足）', branch: 'deal', sev: 0, w: 0.45, tags: ['up'], effects: [{ clock: 'tradeBarrier', d: -1 }] },
-        { key: 'comprehensive', publicKey: null, name: '全面協議', branch: 'deal', sev: 1, w: 0.1, tags: ['up'], effects: [{ clock: 'tradeBarrier', d: -2 }] },
-        { key: 'extended', publicKey: 'lapsed', name: '期限屆滿未成案，延長談判', branch: 'extended', w: 0.3, tags: ['flat'], effects: [] },
-        { key: 'collapse', publicKey: null, name: '破局，互相加碼', branch: 'collapse', w: 0.15, tags: ['down'], effects: [{ clock: 'tradeBarrier', d: 1 }, { attr: 'threat', d: 5 }] } ],
+        { key: 'comprehensive', publicKey: null, name: '全面協議', label: '全面協議', branch: 'deal', sev: 1, w: 0.1, tags: ['up'], effects: [{ clock: 'tradeBarrier', d: -2 }] },
+        { key: 'partial', publicKey: null, name: '部分協議、休兵或單方面下調關稅（含框架協議但執行不足）', label: '部分協議或休兵', branch: 'deal', sev: 0, w: 0.45, tags: ['up'], effects: [{ clock: 'tradeBarrier', d: -1 }] },
+        { key: 'extended', publicKey: 'lapsed', name: '期限屆滿未成案，延長談判', label: '未成案，延長談判', branch: 'extended', w: 0.3, tags: ['flat'], effects: [] },
+        { key: 'collapse', publicKey: null, name: '破局，互相加碼', label: '破局，互相加碼', branch: 'collapse', w: 0.15, tags: ['down'], effects: [{ clock: 'tradeBarrier', d: 1 }, { attr: 'threat', d: 5 }] } ],
       cond: [
         { layer: 'L1', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 1.5 }, mech: '市場重挫時雙方都急著談，期限與峰會更常被排出來' },
         { layer: 'L2', target: 'deal', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 1, situ: 'S02（2008-10-10：雷曼倒閉後一個月，全球股市崩跌，聯準會 10-08 緊急降息）；strain 讀數 16' }, or: 1.6 }, mech: '資金壓力高時雙方承受不起破局，更容易談成' },
@@ -2650,12 +2815,13 @@ const WORLD3 = {
       knownAtWhy: '協議與會談當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：美、中、台、日、南北韓、菲律賓之間（和東亞對峙鐘的範圍相同；含南北韓峰會、美朝峰會）。峰會、高層會談、恢復軍事熱線；收場看具體緩和、實質協議、無果，或會後關係惡化',
+      label: '東亞與美中外交接觸',
       blurb: '東亞與美中展開外交接觸，緊張情勢有機會降溫。',
       outcomes: [
-        { key: 'thaw', publicKey: null, name: '具體緩和（熱線、聯合聲明）', branch: 'thaw', sev: 0, w: 0.5, tags: ['up'], effects: [{ attr: 'threat', d: -20 }] },
-        { key: 'accord', publicKey: null, name: '實質協議（停火、撤軍、互不侵犯）', branch: 'thaw', sev: 1, w: 0.1, tags: ['up'], effects: [{ attr: 'threat', d: -35 }, { clock: 'hostility', d: -1 }] },
-        { key: 'noResult', publicKey: null, name: '會談無果', branch: 'noResult', w: 0.3, tags: ['flat'], effects: [] },
-        { key: 'backfire', publicKey: null, name: '會後互相指責，關係惡化', branch: 'sour', w: 0.1, tags: ['down'], effects: [{ attr: 'threat', d: 10 }] } ],
+        { key: 'accord', publicKey: null, name: '實質協議（停火、撤軍、互不侵犯）', label: '達成實質協議', branch: 'thaw', sev: 1, w: 0.1, tags: ['up'], effects: [{ attr: 'threat', d: -35 }, { clock: 'hostility', d: -1 }] },
+        { key: 'thaw', publicKey: null, name: '具體緩和（熱線、聯合聲明）', label: '具體緩和', branch: 'thaw', sev: 0, w: 0.5, tags: ['up'], effects: [{ attr: 'threat', d: -20 }] },
+        { key: 'noResult', publicKey: null, name: '會談無果', label: '會談無果', branch: 'noResult', w: 0.3, tags: ['flat'], effects: [] },
+        { key: 'backfire', publicKey: null, name: '會後互相指責，關係惡化', label: '會後互相指責', branch: 'sour', w: 0.1, tags: ['down'], effects: [{ attr: 'threat', d: 10 }] } ],
       cond: [
         { layer: 'L1', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 1, situ: 'S02（2008-10-10：雷曼倒閉後一個月，全球股市崩跌，聯準會 10-08 緊急降息）；strain 讀數 16' }, or: 1.8 }, mech: '資金壓力高時各方承受不起新衝擊，緩和的接觸變多' },
         { layer: 'L1', read: { mem: 'conflictRun' }, anchor: { lo: { x: -0.9, situ: 'S06（2018-12-24：升息加縮表，聖誕前夕股市谷底）；記憶 conflictRun 的折現和照記憶定義手算，x＝-0.9' }, hi: { x: 1, situ: 'S10（2024-08-05：日圓套利平倉，VIX 單日暴衝；6 月仁愛礁有人受傷）；記憶 conflictRun 的折現和照記憶定義手算，x＝1' }, or: 1.5 }, mech: '連續升級之後的疲乏：最近衝突越多，各方越需要接觸降溫' },
@@ -2670,11 +2836,12 @@ const WORLD3 = {
       knownAtWhy: '開戰當天全世界知道',
       pSrcOut: 'scenario',
       desc: '當事方：歐洲、中東等地的國家。國家間戰爭爆發，戰場或制裁碰到原油生產或運輸；東亞對峙鐘不動。收場看數週內停火，或持續戰爭與能源受擾；後續停火另由 farWarCeasefire 表示',
+      label: '東亞以外的國家間戰爭',
       blurb: '東亞以外爆發國家間戰爭並牽動原油，能源價格與通膨預期跟著動。',
       outcomes: [
-        { key: 'short', publicKey: null, name: '短期交火，數週內停火', branch: 'short', w: 0.45, tags: ['down'], effects: [{ attr: 'threat', d: 15 }, { attr: 'oil', d: 15, noMod: true }, { attr: 'vol', d: 10, noMod: true }] },
-        { key: 'war', publicKey: null, name: '持續戰爭，能源受擾', branch: 'prolonged', sev: 0, w: 0.45, tags: ['down'], effects: [{ attr: 'threat', d: 25 }, { attr: 'oil', d: 25, noMod: true }, { attr: 'vol', d: 20, noMod: true }] },
-        { key: 'warBig', publicKey: null, name: '長期戰爭，能源設施受損', branch: 'prolonged', sev: 1, w: 0.1, tags: ['down'], effects: [{ attr: 'threat', d: 40 }, { attr: 'oil', d: 45, noMod: true }, { attr: 'vol', d: 30, noMod: true }] } ],
+        { key: 'short', publicKey: null, name: '短期交火，數週內停火', label: '短期交火，數週停火', branch: 'short', w: 0.45, tags: ['down'], effects: [{ attr: 'threat', d: 15 }, { attr: 'oil', d: 15, noMod: true }, { attr: 'vol', d: 10, noMod: true }] },
+        { key: 'war', publicKey: null, name: '持續戰爭，能源受擾', label: '持續戰爭，能源受擾', branch: 'prolonged', sev: 0, w: 0.45, tags: ['down'], effects: [{ attr: 'threat', d: 25 }, { attr: 'oil', d: 25, noMod: true }, { attr: 'vol', d: 20, noMod: true }] },
+        { key: 'warBig', publicKey: null, name: '長期戰爭，能源設施受損', label: '長期戰爭，能源設施受損', branch: 'prolonged', sev: 1, w: 0.1, tags: ['down'], effects: [{ attr: 'threat', d: 40 }, { attr: 'oil', d: 45, noMod: true }, { attr: 'vol', d: 30, noMod: true }] } ],
       cond: [
         { layer: 'L3', target: 'warBig', read: { state: 'threat' }, anchor: { lo: { x: -0.0989, situ: 'S28（2021-11-08：低利率下的題材與新上市熱潮）；threat 讀數 80.22' }, hi: { x: 1, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；threat 讀數 318.93' }, or: 1.8 }, mech: '整體地緣風險高時，戰事更容易打到能源設施' } ] },
     { id: 'farWarCeasefire', name: '東亞以外戰事的停火或和約', kind: 'random', group: 'geo', system: 1, rate: 0.8, max: 2,
@@ -2687,11 +2854,12 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；消息在發生日之後第一個開盤前已知',
       pSrcOut: 'scenario',
       desc: '當事方：東亞以外交戰的各方與斡旋者。停火、和約，或停火破裂；fired() 不退場，戰事已結束時也可能再發生一次（已知限制，max 與 farWar 同為 2）',
+      label: '東亞以外戰事停火',
       blurb: '東亞以外的戰事走向停火或和約，能源與避險壓力可能退去。',
       outcomes: [
-        { key: 'truce', publicKey: null, name: '停火或和約', branch: 'truce', w: 0.6, tags: ['up'], effects: [{ attr: 'threat', d: -20 }, { attr: 'oil', d: -15, noMod: true }] },
-        { key: 'stalled', publicKey: null, name: '談判拖延', branch: 'stalled', w: 0.3, tags: ['flat'], effects: [] },
-        { key: 'flare', publicKey: null, name: '停火破裂', branch: 'fail', w: 0.1, tags: ['down'], effects: [{ attr: 'threat', d: 10 }, { attr: 'oil', d: 10, noMod: true }] } ],
+        { key: 'truce', publicKey: null, name: '停火或和約', label: '停火或和約', branch: 'truce', w: 0.6, tags: ['up'], effects: [{ attr: 'threat', d: -20 }, { attr: 'oil', d: -15, noMod: true }] },
+        { key: 'stalled', publicKey: null, name: '談判拖延', label: '談判拖延', branch: 'stalled', w: 0.3, tags: ['flat'], effects: [] },
+        { key: 'flare', publicKey: null, name: '停火破裂', label: '停火破裂', branch: 'fail', w: 0.1, tags: ['down'], effects: [{ attr: 'threat', d: 10 }, { attr: 'oil', d: 10, noMod: true }] } ],
       cond: [
         { layer: 'L1', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 1, situ: 'S02（2008-10-10：雷曼倒閉後一個月，全球股市崩跌，聯準會 10-08 緊急降息）；strain 讀數 16' }, or: 1.5 }, mech: '全球資金壓力高時，交戰方的金主與買油國施壓停火' },
         { layer: 'L2', target: 'fail', read: { state: 'threat' }, anchor: { lo: { x: -0.0989, situ: 'S28（2021-11-08：低利率下的題材與新上市熱潮）；threat 讀數 80.22' }, hi: { x: 1, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；threat 讀數 318.93' }, or: 1.8 }, mech: '整體地緣風險高時，停火更容易破裂' } ] },
@@ -2705,11 +2873,12 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；消息在發生日之後第一個開盤前已知',
       pSrcOut: 'scenario',
       desc: '當事方：參戰各國、護航聯盟、航運與保險業。東亞以外戰事擴大、能源要道受阻之後，航道全面重開、在護航下部分重開，或重開後再度中斷。新事件（第 4 版，裁定 263(b)：1988 兩伊油輪戰停火後波斯灣航運恢復；2024 年起紅海在護航下部分通行）',
+      label: '能源要道重開',
       blurb: '受戰事影響的能源要道重新開放，油價與運費有機會回落。',
       outcomes: [
-        { key: 'reopened', publicKey: null, name: '航道全面重開', branch: 'reopened', w: 0.5, tags: ['up'], effects: [{ attr: 'threat', d: -15 }, { attr: 'oil', d: -25, noMod: true }] },
-        { key: 'partial', publicKey: null, name: '中斷之後在護航或談判的通行安排下部分重開', branch: 'partial', w: 0.35, tags: ['flat'], effects: [{ attr: 'threat', d: -5 }, { attr: 'oil', d: -10, noMod: true }] },
-        { key: 'reclosed', publicKey: null, name: '重開後再度中斷', branch: 'reclosed', w: 0.15, tags: ['down'], effects: [{ attr: 'threat', d: 10 }, { attr: 'oil', d: 10, noMod: true }] } ],
+        { key: 'reopened', publicKey: null, name: '航道全面重開', label: '航道全面重開', branch: 'reopened', w: 0.5, tags: ['up'], effects: [{ attr: 'threat', d: -15 }, { attr: 'oil', d: -25, noMod: true }] },
+        { key: 'partial', publicKey: null, name: '中斷之後在護航或談判的通行安排下部分重開', label: '航道部分重開', branch: 'partial', w: 0.35, tags: ['flat'], effects: [{ attr: 'threat', d: -5 }, { attr: 'oil', d: -10, noMod: true }] },
+        { key: 'reclosed', publicKey: null, name: '重開後再度中斷', label: '重開後再度中斷', branch: 'reclosed', w: 0.15, tags: ['down'], effects: [{ attr: 'threat', d: 10 }, { attr: 'oil', d: 10, noMod: true }] } ],
       cond: [
         { layer: 'L2', target: 'reclosed', read: { state: 'threat' }, anchor: { lo: { x: -0.0989, situ: 'S28（2021-11-08：低利率下的題材與新上市熱潮）；threat 讀數 80.22' }, hi: { x: 1, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；threat 讀數 318.93' }, or: 1.8 }, mech: '整體地緣風險仍高時，重開的航道更容易再被打斷' } ] },
     // Seq 4 (b), scenario pack scnConflict. Every scenario event: rate is per year at the neutral start, times the scnFreq knob.
@@ -2723,13 +2892,14 @@ const WORLD3 = {
       knownAtWhy: '設這個旗標的條件本身就是公司或主管機關的公告（docs/world-states.md 8.3(a)），公告當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：中國與台灣（美日介入與否不限）。對台灣動用武力（攔截、扣押、封鎖、攻擊）使先進製程或封裝出貨連續中斷五個交易日以上、佔全球一半以上；收場看數週內放行的檢疫、長期封鎖，或對設施的攻擊',
+      label: '台海衝突斷晶片出貨',
       blurb: '台海衝突讓台灣先進晶片出貨中斷，科技供應鏈面臨斷料。',
       scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
-        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
-        { key: 'quarantine', publicKey: null, name: '海上檢疫或部分封鎖，數週內放行', branch: 'blockade', sev: 0, w: 0.5, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 30 }, { flag: 'fShipBlock', v: true }, { attr: 'gpuRent', d: 30, noMod: true }, { attr: 'aiUsage', d: -15, noMod: true }, { attr: 'vol', d: 20, noMod: true }] },
-        { key: 'blockade', publicKey: null, name: '全面封鎖，長期中斷', branch: 'blockade', sev: 1, w: 0.4, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 45 }, { flag: 'fShipBlock', v: true }, { attr: 'gpuRent', d: 50, noMod: true }, { attr: 'aiUsage', d: -30, noMod: true }, { attr: 'vol', d: 35, noMod: true }] },
-        { key: 'strike', publicKey: null, name: '對島內設施的攻擊', branch: 'attack', w: 0.1, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 50 }, { flag: 'fShipBlock', v: true }, { attr: 'gpuRent', d: 60, noMod: true }, { attr: 'aiUsage', d: -35, noMod: true }, { attr: 'vol', d: 40, noMod: true }] } ],
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', label: '虛驚一場', branch: 'none', tags: ['flat'], effects: [] },
+        { key: 'quarantine', publicKey: null, name: '海上檢疫或部分封鎖，數週內放行', label: '海上檢疫，數週放行', branch: 'blockade', sev: 0, w: 0.5, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 30 }, { flag: 'fShipBlock', v: true }, { attr: 'gpuRent', d: 30, noMod: true }, { attr: 'aiUsage', d: -15, noMod: true }, { attr: 'vol', d: 20, noMod: true }] },
+        { key: 'blockade', publicKey: null, name: '全面封鎖，長期中斷', label: '全面封鎖，長期中斷', branch: 'blockade', sev: 1, w: 0.4, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 45 }, { flag: 'fShipBlock', v: true }, { attr: 'gpuRent', d: 50, noMod: true }, { attr: 'aiUsage', d: -30, noMod: true }, { attr: 'vol', d: 35, noMod: true }] },
+        { key: 'strike', publicKey: null, name: '對島內設施的攻擊', label: '攻擊島內設施', branch: 'attack', w: 0.1, tags: ['down'], effects: [{ clock: 'hostility', min: 2 }, { attr: 'threat', d: 50 }, { flag: 'fShipBlock', v: true }, { attr: 'gpuRent', d: 60, noMod: true }, { attr: 'aiUsage', d: -35, noMod: true }, { attr: 'vol', d: 40, noMod: true }] } ],
       cond: [
         { layer: 'L1', read: { mem: 'conflictRun' }, anchor: { lo: { x: -0.9, situ: 'S06（2018-12-24：升息加縮表，聖誕前夕股市谷底）；記憶 conflictRun 的折現和照記憶定義手算，x＝-0.9' }, hi: { x: 1, situ: 'S10（2024-08-05：日圓套利平倉，VIX 單日暴衝；6 月仁愛礁有人受傷）；記憶 conflictRun 的折現和照記憶定義手算，x＝1' }, or: 2 }, mech: '一連串升級之後，動用武力的門檻降低' },
         { layer: 'L1', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 0.7 }, mech: '全球市場大亂時，發動方也承受不起再加一個衝擊' },
@@ -2745,13 +2915,14 @@ const WORLD3 = {
       knownAtWhy: '參戰與航道中斷當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：兩個以上直接參戰的大國。一條主要能源航道受阻；收場看護航下局部通行、中斷數週，或中斷數月以上',
+      label: '遠方戰事擴大威脅能源',
       blurb: '東亞以外的戰事擴大到多個大國，能源要道受威脅，油價與運費上揚。',
       scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none', requires: 'farWar' },
       outcomes: [
-        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
-        { key: 'escort', publicKey: null, name: '護航下局部通行，運費與保險長期偏高', branch: 'escort', w: 0.3, tags: ['down'], effects: [{ attr: 'threat', d: 20 }, { attr: 'oil', d: 15, noMod: true }, { attr: 'vol', d: 10, noMod: true }] },
-        { key: 'closure', publicKey: null, name: '航道中斷數週', branch: 'closure', sev: 0, w: 0.45, tags: ['down'], effects: [{ attr: 'threat', d: 40 }, { attr: 'oil', d: 35, noMod: true }, { attr: 'vol', d: 25, noMod: true }] },
-        { key: 'closureLong', publicKey: null, name: '航道中斷數月以上', branch: 'closure', sev: 1, w: 0.25, tags: ['down'], effects: [{ attr: 'threat', d: 60 }, { attr: 'oil', d: 60, noMod: true }, { attr: 'vol', d: 40, noMod: true }] } ],
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', label: '虛驚一場', branch: 'none', tags: ['flat'], effects: [] },
+        { key: 'escort', publicKey: null, name: '護航下局部通行，運費與保險長期偏高', label: '護航通行，運費偏高', branch: 'escort', w: 0.3, tags: ['down'], effects: [{ attr: 'threat', d: 20 }, { attr: 'oil', d: 15, noMod: true }, { attr: 'vol', d: 10, noMod: true }] },
+        { key: 'closure', publicKey: null, name: '航道中斷數週', label: '航道中斷數週', branch: 'closure', sev: 0, w: 0.45, tags: ['down'], effects: [{ attr: 'threat', d: 40 }, { attr: 'oil', d: 35, noMod: true }, { attr: 'vol', d: 25, noMod: true }] },
+        { key: 'closureLong', publicKey: null, name: '航道中斷數月以上', label: '航道中斷數月以上', branch: 'closure', sev: 1, w: 0.25, tags: ['down'], effects: [{ attr: 'threat', d: 60 }, { attr: 'oil', d: 60, noMod: true }, { attr: 'vol', d: 40, noMod: true }] } ],
       cond: [
         { layer: 'L1', read: { state: 'threat' }, anchor: { lo: { x: -0.0989, situ: 'S28（2021-11-08：低利率下的題材與新上市熱潮）；threat 讀數 80.22' }, hi: { x: 1, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；threat 讀數 318.93' }, or: 2 }, mech: '整體地緣風險高時，區域戰事更容易把別的大國捲進來' },
         { layer: 'L2', target: 'escort', read: { state: 'threat' }, anchor: { lo: { x: -0.0989, situ: 'S28（2021-11-08：低利率下的題材與新上市熱潮）；threat 讀數 80.22' }, hi: { x: 1, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；threat 讀數 318.93' }, or: 0.6 }, mech: '整體地緣風險越高，護航越難維持局部通行，越可能完全中斷' },
@@ -2767,11 +2938,12 @@ const WORLD3 = {
       knownAtWhy: '協議、投降或實際控制的改變當天由當事方公布',
       pSrcOut: 'scenario',
       desc: '當事方：中國、台灣與介入的各方。長期封鎖或攻擊之後的結局：封鎖解除而管轄不變，或在協議、投降、實際控制易手下管轄改變。只讀長期封鎖與攻擊兩個收場，檢疫數週放行的不開這個情勢（設計頁必答 7）。封鎖或管制持續、還沒有結局的長期僵持，就是這個情勢還沒出現（每天的「沒事」），不是一個收場；部分外島或海域的控制改變算 negotiated',
+      label: '台海封鎖後的管轄結局',
       blurb: '台海封鎖之後的結局揭曉，影響晶片供應能否回到原狀。',
       outcomes: [
-        { key: 'held', publicKey: null, name: '封鎖解除，管轄未變', branch: 'held', w: 0.7, tags: ['up'], effects: [{ attr: 'threat', d: -20 }] },
-        { key: 'negotiated', publicKey: null, name: '在壓力下談判改變管轄', branch: 'change', sev: 0, w: 0.15, tags: ['down'], effects: [{ attr: 'threat', d: 10 }, { flag: 'fStraitChange', v: true }, { attr: 'gpuRent', d: 30, noMod: true }] },
-        { key: 'forced', publicKey: null, name: '武力奪取或投降', branch: 'change', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'threat', d: 25 }, { flag: 'fStraitChange', v: true }, { attr: 'gpuRent', d: 50, noMod: true }] } ],
+        { key: 'held', publicKey: null, name: '封鎖解除，管轄未變', label: '封鎖解除，管轄未變', branch: 'held', w: 0.7, tags: ['up'], effects: [{ attr: 'threat', d: -20 }] },
+        { key: 'negotiated', publicKey: null, name: '在壓力下談判改變管轄', label: '談判改變管轄', branch: 'change', sev: 0, w: 0.15, tags: ['down'], effects: [{ attr: 'threat', d: 10 }, { flag: 'fStraitChange', v: true }, { attr: 'gpuRent', d: 30, noMod: true }] },
+        { key: 'forced', publicKey: null, name: '武力奪取或投降', label: '武力奪取或投降', branch: 'change', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'threat', d: 25 }, { flag: 'fStraitChange', v: true }, { attr: 'gpuRent', d: 50, noMod: true }] } ],
       cond: [
         { layer: 'L2', target: 'change', read: { mem: 'conflictRun' }, anchor: { lo: { x: -0.9, situ: 'S06（2018-12-24：升息加縮表，聖誕前夕股市谷底）；記憶 conflictRun 的折現和照記憶定義手算，x＝-0.9' }, hi: { x: 1, situ: 'S10（2024-08-05：日圓套利平倉，VIX 單日暴衝；6 月仁愛礁有人受傷）；記憶 conflictRun 的折現和照記憶定義手算，x＝1' }, or: 2 }, mech: '升級一路累積時，管轄改變的機會較大；中途有緩和則較小' },
         { layer: 'L3', target: 'forced', read: { state: 'threat' }, anchor: { lo: { x: 0.31095, situ: 'S16（2022-08-04：裴洛西訪台後，中國圍台演習第一天）；threat 讀數 162.19' }, hi: { x: 1, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；threat 讀數 318.93' }, or: 1.8 }, mech: '整體風險越高，越可能是武力奪取而不是談判' } ] },
@@ -2786,10 +2958,11 @@ const WORLD3 = {
       knownAtWhy: '核爆當天全世界知道',
       pSrcOut: 'scenario',
       desc: '當事方：交戰的一方。在衝突中使用核武；收場只分示威性引爆或對軍事、城市目標使用',
+      label: '衝突中動用核武',
       blurb: '衝突中有人動用核武，全球市場陷入極端避險。',
       outcomes: [
-        { key: 'demo', publicKey: null, name: '示威性引爆（海上、無人區）', branch: 'use', sev: 0, w: 0.6, tags: ['down'], effects: [{ attr: 'threat', d: 40 }, { flag: 'fNuclear', v: true }, { attr: 'vol', d: 50, noMod: true }] },
-        { key: 'strike', publicKey: null, name: '對軍事或城市目標使用', branch: 'use', sev: 1, w: 0.4, tags: ['down'], effects: [{ attr: 'threat', d: 70 }, { flag: 'fNuclear', v: true }, { attr: 'vol', d: 75, noMod: true }] } ],
+        { key: 'demo', publicKey: null, name: '示威性引爆（海上、無人區）', label: '示威性引爆', branch: 'use', sev: 0, w: 0.6, tags: ['down'], effects: [{ attr: 'threat', d: 40 }, { flag: 'fNuclear', v: true }, { attr: 'vol', d: 50, noMod: true }] },
+        { key: 'strike', publicKey: null, name: '對軍事或城市目標使用', label: '攻擊軍事或城市目標', branch: 'use', sev: 1, w: 0.4, tags: ['down'], effects: [{ attr: 'threat', d: 70 }, { flag: 'fNuclear', v: true }, { attr: 'vol', d: 75, noMod: true }] } ],
       cond: [
         { layer: 'L1', read: { mem: 'conflictRun' }, anchor: { lo: { x: -0.9, situ: 'S06（2018-12-24：升息加縮表，聖誕前夕股市谷底）；記憶 conflictRun 的折現和照記憶定義手算，x＝-0.9' }, hi: { x: 1, situ: 'S10（2024-08-05：日圓套利平倉，VIX 單日暴衝；6 月仁愛礁有人受傷）；記憶 conflictRun 的折現和照記憶定義手算，x＝1' }, or: 2 }, mech: '升級鏈越長，核門檻越可能被跨過' },
         { layer: 'L3', target: 'strike', read: { state: 'threat' }, anchor: { lo: { x: 0.0297, situ: 'S06（2018-12-24：升息加縮表，聖誕前夕股市谷底）；threat 讀數 105.94' }, hi: { x: 1, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；threat 讀數 318.93' }, or: 1.5 }, mech: '風險越高，使用越可能不只是示威' } ] },
@@ -2804,14 +2977,15 @@ const WORLD3 = {
       knownAtWhy: '法案通過或生效當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：美國、歐盟或中國的立法與主管機關。前沿 AI 的訓練或部署規範表決或生效；收場看大幅限制、溫和規範、否決或延後，或放寬既有限制',
+      label: '前沿 AI 立法表決或生效',
       blurb: '主要經濟體對前沿 AI 立法表決或生效，AI 產業的發展空間可能被重新劃定。',
       scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
-        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
-        { key: 'strict', publicKey: null, name: '大幅限制（許可、暫停、算力上限）', branch: 'restrict', sev: 1, w: 0.4, tags: ['down'], effects: [{ attr: 'aiUsage', d: -15, noMod: true }, { attr: 'aiHeat', d: -15, noMod: true }] },
-        { key: 'mild', publicKey: null, name: '溫和規範（揭露、評測）', branch: 'restrict', sev: 0, w: 0.3, tags: ['down'], effects: [{ attr: 'aiUsage', d: -5, noMod: true }, { attr: 'aiHeat', d: -5, noMod: true }] },
-        { key: 'rejected', publicKey: null, name: '被否決、延後表決，或通過但生效日在模型期間之後（本期沒有效果）', branch: 'rejected', w: 0.2, tags: ['flat'], effects: [] },
-        { key: 'loosen', publicKey: null, name: '撤回或放寬既有限制', branch: 'loosen', w: 0.1, tags: ['up'], effects: [{ attr: 'aiHeat', d: 10, noMod: true }] } ],
+        { key: 'loosen', publicKey: null, name: '撤回或放寬既有限制', label: '撤回或放寬限制', branch: 'loosen', w: 0.1, tags: ['up'], effects: [{ attr: 'aiHeat', d: 10, noMod: true }] },
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', label: '虛驚一場', branch: 'none', tags: ['flat'], effects: [] },
+        { key: 'rejected', publicKey: null, name: '被否決、延後表決，或通過但生效日在模型期間之後（本期沒有效果）', label: '被否決、延後或未生效', branch: 'rejected', w: 0.2, tags: ['flat'], effects: [] },
+        { key: 'mild', publicKey: null, name: '溫和規範（揭露、評測）', label: '溫和規範', branch: 'restrict', sev: 0, w: 0.3, tags: ['down'], effects: [{ attr: 'aiUsage', d: -5, noMod: true }, { attr: 'aiHeat', d: -5, noMod: true }] },
+        { key: 'strict', publicKey: null, name: '大幅限制（許可、暫停、算力上限）', label: '大幅限制', branch: 'restrict', sev: 1, w: 0.4, tags: ['down'], effects: [{ attr: 'aiUsage', d: -15, noMod: true }, { attr: 'aiHeat', d: -15, noMod: true }] } ],
       cond: [
         { layer: 'L1', read: { state: 'aiHeat' }, anchor: { lo: { x: -0.3425, situ: 'S09（2022-10-12：美元與殖利率高點；晶片出口管制剛宣布）；aiHeat 讀數 -13.7' }, hi: { x: 0.51, situ: 'S21（2025-10-29：輝達市值創高，AI 題材重燃（決議日前））；aiHeat 讀數 20.4' }, or: 1.5 }, mech: '題材越熱、部署越快，立法的壓力越大' },
         { layer: 'L2', target: 'restrict', read: { state: 'threat' }, anchor: { lo: { x: -0.0989, situ: 'S28（2021-11-08：低利率下的題材與新上市熱潮）；threat 讀數 80.22' }, hi: { x: 1, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；threat 讀數 318.93' }, or: 0.6 }, mech: '地緣緊張時 AI 被當成國力競賽，大幅限制較少' },
@@ -2824,11 +2998,12 @@ const WORLD3 = {
       knownAtWhy: '產油設施或航道受阻的消息當天傳出',
       pSrcOut: 'scenario',
       desc: '當事方：產油國、航道與設施（含非國家行為者攻擊航運，例如 2023-12 起紅海）。減產、航道或設施受襲使原油價格一個月內大漲；收場看漲 25–40%、漲 40% 以上，或很快被備用產能與儲備補上',
+      label: '原油供給衝擊',
       blurb: '原油供給突然受阻，油價急漲，推高通膨並壓抑消費。',
       outcomes: [
-        { key: 'spike', publicKey: null, name: '油價一個月漲 25–40%', branch: 'spike', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'oil', d: 30 }] },
-        { key: 'spikeBig', publicKey: null, name: '油價一個月漲 40% 以上', branch: 'spike', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'oil', d: 50 }] },
-        { key: 'offset', publicKey: null, name: '很快被補上或回落（備用產能、釋出儲備、需求破壞）', branch: 'offset', w: 0.15, tags: ['flat'], effects: [{ attr: 'oil', d: 8 }] } ],
+        { key: 'offset', publicKey: null, name: '很快被補上或回落（備用產能、釋出儲備、需求破壞）', label: '很快補上或回落', branch: 'offset', w: 0.15, tags: ['flat'], effects: [{ attr: 'oil', d: 8 }] },
+        { key: 'spike', publicKey: null, name: '油價一個月漲 25–40%', label: '油價月漲 25–40%', branch: 'spike', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'oil', d: 30 }] },
+        { key: 'spikeBig', publicKey: null, name: '油價一個月漲 40% 以上', label: '油價月漲 40% 以上', branch: 'spike', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'oil', d: 50 }] } ],
       cond: [
         { layer: 'L2', target: 'offset', read: { state: 'oil' }, anchor: { lo: { x: -0.75, situ: 'S24（2016-01-20：油價谷底，高收益債能源違約壓力）；oil 讀數 27.88' }, hi: { x: 0.883, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；oil 讀數 127.98' }, or: 1.5 }, mech: '油價已經很高時，產油國增產與政府釋出儲備的意願與政治壓力較大' },
         { layer: 'L3', target: 'spikeBig', read: { state: 'threat' }, anchor: { lo: { x: -0.0989, situ: 'S28（2021-11-08：低利率下的題材與新上市熱潮）；threat 讀數 80.22' }, hi: { x: 1, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；threat 讀數 318.93' }, or: 1.8 }, mech: '地緣風險高時，供給衝擊更可能持續、漲得更多' } ] },
@@ -2840,11 +3015,12 @@ const WORLD3 = {
       knownAtWhy: '價格本身就是公開讀數，當天收盤可見',
       pSrcOut: 'scenario',
       desc: '當事方：產油國與全球需求。增產價格戰或需求崩落使原油價格一個月內大跌；收場看跌 25–40%、跌 40% 以上，或產油國減產止跌',
+      label: '原油供過於求',
       blurb: '原油供過於求或需求崩落，油價大跌，能源股受壓、通膨降溫。',
       outcomes: [
-        { key: 'slump', publicKey: null, name: '油價一個月跌 25–40%', branch: 'slump', sev: 0, w: 0.7, tags: ['flat'], effects: [{ attr: 'oil', d: -35 }] },
-        { key: 'crash', publicKey: null, name: '油價跌 40% 以上（價格戰或需求崩潰）', branch: 'slump', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'oil', d: -55 }] },
-        { key: 'opecCut', publicKey: null, name: '產油國減產止跌', branch: 'cut', w: 0.15, tags: ['flat'], effects: [{ attr: 'oil', d: -10 }] } ],
+        { key: 'opecCut', publicKey: null, name: '產油國減產止跌', label: '產油國減產止跌', branch: 'cut', w: 0.15, tags: ['flat'], effects: [{ attr: 'oil', d: -10 }] },
+        { key: 'slump', publicKey: null, name: '油價一個月跌 25–40%', label: '油價月跌 25–40%', branch: 'slump', sev: 0, w: 0.7, tags: ['flat'], effects: [{ attr: 'oil', d: -35 }] },
+        { key: 'crash', publicKey: null, name: '油價跌 40% 以上（價格戰或需求崩潰）', label: '油價大跌 40% 以上', branch: 'slump', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'oil', d: -55 }] } ],
       cond: [
         { layer: 'L2', target: 'cut', read: { state: 'oil' }, anchor: { lo: { x: -0.75, situ: 'S24（2016-01-20：油價谷底，高收益債能源違約壓力）；oil 讀數 27.88' }, hi: { x: 0.883, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；oil 讀數 127.98' }, or: 0.5 }, mech: '油價已經很低時，產油國財政吃緊，更快減產止跌' },
         { layer: 'L3', target: 'crash', read: { state: 'jobless' }, anchor: { lo: { x: -0.28, situ: 'S13（2019-12-20：平靜，美中第一階段協議將簽）；jobless 讀數 3.5' }, hi: { x: 1, situ: 'S03（2011-08-08：美國被降評等後第一個交易日）；jobless 讀數 9.1' }, or: 2 }, mech: '景氣差、失業高時需求崩落，跌勢更深' } ] },
@@ -2856,10 +3032,11 @@ const WORLD3 = {
       knownAtWhy: '封城或大災的消息當天公開；對就業的影響要等月資料',
       pSrcOut: 'scenario',
       desc: '當事方：疫病或天災，與各國政府的封控。經濟活動大範圍停擺；收場只分區域性停擺數週，或全球停擺（2020 級）。復工另由 reopening 表示',
+      label: '疫病或天災使經濟停擺',
       blurb: '疫病或重大天災讓經濟活動大範圍停擺，景氣與企業獲利急凍。',
       outcomes: [
-        { key: 'regional', publicKey: null, name: '區域性停擺，數週恢復', branch: 'shock', sev: 0, w: 0.6, tags: ['down'], effects: [{ attr: 'jobless', d: 15 }, { attr: 'oil', d: -10 }] },
-        { key: 'global', publicKey: null, name: '全球停擺', branch: 'shock', sev: 1, w: 0.4, tags: ['down'], effects: [{ attr: 'jobless', d: 40 }, { attr: 'oil', d: -30 }] } ],
+        { key: 'regional', publicKey: null, name: '區域性停擺，數週恢復', label: '區域停擺，數週恢復', branch: 'shock', sev: 0, w: 0.6, tags: ['down'], effects: [{ attr: 'jobless', d: 15 }, { attr: 'oil', d: -10 }] },
+        { key: 'global', publicKey: null, name: '全球停擺', label: '全球停擺', branch: 'shock', sev: 1, w: 0.4, tags: ['down'], effects: [{ attr: 'jobless', d: 40 }, { attr: 'oil', d: -30 }] } ],
       cond: [
         { layer: 'L3', target: 'global', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 0.666667, situ: 'S07（2020-03-16：新冠疫情，聯準會降到零利率）；strain 讀數 8.9' }, or: 2, src: 'alessandriMumtaz', data: '金融壓力高時，不確定性衝擊使產出下降約六倍（原文 roughly six times larger：−0.17% 對 −0.025%）；方向來自這份，大小是判斷', grade: '未核' }, mech: '金融壓力高時，同樣的衝擊打到實體更重' } ] },
     { id: 'reopening', name: '停擺之後的復工與重建', kind: 'random', group: 'econ', system: 2, rate: 0.3, max: 2,
@@ -2872,11 +3049,12 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；消息在發生日之後第一個開盤前已知',
       pSrcOut: 'scenario',
       desc: '當事方：政府、企業與勞工。疫病、天災或大停電之後的復工；收場看快速回補、緩慢恢復，或再度停擺。fired() 不退場，所以頻率由讀記憶 shockRun 的條件撐：衝擊剛發生時約每年 3 次，半衰期 90 曆日後退回 0.3',
+      label: '停擺後復工重建',
       blurb: '停擺之後開始復工重建，景氣能否回溫要看恢復的速度。',
       outcomes: [
-        { key: 'fast', publicKey: null, name: '快速復工，就業回補', branch: 'rebound', sev: 1, w: 0.5, tags: ['up'], effects: [{ attr: 'jobless', d: -15 }] },
-        { key: 'slow', publicKey: null, name: '緩慢恢復', branch: 'rebound', sev: 0, w: 0.4, tags: ['up'], effects: [{ attr: 'jobless', d: -8 }] },
-        { key: 'relapse', publicKey: null, name: '再度停擺', branch: 'relapse', w: 0.1, tags: ['down'], effects: [{ attr: 'jobless', d: 10 }] } ],
+        { key: 'fast', publicKey: null, name: '快速復工，就業回補', label: '快速復工，就業回補', branch: 'rebound', sev: 1, w: 0.5, tags: ['up'], effects: [{ attr: 'jobless', d: -15 }] },
+        { key: 'slow', publicKey: null, name: '緩慢恢復', label: '緩慢恢復', branch: 'rebound', sev: 0, w: 0.4, tags: ['up'], effects: [{ attr: 'jobless', d: -8 }] },
+        { key: 'relapse', publicKey: null, name: '再度停擺', label: '再度停擺', branch: 'relapse', w: 0.1, tags: ['down'], effects: [{ attr: 'jobless', d: 10 }] } ],
       cond: [
         { layer: 'L1', read: { mem: 'shockRun' }, anchor: { lo: { x: 0.03, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；記憶 shockRun 的折現和照記憶定義手算，x＝0.03' }, hi: { x: 1, situ: 'S07（2020-03-16：新冠疫情，聯準會降到零利率）；記憶 shockRun 的折現和照記憶定義手算，x＝1' }, or: 9 }, mech: '停擺剛發生時復工的消息密集，衝擊過去越久越少' },
         { layer: 'L3', target: 'fast', read: { mem: 'rescueRun' }, anchor: { lo: { x: 0.01, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；記憶 rescueRun 的折現和照記憶定義手算，x＝0.01' }, hi: { x: 1, situ: 'S07（2020-03-16：新冠疫情，聯準會降到零利率）；記憶 rescueRun 的折現和照記憶定義手算，x＝1' }, or: 2 }, mech: '剛有央行與國會的救援，企業留住員工、需求撐住，復工更快' } ] },
@@ -2888,6 +3066,7 @@ const WORLD3 = {
       pWhy: '事件規格第 4 版（裁定 250、258–263）：上升與下降的大小兩級，每一級寫成一個確切的公告值（Astra 第 51 則：對外文字要給同一個數，不能拿區間的代表值當實際揭露；第 1 版的區間名稱與 0.15 作廢）：失業率 ±0.1、±0.4，物價年增率 ±0.2、±0.6（判斷：公告以 0.1 為單位，小的那一級取最常見的值，大的那一級取代表值）。其他幅度的公告（例如失業率 ＋0.2）在這個世界裡歸到最近的一級，是已知的粗化。T1b 換成屬性單位：失業率 1 個百分點＝20、物價年增率 1 個百分點＝12.5，所以小、大兩級的差是 6 與 5，過下限 5（腳本查）。對外的公告幅度就是 Δ（Astra 第 47 則第 2 點 `announcedDelta`），世界狀態被 0／100 截掉的部分另存診斷（照引擎規格）。 ｜舊依據（第 3 版以前；其中的數字已被上面的新權重與發生率取代，留作歷史）：裁定 169：結果是讀數本身怎麼動。資料：FRED UNRATE，參考月 2000-01 到 2026-10；算法：這一期減上一期（都是公布的 0.1 位），大於 0 上升、等於 0 持平、小於 0 下降；2025-10 沒有資料，前後兩期跳過；程式 handover/2026-11-19/w4-freq.py。結果：319 期，上升 100（0.313）、持平 85（0.266）、下降 134（0.420），上升與下降的中位數都是 0.1 個百分點。這是各種景氣下的平均頻率，不是中性起點的頻率（研究筆記（d）的偏差，照實寫）。效果大小：0.1 個百分點＝map 2 分；起點 22：上升 d 3 ≈ +2.3 分，下降 d −9 ≈ −2.0 分。pSrcOut：可能被影響——推的狀態 jobless 的依賴集合含 M 裡的 tradeBarrier、strain、oil 等 5 個（docs/world-math.md 11.3：Dep(e) ∩ M ≠ ∅），必填；填 scenario：世界算的機率對外標代入情境，不標 market',
       pSrcOut: 'scenario',
       desc: '當事方：美國勞工統計局。每月公布失業率；收場是失業率對上一期的變動。五個權重加總 0.999，是現行三類權重（0.313、0.266、0.42，FRED 2000-01 到 2026-10 共 319 期的升、平、降頻率）捨到三位小數的結果，不改；權重是相對值，引擎歸一（統籌裁定 294）',
+      label: '美國就業報告',
       blurb: '美國公布就業報告，失業率的升降牽動對景氣與降息的預期。',
       dates: ['2026-12-04', '2027-01-08', '2027-02-05', '2027-03-05', '2027-04-02', '2027-05-07', '2027-06-04', '2027-07-02', '2027-08-06', '2027-09-03', '2027-10-08', '2027-11-05', '2027-12-03'],
       dateSrc: [{ dates: ['2026-12-04', '2027-01-08', '2027-02-05', '2027-03-05', '2027-04-02', '2027-05-07', '2027-06-04', '2027-07-02', '2027-08-06', '2027-09-03', '2027-10-08', '2027-11-05', '2027-12-03'], doc: 'BLS, Schedule of Releases for The Employment Situation（參考月 2026-11 到 2027-11，每次 08:30 ET）', url: 'https://www.bls.gov/schedule/news_release/empsit.htm' }],
@@ -2898,11 +3077,11 @@ const WORLD3 = {
       knownAt: ['2026-12-04T13:30Z', '2027-01-08T13:30Z', '2027-02-05T13:30Z', '2027-03-05T13:30Z', '2027-04-02T12:30Z', '2027-05-07T12:30Z', '2027-06-04T12:30Z', '2027-07-02T12:30Z', '2027-08-06T12:30Z', '2027-09-03T12:30Z', '2027-10-08T12:30Z', '2027-11-05T12:30Z', '2027-12-03T13:30Z'],
       expect: { kind: 'history', what: '失業率（季調，公布到 0.1 個百分點）比上一次公布上升、持平、下降的歷史頻率；不是市場預期，意外由價格層算（裁定 169）', grade: 'base-rate', src: 'fred_unrate' },
       outcomes: [
-        { key: 'upSmall', publicKey: null, name: '失業率上升 0.1 個百分點', branch: 'rise', sev: 0, w: 0.25, tags: ['down'], effects: [{ attr: 'jobless', dRead: 0.1 }] },
-        { key: 'upBig', publicKey: null, name: '失業率上升 0.4 個百分點', branch: 'rise', sev: 1, w: 0.063, tags: ['down'], effects: [{ attr: 'jobless', dRead: 0.4 }] },
-        { key: 'flat', publicKey: null, name: '失業率持平', branch: 'flat', w: 0.266, tags: ['flat'], effects: [{ attr: 'jobless', dRead: 0 }] },
-        { key: 'downSmall', publicKey: null, name: '失業率下降 0.1 個百分點', branch: 'fall', sev: 0, w: 0.38, tags: ['up'], effects: [{ attr: 'jobless', dRead: -0.1 }] },
-        { key: 'downBig', publicKey: null, name: '失業率下降 0.4 個百分點', branch: 'fall', sev: 1, w: 0.04, tags: ['up'], effects: [{ attr: 'jobless', dRead: -0.4 }] } ],
+        { key: 'upBig', publicKey: null, name: '失業率上升 0.4 個百分點', label: '失業率升 0.4 點', branch: 'rise', sev: 1, w: 0.063, tags: ['down'], effects: [{ attr: 'jobless', dRead: 0.4 }] },
+        { key: 'upSmall', publicKey: null, name: '失業率上升 0.1 個百分點', label: '失業率升 0.1 點', branch: 'rise', sev: 0, w: 0.25, tags: ['down'], effects: [{ attr: 'jobless', dRead: 0.1 }] },
+        { key: 'flat', publicKey: null, name: '失業率持平', label: '失業率持平', branch: 'flat', w: 0.266, tags: ['flat'], effects: [{ attr: 'jobless', dRead: 0 }] },
+        { key: 'downSmall', publicKey: null, name: '失業率下降 0.1 個百分點', label: '失業率降 0.1 點', branch: 'fall', sev: 0, w: 0.38, tags: ['up'], effects: [{ attr: 'jobless', dRead: -0.1 }] },
+        { key: 'downBig', publicKey: null, name: '失業率下降 0.4 個百分點', label: '失業率降 0.4 點', branch: 'fall', sev: 1, w: 0.04, tags: ['up'], effects: [{ attr: 'jobless', dRead: -0.4 }] } ],
       cond: [
         { layer: 'L3', target: 'upBig', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 1, situ: 'S02（2008-10-10：雷曼倒閉後一個月，全球股市崩跌，聯準會 10-08 緊急降息）；strain 讀數 16' }, or: 2.5 }, mech: '信用緊縮時企業一次大量裁員，失業率跳升' },
         { layer: 'L3', target: 'downBig', read: { mem: 'rescueRun' }, anchor: { lo: { x: 0.01, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；記憶 rescueRun 的折現和照記憶定義手算，x＝0.01' }, hi: { x: 1, situ: 'S07（2020-03-16：新冠疫情，聯準會降到零利率）；記憶 rescueRun 的折現和照記憶定義手算，x＝1' }, or: 2 }, mech: '剛有大規模救援時，停擺後的回補一次很大（2020 年 5、6 月）' } ] },
@@ -2912,6 +3091,7 @@ const WORLD3 = {
       pWhy: '事件規格第 4 版（裁定 250、258–263）：上升與下降的大小兩級，每一級寫成一個確切的公告值（Astra 第 51 則：對外文字要給同一個數，不能拿區間的代表值當實際揭露；第 1 版的區間名稱與 0.15 作廢）：失業率 ±0.1、±0.4，物價年增率 ±0.2、±0.6（判斷：公告以 0.1 為單位，小的那一級取最常見的值，大的那一級取代表值）。其他幅度的公告（例如失業率 ＋0.2）在這個世界裡歸到最近的一級，是已知的粗化。T1b 換成屬性單位：失業率 1 個百分點＝20、物價年增率 1 個百分點＝12.5，所以小、大兩級的差是 6 與 5，過下限 5（腳本查）。對外的公告幅度就是 Δ（Astra 第 47 則第 2 點 `announcedDelta`），世界狀態被 0／100 截掉的部分另存診斷（照引擎規格）。 ｜舊依據（第 3 版以前；其中的數字已被上面的新權重與發生率取代，留作歷史）：裁定 169：結果是讀數本身怎麼動。資料：FRED CPIAUCNS（未季調指數），用它算每月的 12 個月變動、四捨五入到 0.1，參考月 2000-01 到 2026-10；算法：這一期減上一期，大於 0 上升、等於 0 持平、小於 0 下降；2025-10 沒有資料，碰到它的期跳過；程式 handover/2026-11-19/w4-freq.py（算出 2026-09 為 3.7%，與 BLS 公布相同）。結果：318 期，上升 145（0.456）、持平 34（0.107）、下降 139（0.437），上升與下降的中位數都是 0.3 個百分點。這是各種情形下的平均頻率，不是中性起點的頻率。效果大小：0.3 個百分點＝map 3.75 分；起點 46.3：上升 d 7 ≈ +3.8 分，下降 d −8 ≈ −3.7 分。pSrcOut：可能被影響——推的狀態 cpiTrend 的依賴集合含 M 裡的 tradeBarrier、jobless、oil 等 6 個（docs/world-math.md 11.3：Dep(e) ∩ M ≠ ∅），必填；填 scenario：世界算的機率對外標代入情境，不標 market',
       pSrcOut: 'scenario',
       desc: '當事方：美國勞工統計局。每月公布 CPI；收場是總指數 12 個月年增率對上一期的變動（核心與能源分項方向相反的不另成收場）',
+      label: '美國消費者物價公布',
       blurb: '美國公布消費者物價，通膨的走向影響利率預期與股債表現。',
       dates: ['2026-12-10', '2027-01-13', '2027-02-11', '2027-03-10', '2027-04-13', '2027-05-12', '2027-06-10', '2027-07-14', '2027-08-11', '2027-09-14', '2027-10-14', '2027-11-10', '2027-12-10'],
       dateSrc: [{ dates: ['2026-12-10', '2027-01-13', '2027-02-11', '2027-03-10', '2027-04-13', '2027-05-12', '2027-06-10', '2027-07-14', '2027-08-11', '2027-09-14', '2027-10-14', '2027-11-10', '2027-12-10'], doc: 'BLS, Schedule of Releases for the Consumer Price Index（參考月 2026-11 到 2027-11，每次 08:30 ET）', url: 'https://www.bls.gov/schedule/news_release/cpi.htm' }],
@@ -2922,11 +3102,11 @@ const WORLD3 = {
       knownAt: ['2026-12-10T13:30Z', '2027-01-13T13:30Z', '2027-02-11T13:30Z', '2027-03-10T13:30Z', '2027-04-13T12:30Z', '2027-05-12T12:30Z', '2027-06-10T12:30Z', '2027-07-14T12:30Z', '2027-08-11T12:30Z', '2027-09-14T12:30Z', '2027-10-14T12:30Z', '2027-11-10T13:30Z', '2027-12-10T13:30Z'],
       expect: { kind: 'history', what: 'CPI-U 12 個月變動（四捨五入到 0.1）比上一次公布上升、持平、下降的歷史頻率；不是市場預期，意外由價格層算（裁定 169）', grade: 'base-rate', src: 'fred_cpi' },
       outcomes: [
-        { key: 'upSmall', publicKey: null, name: '年增率上升 0.2 個百分點', branch: 'rise', sev: 0, w: 0.33, tags: ['down'], effects: [{ attr: 'cpiTrend', dRead: 0.2 }] },
-        { key: 'upBig', publicKey: null, name: '年增率上升 0.6 個百分點', branch: 'rise', sev: 1, w: 0.126, tags: ['down'], effects: [{ attr: 'cpiTrend', dRead: 0.6 }] },
-        { key: 'flat', publicKey: null, name: '年增率持平', branch: 'flat', w: 0.107, tags: ['flat'], effects: [{ attr: 'cpiTrend', dRead: 0 }] },
-        { key: 'downSmall', publicKey: null, name: '年增率下降 0.2 個百分點', branch: 'fall', sev: 0, w: 0.32, tags: ['up'], effects: [{ attr: 'cpiTrend', dRead: -0.2 }] },
-        { key: 'downBig', publicKey: null, name: '年增率下降 0.6 個百分點', branch: 'fall', sev: 1, w: 0.117, tags: ['up'], effects: [{ attr: 'cpiTrend', dRead: -0.6 }] } ],
+        { key: 'upBig', publicKey: null, name: '年增率上升 0.6 個百分點', label: '年增率升 0.6 點', branch: 'rise', sev: 1, w: 0.126, tags: ['down'], effects: [{ attr: 'cpiTrend', dRead: 0.6 }] },
+        { key: 'upSmall', publicKey: null, name: '年增率上升 0.2 個百分點', label: '年增率升 0.2 點', branch: 'rise', sev: 0, w: 0.33, tags: ['down'], effects: [{ attr: 'cpiTrend', dRead: 0.2 }] },
+        { key: 'flat', publicKey: null, name: '年增率持平', label: '年增率持平', branch: 'flat', w: 0.107, tags: ['flat'], effects: [{ attr: 'cpiTrend', dRead: 0 }] },
+        { key: 'downSmall', publicKey: null, name: '年增率下降 0.2 個百分點', label: '年增率降 0.2 點', branch: 'fall', sev: 0, w: 0.32, tags: ['up'], effects: [{ attr: 'cpiTrend', dRead: -0.2 }] },
+        { key: 'downBig', publicKey: null, name: '年增率下降 0.6 個百分點', label: '年增率降 0.6 點', branch: 'fall', sev: 1, w: 0.117, tags: ['up'], effects: [{ attr: 'cpiTrend', dRead: -0.6 }] } ],
       cond: [
         { layer: 'L3', target: 'upBig', read: { state: 'oil' }, anchor: { lo: { x: -0.75, situ: 'S24（2016-01-20：油價谷底，高收益債能源違約壓力）；oil 讀數 27.88' }, hi: { x: 0.883, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；oil 讀數 127.98' }, or: 2 }, mech: '油價高時能源直接推高物價，年增率一次跳得多' },
         { layer: 'L3', target: 'downBig', read: { state: 'jobless' }, anchor: { lo: { x: -0.28, situ: 'S13（2019-12-20：平靜，美中第一階段協議將簽）；jobless 讀數 3.5' }, hi: { x: 1, situ: 'S03（2011-08-08：美國被降評等後第一個交易日）；jobless 讀數 9.1' }, or: 2 }, mech: '失業高、需求弱時物價一次降得多' } ] },
@@ -2941,12 +3121,13 @@ const WORLD3 = {
       knownAtWhy: '大停電當天公開；對就業的影響要等月資料',
       pSrcOut: 'scenario',
       desc: '當事方：北美或歐洲的電網、太陽風暴或攻擊者。高壓電網大範圍損壞；收場只分區域停電數天到兩週，或大範圍停電數週以上。復工另由 reopening 表示',
+      label: '電網損壞長時間停電',
       blurb: '大範圍電網損壞造成長時間停電，生產與資料中心運作受衝擊。',
       scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
-        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
-        { key: 'regional', publicKey: null, name: '區域停電數天到兩週', branch: 'outage', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'jobless', d: 5 }, { attr: 'gpuRent', d: 10, noMod: true }] },
-        { key: 'continental', publicKey: null, name: '大範圍停電數週以上', branch: 'outage', sev: 1, w: 0.3, tags: ['down'], effects: [{ attr: 'jobless', d: 15 }, { attr: 'gpuRent', d: 20, noMod: true }] } ],
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', label: '虛驚一場', branch: 'none', tags: ['flat'], effects: [] },
+        { key: 'regional', publicKey: null, name: '區域停電數天到兩週', label: '區域停電數天到兩週', branch: 'outage', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'jobless', d: 5 }, { attr: 'gpuRent', d: 10, noMod: true }] },
+        { key: 'continental', publicKey: null, name: '大範圍停電數週以上', label: '大範圍停電數週以上', branch: 'outage', sev: 1, w: 0.3, tags: ['down'], effects: [{ attr: 'jobless', d: 15 }, { attr: 'gpuRent', d: 20, noMod: true }] } ],
       cond: [
         { layer: 'L3', target: 'continental', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 0.666667, situ: 'S07（2020-03-16：新冠疫情，聯準會降到零利率）；strain 讀數 8.9' }, or: 1.5, src: 'alessandriMumtaz', data: '金融壓力高時，不確定性衝擊使產出下降約六倍（原文 roughly six times larger：−0.17% 對 −0.025%）；方向來自這份，大小是判斷', grade: '未核' }, mech: '金融壓力高時，修復的融資與保險更慢，停擺拖得更久' } ] },
     { id: 'emergencyEase', name: '聯準會臨時出手（例會外降息、緊急放款或換匯工具）', kind: 'random', group: 'policy', system: 3, rate: 0.1, max: 3,
@@ -2957,11 +3138,12 @@ const WORLD3 = {
       knownAtWhy: '聯準會臨時決定以新聞稿公布，當天可見',
       pSrcOut: 'scenario',
       desc: '當事方：聯準會（換匯額度含其他央行）。例會之外的降息，或推出緊急放款、換匯、購債工具；收場看只開工具、臨時降息，或大幅降息到零',
+      label: '聯準會臨時救市',
       blurb: '聯準會在例會之外臨時出手救市，用降息或放款穩住金融市場。',
       outcomes: [
-        { key: 'facility', publicKey: null, name: '緊急流動性工具（不降息）', branch: 'facility', w: 0.5, tags: ['up', 'rescue'], effects: [{ attr: 'fedStance', d: -20 }, { flag: 'fRescue', v: true }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '向聯準會緊急工具借款的銀行與交易商', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
-        { key: 'cut', publicKey: null, name: '臨時降息 50 基點', branch: 'cut', sev: 0, w: 0.35, tags: ['up', 'rescue'], effects: [{ attr: 'fedStance', dRead: -50 }, { flag: 'fRescue', v: true }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '以短期利率融資的銀行、企業與槓桿部位', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
-        { key: 'cutBig', publicKey: null, name: '臨時降息 100 基點（大幅降息或降到零）', branch: 'cut', sev: 1, w: 0.15, tags: ['up', 'rescue'], effects: [{ attr: 'fedStance', dRead: -100 }, { flag: 'fRescue', v: true }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '以短期利率融資的銀行、企業與槓桿部位', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } } ],
+        { key: 'facility', publicKey: null, name: '緊急流動性工具（不降息）', label: '緊急流動性工具', branch: 'facility', w: 0.5, tags: ['up', 'rescue'], effects: [{ attr: 'fedStance', d: -20 }, { flag: 'fRescue', v: true }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '向聯準會緊急工具借款的銀行與交易商', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
+        { key: 'cut', publicKey: null, name: '臨時降息 50 基點', label: '臨時降息 50 基點', branch: 'cut', sev: 0, w: 0.35, tags: ['up', 'rescue'], effects: [{ attr: 'fedStance', dRead: -50 }, { flag: 'fRescue', v: true }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '以短期利率融資的銀行、企業與槓桿部位', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
+        { key: 'cutBig', publicKey: null, name: '臨時降息 100 基點（大幅降息或降到零）', label: '臨時降息 100 基點', branch: 'cut', sev: 1, w: 0.15, tags: ['up', 'rescue'], effects: [{ attr: 'fedStance', dRead: -100 }, { flag: 'fRescue', v: true }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '以短期利率融資的銀行、企業與槓桿部位', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } } ],
       cond: [
         { layer: 'L1', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 4, src: 'cvj2020', data: '兩次會議之間股市負報酬的係數 3.15（t＝4.11），跌 10% 對應下次會議預期降 32 基點；只對下跌，1994–2008；量的是例會的預期，臨時出手的大小是判斷' }, mech: '股市重挫、波動高時，聯準會更容易在例會外出手' },
         { layer: 'L1', read: { mem: 'fedDir' }, anchor: { lo: { x: 1, situ: 'S08（2022-06-16：通膨高點，聯準會一次升 75 基點）；記憶 fedDir 的折現和照記憶定義手算，x＝1' }, hi: { x: -0.88, situ: 'S26（2024-09-20：聯準會降息 50 基點後）；記憶 fedDir 的折現和照記憶定義手算，x＝-0.88' }, or: 2 }, mech: '上一次是降息時，聯準會已在寬鬆循環，臨時出手比較容易' },
@@ -2973,6 +3155,7 @@ const WORLD3 = {
       pWhy: '事件規格第 4 版（裁定 250、258–263）：拆成升、降各兩級。`fedDir` 兩個條件的勝算比 30 是判斷（有序 probit 的係數不能直接當 β；N1）：x 從 −1 到 ＋1，β＝ln 30 ÷ 2≈1.70，作用上限 1.70，在 `cond_max` 2.3 之內。`vol` 那一條帶 N2 的註記。可調的數 n_e＝(5−1)＋3＋5＝12，剛好到上限（T5b），所以 L3（一次升或降多少）不寫條件、記例外；原本想寫的兩條（升 50 讀 `cpiTrend`、降 50 讀 `strain`，限制一、二都過）留在這裡，給之後放寬上限或把 `hold` 的 Δ＝0 不算可調的數時用。 ｜舊依據（第 3 版以前；其中的數字已被上面的新權重與發生率取代，留作歷史）：參照群：2000–2025 年的排定例會，每年 8 次 × 26 年＝208 次（分母用排定會議數，不用維基表的列數，表漏列很多不動的會議）。升息 39 次（0.19；核對憑記憶數到 40，差一次未核）；降息 34 次扣掉 7 次臨時會議（2001-01-03、2001-04-18、2001-09-17、2008-01-22、2008-10-08、2020-03-03、2020-03-15，那是 emergencyEase 的事）＝27 次（0.13）；其餘不動 142 次（0.68）。次數是網頁讀取工具對維基表數的〔二手〕。中性起點時照這個比例，之後由表（通膨、失業、資金壓力 → 聯準會）推。效果：一碼＝25 基點＝map 上 8.3 分；從靜止值 50 算 d ±17。pSrcOut：可能被影響——推的狀態 fedStance 的依賴集合含 M 裡的 strain、jobless、cpiTrend（docs/world-math.md 11.3：Dep(e) ∩ M ≠ ∅），必填；填 scenario：世界算的機率對外標代入情境，不標 market',
       pSrcOut: 'scenario',
       desc: '當事方：聯邦公開市場委員會。每次例會決定目標利率；收場是目標區間上限的變動',
+      label: '聯準會例會決議',
       blurb: '聯準會例會公布利率決策，直接影響資金成本與股債價格。',
       outlook: null,
       dates: ['2026-12-09', '2027-01-27', '2027-03-17', '2027-04-28', '2027-06-09', '2027-07-28', '2027-09-15', '2027-10-27', '2027-11-17'],
@@ -2983,11 +3166,11 @@ const WORLD3 = {
       knownAt: ['2026-12-09T19:00Z', '2027-01-27T19:00Z', '2027-03-17T18:00Z', '2027-04-28T18:00Z', '2027-06-09T18:00Z', '2027-07-28T18:00Z', '2027-09-15T18:00Z', '2027-10-27T18:00Z', '2027-11-17T19:00Z'],
       expect: { kind: 'history', what: '2000–2025 年排定例會的升息、不動、降息比例；沒有讀到市場隱含機率（期貨定價），不是市場預期', grade: 'base-rate', src: 'wiki_fomc' },
       outcomes: [
-        { key: 'hike25', publicKey: 'hike25', name: '升息 25 基點', branch: 'hike', sev: 0, w: 0.14, tags: ['down'], effects: [{ attr: 'fedStance', dRead: 25 }] },
-        { key: 'hike50', publicKey: 'hike50', name: '升息 50 基點', branch: 'hike', sev: 1, w: 0.05, tags: ['down'], effects: [{ attr: 'fedStance', dRead: 50 }] },
-        { key: 'hold', publicKey: 'hold', name: '按兵不動（措詞、點陣圖或縮表計畫的轉向不另成收場）', branch: 'hold', w: 0.68, tags: ['flat'], effects: [{ attr: 'fedStance', dRead: 0 }] },
-        { key: 'cut25', publicKey: 'cut25', name: '降息 25 基點', branch: 'cut', sev: 0, w: 0.1, tags: ['up'], effects: [{ attr: 'fedStance', dRead: -25 }] },
-        { key: 'cut50', publicKey: 'cut50', name: '降息 50 基點', branch: 'cut', sev: 1, w: 0.03, tags: ['up'], effects: [{ attr: 'fedStance', dRead: -50 }] } ],
+        { key: 'hike50', publicKey: 'hike50', name: '升息 50 基點', label: '升息 50 基點', branch: 'hike', sev: 1, w: 0.05, tags: ['down'], effects: [{ attr: 'fedStance', dRead: 50 }] },
+        { key: 'hike25', publicKey: 'hike25', name: '升息 25 基點', label: '升息 25 基點', branch: 'hike', sev: 0, w: 0.14, tags: ['down'], effects: [{ attr: 'fedStance', dRead: 25 }] },
+        { key: 'hold', publicKey: 'hold', name: '按兵不動（措詞、點陣圖或縮表計畫的轉向不另成收場）', label: '按兵不動', branch: 'hold', w: 0.68, tags: ['flat'], effects: [{ attr: 'fedStance', dRead: 0 }] },
+        { key: 'cut25', publicKey: 'cut25', name: '降息 25 基點', label: '降息 25 基點', branch: 'cut', sev: 0, w: 0.1, tags: ['up'], effects: [{ attr: 'fedStance', dRead: -25 }] },
+        { key: 'cut50', publicKey: 'cut50', name: '降息 50 基點', label: '降息 50 基點', branch: 'cut', sev: 1, w: 0.03, tags: ['up'], effects: [{ attr: 'fedStance', dRead: -50 }] } ],
       cond: [
         { layer: 'L2', target: 'cut', read: { mem: 'fedDir' }, anchor: { lo: { x: 1, situ: 'S08（2022-06-16：通膨高點，聯準會一次升 75 基點）；記憶 fedDir 的折現和照記憶定義手算，x＝1' }, hi: { x: -0.88, situ: 'S26（2024-09-20：聯準會降息 50 基點後）；記憶 fedDir 的折現和照記憶定義手算，x＝-0.88' }, or: 30, src: 'hjHuPhillips', data: '上一次目標利率的變動對這一次的有序 probit 係數 2.60（1984–97）；2.19，t＝5.6，148 次會議（1985–2001）；probit 指標單位，勝算比 30 是換成本模型的判斷', grade: '未核' }, mech: '聯準會的決定成串：上一次是降息，這一次也降的機會遠高於上一次是升息時' },
         { layer: 'L2', target: 'cut', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 3, src: 'cvj2020', data: '兩次會議之間股市負報酬的係數 3.15（t＝4.11），跌 10% 對應下次會議預期降 32 基點、一年後 127 基點；只對下跌，1994–2008' }, mech: '兩次會議之間股市大跌，下一次會議降息的機會升高' },
@@ -2999,6 +3182,7 @@ const WORLD3 = {
       pWhy: '事件規格第 4 版（裁定 250、258–263）：設計頁列的「機率不隨任何狀態變」的兩個事件之一，現在有三個條件（所有效果都是 `noMod`，表推不到它，所以讀什麼都不受限制二擋；限制一：`vol` 6 → 3、`dollar` 5 → 3 都在接線上）。加了「降息或重啟寬鬆」一類（三次收場列全裡有兩次列了）。`reading` 照裁定 272 用 `{qty, unit, delta}`（政策利率的變動）；`before` 不寫（`delta` 與 `before`／`after` 不可並存），`tool` 拿掉（要不要加 `tool` 欄，統籌在問 Astra）。 ｜舊依據（第 3 版以前；其中的數字已被上面的新權重與發生率取代，留作歷史）：裁定 114：日本央行升息用排定事件表示。參照群：2024-03 到 2026-10 的例會約 22 次（每年 8 次 × 2.75 年），升息 6 次（2024-03、2024-07、2025-01、2025-12、2026-06、2026-09）〔二手，搜尋摘要，2025-01 那次是本檔補的、沒核到原文〕＝0.27；其餘維持 0.73，沒有降息。日本的政策沒有自己的狀態，效果全部沿接線 3 → 5 推槓桿與美元、帶 noMod，所以它的機率不隨世界狀態變（交件寫明）。效果大小是判斷：參考 2024 年 8 月套利平倉，槓桿往下 15%、美元略弱。pSrcOut：不在可能被影響那一類——效果全帶 noMod，推的狀態是空集合，沒有前置條件，所以 Dep(e) ∩ M 是空的（docs/world-math.md 11.3）；照規則可以不填，填的是預設值 scenario',
       pSrcOut: 'scenario',
       desc: '當事方：日本銀行政策委員會。每次會議決定政策利率；收場是政策利率的變動，或政策框架的調整。世界裡沒有日本的狀態，效果沿 3 → 5 推槓桿與美元。framework 收場（結束負利率、殖利率曲線控制）涉及多種工具、不能唯一指認單一公開量，照 Astra 第 54 則省略 reading（只發文字）；它對套利部位的作用照升息 25 基點寫，是判斷。維持與重啟寬鬆的收場政策利率不變，reading.delta 填 0',
+      label: '日本央行政策決議',
       blurb: '日本央行公布政策決議，牽動日圓與全球套利資金的流向。',
       dates: ['2026-12-18', '2027-01-22', '2027-03-18', '2027-04-28', '2027-06-11', '2027-07-22', '2027-09-22', '2027-10-29', '2027-12-17'],
       dateSrc: [{ dates: ['2026-12-18', '2027-01-22', '2027-03-18', '2027-04-28', '2027-06-11', '2027-07-22', '2027-09-22', '2027-10-29', '2027-12-17'], doc: '日本銀行 Monetary Policy Meetings 日程（2026-12-17、18；2027 年 1/21–22、3/17–18、4/27–28、6/10–11、7/21–22、9/21–22、10/28–29、12/16–17）；決議日取第二天', url: 'https://www.boj.or.jp/en/mopo/mpmsche_minu/index.htm' }],
@@ -3007,12 +3191,12 @@ const WORLD3 = {
       knownAt: ['2026-12-18T06:00Z', '2027-01-22T06:00Z', '2027-03-18T06:00Z', '2027-04-28T06:00Z', '2027-06-11T06:00Z', '2027-07-22T06:00Z', '2027-09-22T06:00Z', '2027-10-29T06:00Z', '2027-12-17T06:00Z'],
       expect: { kind: 'history', what: '2024-03 到 2026-10 日本央行例會的升息比例；沒有讀到市場隱含機率', grade: 'base-rate', src: 'boj_hikes' },
       outcomes: [
-        { key: 'framework', publicKey: null, name: '政策框架正常化（結束負利率、放寬或結束殖利率曲線控制）', branch: 'framework', w: 0.02, tags: ['down'], effects: [{ attr: 'leverage', d: -15, noMod: true }, { attr: 'dollar', d: -3, noMod: true }], funding: { terms: [], background: [{ quantityId: 'bojPolicyRate', unit: '基點', src: 'boj_sched' }], subject: { who: '借日圓投資的套利部位', currency: 'JPY', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
-        { key: 'hike25', publicKey: null, name: '升息 25 基點', branch: 'hike', sev: 0, w: 0.2, tags: ['down'], reading: { qty: 'bojPolicyRate', unit: '基點', delta: 25 }, effects: [{ attr: 'leverage', d: -15, noMod: true }, { attr: 'dollar', d: -3, noMod: true }], funding: { terms: [], background: [{ quantityId: 'bojPolicyRate', unit: '基點', src: 'boj_sched' }], subject: { who: '借日圓投資的套利部位', currency: 'JPY', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
-        { key: 'hike50', publicKey: null, name: '升息 50 基點', branch: 'hike', sev: 1, w: 0.03, tags: ['down'], reading: { qty: 'bojPolicyRate', unit: '基點', delta: 50 }, effects: [{ attr: 'leverage', d: -25, noMod: true }, { attr: 'dollar', d: -8, noMod: true }], funding: { terms: [], background: [{ quantityId: 'bojPolicyRate', unit: '基點', src: 'boj_sched' }], subject: { who: '借日圓投資的套利部位', currency: 'JPY', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
-        { key: 'hold', publicKey: null, name: '維持利率', branch: 'hold', w: 0.73, tags: ['flat'], reading: { qty: 'bojPolicyRate', unit: '基點', delta: 0 }, effects: [] },
-        { key: 'cut25', publicKey: null, name: '降息 25 基點', branch: 'cut', w: 0.01, tags: ['flat'], reading: { qty: 'bojPolicyRate', unit: '基點', delta: -25 }, effects: [{ attr: 'dollar', d: 3, noMod: true }] },
-        { key: 'easing', publicKey: null, name: '利率不變，重啟非利率的寬鬆工具（購債等）', branch: 'easing', w: 0.01, tags: ['flat'], reading: { qty: 'bojPolicyRate', unit: '基點', delta: 0 }, effects: [{ attr: 'dollar', d: 3, noMod: true }] } ],
+        { key: 'hike50', publicKey: null, name: '升息 50 基點', label: '升息 50 基點', branch: 'hike', sev: 1, w: 0.03, tags: ['down'], reading: { qty: 'bojPolicyRate', unit: '基點', delta: 50 }, effects: [{ attr: 'leverage', d: -25, noMod: true }, { attr: 'dollar', d: -8, noMod: true }], funding: { terms: [], background: [{ quantityId: 'bojPolicyRate', unit: '基點', src: 'boj_sched' }], subject: { who: '借日圓投資的套利部位', currency: 'JPY', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
+        { key: 'hike25', publicKey: null, name: '升息 25 基點', label: '升息 25 基點', branch: 'hike', sev: 0, w: 0.2, tags: ['down'], reading: { qty: 'bojPolicyRate', unit: '基點', delta: 25 }, effects: [{ attr: 'leverage', d: -15, noMod: true }, { attr: 'dollar', d: -3, noMod: true }], funding: { terms: [], background: [{ quantityId: 'bojPolicyRate', unit: '基點', src: 'boj_sched' }], subject: { who: '借日圓投資的套利部位', currency: 'JPY', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
+        { key: 'framework', publicKey: null, name: '政策框架正常化（結束負利率、放寬或結束殖利率曲線控制）', label: '政策框架正常化', branch: 'framework', w: 0.02, tags: ['down'], effects: [{ attr: 'leverage', d: -15, noMod: true }, { attr: 'dollar', d: -3, noMod: true }], funding: { terms: [], background: [{ quantityId: 'bojPolicyRate', unit: '基點', src: 'boj_sched' }], subject: { who: '借日圓投資的套利部位', currency: 'JPY', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
+        { key: 'hold', publicKey: null, name: '維持利率', label: '維持利率', branch: 'hold', w: 0.73, tags: ['flat'], reading: { qty: 'bojPolicyRate', unit: '基點', delta: 0 }, effects: [] },
+        { key: 'easing', publicKey: null, name: '利率不變，重啟非利率的寬鬆工具（購債等）', label: '利率不變，重啟寬鬆工具', branch: 'easing', w: 0.01, tags: ['flat'], reading: { qty: 'bojPolicyRate', unit: '基點', delta: 0 }, effects: [{ attr: 'dollar', d: 3, noMod: true }] },
+        { key: 'cut25', publicKey: null, name: '降息 25 基點', label: '降息 25 基點', branch: 'cut', w: 0.01, tags: ['flat'], reading: { qty: 'bojPolicyRate', unit: '基點', delta: -25 }, effects: [{ attr: 'dollar', d: 3, noMod: true }] } ],
       cond: [
         { layer: 'L2', target: 'hike', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 0.5 }, mech: '市場動盪時日本央行不升息（2024-08 副總裁：市場不穩時不升）' },
         { layer: 'L2', target: 'hike', read: { state: 'dollar' }, anchor: { lo: { x: -0.159, situ: 'S32（2025-06-30：美元走弱，資金流向非美市場）；dollar 讀數 96.82' }, hi: { x: 0.63, situ: 'S31（2022-09-27：英國公債危機，美元指數高點）；dollar 讀數 112.6' }, or: 1.8 }, mech: '美元強、日圓弱時，日本央行更有理由升息（2024-07）' },
@@ -3027,11 +3211,12 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；公告在發生日當天、收盤時點為準',
       pSrcOut: 'scenario',
       desc: '當事方：美國總統與政府、聯準會理事會、法院與參議院。政府試圖撤換理事或主席、公開要求降息；收場看被法院或參議院擋下、壓力持續但制度守住，或撤換成功、政策被認為受控。新事件（第 4 版，裁定 261：2025-08 試圖免除理事；對美國資產的信心 usDoubt 的往上與往下）。撤換成功（captured）之後不再開這個情勢，也不補事後修復的收拾：理事與主席的任期在模型期間內不會再換；信心的回復靠 usDoubt 的回落與其他事件的往下收場',
+      label: '聯準會獨立性受挑戰',
       blurb: '聯準會的獨立性受到政治挑戰，市場開始擔心利率政策被干預。',
       outcomes: [
-        { key: 'rebuffed', publicKey: null, name: '被法院或參議院擋下，獨立性守住', branch: 'rebuffed', w: 0.45, tags: ['up'], effects: [{ attr: 'usDoubt', d: -10, noMod: true }] },
-        { key: 'pressure', publicKey: null, name: '壓力持續或人事讓步（席次被換、聯準會對政府讓步），制度形式未變', branch: 'erode', sev: 0, w: 0.4, tags: ['down'], effects: [{ attr: 'usDoubt', d: 10, noMod: true }] },
-        { key: 'captured', publicKey: null, name: '撤換成功或法律改寫聯準會權限，政策被認為受政治控制', branch: 'erode', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'usDoubt', d: 30, noMod: true }, { attr: 'dollar', d: -10, noMod: true }] } ],
+        { key: 'rebuffed', publicKey: null, name: '被法院或參議院擋下，獨立性守住', label: '被擋下，獨立性守住', branch: 'rebuffed', w: 0.45, tags: ['up'], effects: [{ attr: 'usDoubt', d: -10, noMod: true }] },
+        { key: 'pressure', publicKey: null, name: '壓力持續或人事讓步（席次被換、聯準會對政府讓步），制度形式未變', label: '壓力持續或人事讓步', branch: 'erode', sev: 0, w: 0.4, tags: ['down'], effects: [{ attr: 'usDoubt', d: 10, noMod: true }] },
+        { key: 'captured', publicKey: null, name: '撤換成功或法律改寫聯準會權限，政策被認為受政治控制', label: '政策受政治控制', branch: 'erode', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'usDoubt', d: 30, noMod: true }, { attr: 'dollar', d: -10, noMod: true }] } ],
       cond: [
         { layer: 'L1', read: { state: 'fedStance' }, anchor: { lo: { x: -0.333333, situ: 'S26（2024-09-20：聯準會降息 50 基點後）；fedStance 讀數 -50' }, hi: { x: 1, situ: 'S31（2022-09-27：英國公債危機，美元指數高點）；fedStance 讀數 150' }, or: 2 }, mech: '聯準會緊縮時，政府要求降息、挑戰聯準會的壓力較大' },
         { layer: 'L2', target: 'erode', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 0.6 }, mech: '挑戰引發股債大跌時，國會與法院較會擋下' },
@@ -3044,11 +3229,12 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；公告在發生日當天、收盤時點為準',
       pSrcOut: 'scenario',
       desc: '當事方：美國國會與政府。紓困、刺激或減稅法案的表決；收場看大規模紓困、一般刺激，或卡關。新事件（過去十年漏掉的：2020 CARES、2021 ARPA；2008 TARP 與 ARRA）',
+      label: '美國財政紓困或刺激',
       blurb: '美國推出財政紓困或刺激法案，能撐住景氣，但也可能推升債務疑慮。',
       outcomes: [
-        { key: 'reliefBig', publicKey: null, name: '大規模紓困（衰退中）', branch: 'relief', sev: 1, w: 0.3, tags: ['up', 'rescue'], effects: [{ attr: 'jobless', d: -25, noMod: true }, { attr: 'usDoubt', d: 5, noMod: true }] },
-        { key: 'stimulus', publicKey: null, name: '一般刺激或減稅', branch: 'relief', sev: 0, w: 0.4, tags: ['up'], effects: [{ attr: 'jobless', d: -10, noMod: true }] },
-        { key: 'stalled', publicKey: null, name: '法案卡關', branch: 'stalled', w: 0.3, tags: ['flat'], effects: [] } ],
+        { key: 'reliefBig', publicKey: null, name: '大規模紓困（衰退中）', label: '衰退中大規模紓困', branch: 'relief', sev: 1, w: 0.3, tags: ['up', 'rescue'], effects: [{ attr: 'jobless', d: -25, noMod: true }, { attr: 'usDoubt', d: 5, noMod: true }] },
+        { key: 'stimulus', publicKey: null, name: '一般刺激或減稅', label: '一般刺激或減稅', branch: 'relief', sev: 0, w: 0.4, tags: ['up'], effects: [{ attr: 'jobless', d: -10, noMod: true }] },
+        { key: 'stalled', publicKey: null, name: '法案卡關', label: '法案卡關', branch: 'stalled', w: 0.3, tags: ['flat'], effects: [] } ],
       cond: [
         { layer: 'L1', read: { state: 'jobless' }, anchor: { lo: { x: -0.28, situ: 'S13（2019-12-20：平靜，美中第一階段協議將簽）；jobless 讀數 3.5' }, hi: { x: 1, situ: 'S03（2011-08-08：美國被降評等後第一個交易日）；jobless 讀數 9.1' }, or: 3 }, mech: '失業升高時國會才有共識推紓困' },
         { layer: 'L1', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 1.5 }, mech: '股市重挫逼國會加快（2008-09 第一次表決失敗、股市大跌後通過）' },
@@ -3062,12 +3248,13 @@ const WORLD3 = {
       knownAtWhy: '發表即公開',
       pSrcOut: 'scenario',
       desc: '當事方：OpenAI、Anthropic、Google、Meta 等前沿實驗室。發表新一代模型；收場看能力跳級、改變格局、進步有限，或低於宣稱',
+      label: '新一代前沿模型發表',
       blurb: '主要實驗室發表新一代前沿模型，市場重新評估 AI 的實力與商機。',
       outcomes: [
-        { key: 'leap', publicKey: null, name: '能力明顯跳級，採用加速', branch: 'leap', sev: 0, w: 0.45, tags: ['up'], effects: [{ attr: 'aiUsage', d: 15 }] },
-        { key: 'leapBig', publicKey: null, name: '改變格局，新應用爆發', branch: 'leap', sev: 1, w: 0.1, tags: ['up'], effects: [{ attr: 'aiUsage', d: 30 }] },
-        { key: 'incremental', publicKey: null, name: '進步有限或商業化落差（成本高、採用有限），市場反應平淡；競爭者追上與價格戰屬 cheapModel', branch: 'incremental', w: 0.4, tags: ['flat'], effects: [] },
-        { key: 'disappoint', publicKey: null, name: '能力低於宣稱（評測無法複現）', branch: 'disappoint', w: 0.05, tags: ['down'], effects: [{ attr: 'aiHeat', d: -5, noMod: true }] } ],
+        { key: 'leapBig', publicKey: null, name: '改變格局，新應用爆發', label: '改變格局，應用爆發', branch: 'leap', sev: 1, w: 0.1, tags: ['up'], effects: [{ attr: 'aiUsage', d: 30 }] },
+        { key: 'leap', publicKey: null, name: '能力明顯跳級，採用加速', label: '能力跳級，採用加速', branch: 'leap', sev: 0, w: 0.45, tags: ['up'], effects: [{ attr: 'aiUsage', d: 15 }] },
+        { key: 'incremental', publicKey: null, name: '進步有限或商業化落差（成本高、採用有限），市場反應平淡；競爭者追上與價格戰屬 cheapModel', label: '進步有限，市場平淡', branch: 'incremental', w: 0.4, tags: ['flat'], effects: [] },
+        { key: 'disappoint', publicKey: null, name: '能力低於宣稱（評測無法複現）', label: '能力低於宣稱', branch: 'disappoint', w: 0.05, tags: ['down'], effects: [{ attr: 'aiHeat', d: -5, noMod: true }] } ],
       cond: [
         { layer: 'L1', read: { state: 'aiHeat' }, anchor: { lo: { x: -0.3425, situ: 'S09（2022-10-12：美元與殖利率高點；晶片出口管制剛宣布）；aiHeat 讀數 -13.7' }, hi: { x: 0.51, situ: 'S21（2025-10-29：輝達市值創高，AI 題材重燃（決議日前））；aiHeat 讀數 20.4' }, or: 1.5 }, mech: '題材熱、資金充裕時實驗室更常推出新一代模型' },
         { layer: 'L2', target: 'leap', read: { state: 'buildout' }, anchor: { lo: { x: -0.2, situ: 'S14（2023-12-14：聯準會暗示降息，低波動）；buildout 讀數 -5' }, hi: { x: 0.92, situ: 'S01（2026-11-18：現在，模型起點）；buildout 讀數 107' }, or: 1.8 }, mech: '擴建的算力越多，下一代模型越可能明顯跳級' },
@@ -3080,12 +3267,13 @@ const WORLD3 = {
       knownAtWhy: '發表即公開；市場可能隔幾天才反應，那是價格層的事',
       pSrcOut: 'scenario',
       desc: '當事方：前沿實驗室與挑戰者（含中國的實驗室、開源社群）。訓練或推論成本低很多的模型出現（含競爭者追上、開源追平引發的價格戰）；收場看算力需求被重估、重創算力題材、降價帶來更多用量，或市場消化',
+      label: '低成本高效率模型發表',
       blurb: '低成本或高效率的模型問世，市場開始懷疑算力需求是否被高估。',
       outcomes: [
-        { key: 'shock', publicKey: null, name: '算力需求被重估，租價大跌', branch: 'shock', sev: 0, w: 0.4, tags: ['down'], effects: [{ attr: 'gpuRent', d: -25 }, { attr: 'aiUsage', d: 5 }] },
-        { key: 'shockBig', publicKey: null, name: '重創算力題材', branch: 'shock', sev: 1, w: 0.1, tags: ['down'], effects: [{ attr: 'gpuRent', d: -45 }, { attr: 'aiUsage', d: 10 }] },
-        { key: 'jevons', publicKey: null, name: '降價帶來更多用量', branch: 'jevons', w: 0.3, tags: ['up'], effects: [{ attr: 'aiUsage', d: 15 }, { attr: 'gpuRent', d: -5 }] },
-        { key: 'absorbed', publicKey: null, name: '市場消化，影響有限', branch: 'absorbed', w: 0.2, tags: ['flat'], effects: [] } ],
+        { key: 'jevons', publicKey: null, name: '降價帶來更多用量', label: '降價帶來更多用量', branch: 'jevons', w: 0.3, tags: ['up'], effects: [{ attr: 'aiUsage', d: 15 }, { attr: 'gpuRent', d: -5 }] },
+        { key: 'absorbed', publicKey: null, name: '市場消化，影響有限', label: '市場消化，影響有限', branch: 'absorbed', w: 0.2, tags: ['flat'], effects: [] },
+        { key: 'shock', publicKey: null, name: '算力需求被重估，租價大跌', label: '算力需求被重估', branch: 'shock', sev: 0, w: 0.4, tags: ['down'], effects: [{ attr: 'gpuRent', d: -25 }, { attr: 'aiUsage', d: 5 }] },
+        { key: 'shockBig', publicKey: null, name: '重創算力題材', label: '重創算力題材', branch: 'shock', sev: 1, w: 0.1, tags: ['down'], effects: [{ attr: 'gpuRent', d: -45 }, { attr: 'aiUsage', d: 10 }] } ],
       cond: [
         { layer: 'L2', target: 'shock', read: { state: 'aiHeat' }, anchor: { lo: { x: -0.3425, situ: 'S09（2022-10-12：美元與殖利率高點；晶片出口管制剛宣布）；aiHeat 讀數 -13.7' }, hi: { x: 0.51, situ: 'S21（2025-10-29：輝達市值創高，AI 題材重燃（決議日前））；aiHeat 讀數 20.4' }, or: 2 }, mech: '題材過熱、估值高時，同樣的消息打得更重（2025-01）' },
         { layer: 'L3', target: 'shockBig', read: { state: 'aiHeat' }, anchor: { lo: { x: -0.3425, situ: 'S09（2022-10-12：美元與殖利率高點；晶片出口管制剛宣布）；aiHeat 讀數 -13.7' }, hi: { x: 0.51, situ: 'S21（2025-10-29：輝達市值創高，AI 題材重燃（決議日前））；aiHeat 讀數 20.4' }, or: 1.8 }, mech: '越熱的時候重估越劇烈' } ] },
@@ -3097,11 +3285,12 @@ const WORLD3 = {
       knownAtWhy: '公司公告或財報電話會議公開',
       pSrcOut: 'scenario',
       desc: '當事方：微軟、Alphabet、亞馬遜、Meta。財報以外的下修或延後消息（取消租約、暫停專案的報導；財報裡的資本支出由 cloudCapex 表示）；收場看小幅下修、大幅削減，或管理層重申計畫',
+      label: '雲端廠檢討 AI 資本支出',
       blurb: '大型雲端廠在財報之外檢討 AI 投資，算力供應鏈的訂單前景蒙上陰影。',
       outcomes: [
-        { key: 'trim', publicKey: null, name: '小幅下修、延後、轉成租賃或取消部分租約', branch: 'cut', sev: 0, w: 0.55, tags: ['down'], effects: [{ attr: 'buildout', d: -15 }] },
-        { key: 'slash', publicKey: null, name: '大幅削減', branch: 'cut', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'buildout', d: -35 }] },
-        { key: 'reaffirmed', publicKey: null, name: '管理層重申計畫，傳聞被否認', branch: 'reaffirmed', w: 0.3, tags: ['flat'], effects: [] } ],
+        { key: 'reaffirmed', publicKey: null, name: '管理層重申計畫，傳聞被否認', label: '重申計畫，傳聞被否認', branch: 'reaffirmed', w: 0.3, tags: ['flat'], effects: [] },
+        { key: 'trim', publicKey: null, name: '小幅下修、延後、轉成租賃或取消部分租約', label: '小幅下修或延後', branch: 'cut', sev: 0, w: 0.55, tags: ['down'], effects: [{ attr: 'buildout', d: -15 }] },
+        { key: 'slash', publicKey: null, name: '大幅削減', label: '大幅削減', branch: 'cut', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'buildout', d: -35 }] } ],
       cond: [
         { layer: 'L3', target: 'slash', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 0.666667, situ: 'S07（2020-03-16：新冠疫情，聯準會降到零利率）；strain 讀數 8.9' }, or: 2, src: 'alessandriMumtaz', data: '金融壓力高時，不確定性衝擊使產出下降約六倍（原文 roughly six times larger：−0.17% 對 −0.025%）；方向來自這份，大小是判斷', grade: '未核' }, mech: '融資條件緊時，削減一次砍得多' } ] },
     { id: 'chipShortage', name: '先進封裝或記憶體的供需變化', kind: 'random', group: 'ai', system: 4, rate: 1.2, max: 99,
@@ -3112,11 +3301,12 @@ const WORLD3 = {
       knownAtWhy: '供應商公告或報價公開',
       pSrcOut: 'scenario',
       desc: '當事方：台積電、記憶體廠與 AI 晶片買方。先進封裝、高頻寬記憶體，或資料中心的電力與併網瓶頸造成的供需變化；收場看交期拉長、嚴重短缺，或新產能開出而緩解',
+      label: '先進封裝或記憶體供需',
       blurb: '先進封裝或記憶體的供需出現變化，晶片的交期與價格跟著起伏。',
       outcomes: [
-        { key: 'tight', publicKey: null, name: '交期拉長、漲價', branch: 'tight', sev: 0, w: 0.6, tags: ['flat'], effects: [{ attr: 'gpuRent', d: 20 }] },
-        { key: 'severe', publicKey: null, name: '嚴重短缺，出貨受限', branch: 'tight', sev: 1, w: 0.15, tags: ['flat'], effects: [{ attr: 'gpuRent', d: 40 }, { attr: 'aiUsage', d: -5 }] },
-        { key: 'eased', publicKey: null, name: '新產能開出，供需緩解', branch: 'eased', w: 0.25, tags: ['flat'], effects: [{ attr: 'gpuRent', d: -10 }] } ],
+        { key: 'eased', publicKey: null, name: '新產能開出，供需緩解', label: '新產能開出，供需緩解', branch: 'eased', w: 0.25, tags: ['flat'], effects: [{ attr: 'gpuRent', d: -10 }] },
+        { key: 'tight', publicKey: null, name: '交期拉長、漲價', label: '交期拉長、漲價', branch: 'tight', sev: 0, w: 0.6, tags: ['flat'], effects: [{ attr: 'gpuRent', d: 20 }] },
+        { key: 'severe', publicKey: null, name: '嚴重短缺，出貨受限', label: '嚴重短缺，出貨受限', branch: 'tight', sev: 1, w: 0.15, tags: ['flat'], effects: [{ attr: 'gpuRent', d: 40 }, { attr: 'aiUsage', d: -5 }] } ],
       cond: [
         { layer: 'L3', target: 'severe', read: { state: 'aiUsage' }, anchor: { lo: { x: -0.4, situ: 'S14（2023-12-14：聯準會暗示降息，低波動）；aiUsage 讀數 0' }, hi: { x: 0.718, situ: 'S01（2026-11-18：現在，模型起點）；aiUsage 讀數 55.9' }, or: 2 }, mech: '需求越強，吃緊越容易變成嚴重短缺' } ] },
     { id: 'tsmcMonthly', name: '台積電月營收公布', kind: 'scheduled', group: 'ai', system: 4,
@@ -3125,6 +3315,7 @@ const WORLD3 = {
       pWhy: '事件規格第 4 版（裁定 250、258–263）：Δ 的兩級（4、12 個百分點）是判斷；`eventspec-freq-2.md` 第 26 號只查到 2025 年 1–10 月年增率的量級（中位數約 ＋36%），沒有逐期變動的分布。 ｜舊依據（第 3 版以前；其中的數字已被上面的新權重與發生率取代，留作歷史）：裁定 169：結果是讀數本身怎麼動。本專案沒有台積電月營收的歷史序列（data/ 只有股價），歷史頻率算不出，標判斷：上升、下降各 0.45，持平（三個月平均年增率變動在正負 1 個百分點內）0.1；形狀參考 CPI 年增率算出的 0.456／0.107／0.437（不同序列，只是參考）。效果大小：一個月約讓三個月平均動 3 個百分點（map 一個百分點＝1 分，起點 75.9：上升 d 12 ≈ +2.9 分，下降 d −4 ≈ −3.0 分）。pSrcOut：可能被影響——推的狀態 aiUsage 的依賴集合含 M 裡的 tradeBarrier、jobless、gpuRent（docs/world-math.md 11.3：Dep(e) ∩ M ≠ ∅），必填；填 scenario：世界算的機率對外標代入情境，不標 market',
       pSrcOut: 'scenario',
       desc: '當事方：台積電。每月公布上月營收；收場是三個月平均年增率對上一期的變動',
+      label: '台積電月營收公布',
       blurb: '台積電公布月營收，市場從中觀察 AI 晶片需求的熱度。',
       dates: ['2026-12-10', '2027-01-08', '2027-02-10', '2027-03-10', '2027-04-09', '2027-05-10', '2027-06-10', '2027-07-09', '2027-08-10', '2027-09-10', '2027-10-08', '2027-11-10', '2027-12-10'],
       dateSrc: [{ dates: ['2026-12-10', '2027-01-08'], doc: '台積電投資人關係財務行事曆：TSMC Monthly Sales - November 2026（2026-12-10）、December 2026（2027-01-08）；2027 年 2 月以後的日期頁上還沒有，所以只排這兩次', url: 'https://investor.tsmc.com/english/financial-calendar' }, { dates: ['2027-02-10', '2027-03-10', '2027-04-09', '2027-05-10', '2027-06-10', '2027-07-09', '2027-08-10', '2027-09-10', '2027-10-08', '2027-11-10', '2027-12-10'], doc: '具名日期假設 twMonthlyRevenue 的規則（事件規格第 4 版，裁定 262）：每月 10 日公布上月營收，10 日是週末時取之前最後一個週一到週五；不是公司公布的日程' }],
@@ -3134,11 +3325,11 @@ const WORLD3 = {
       observedPeriodSrc: { src: 'tsmc_cal', grade: '原文', why: '行事曆的項目名稱：TSMC Monthly Sales - November 2026、December 2026（以公布日為鍵；裁定 209、218）' },
       expect: { kind: 'judgement', what: '讀數（最近三個月平均的營收年增率）比上一次公布上升、持平、下降的頻率；本專案沒有台積電月營收的歷史序列，算不出，標判斷（裁定 169）', grade: 'judgement', src: 'own' },
       outcomes: [
-        { key: 'upSmall', publicKey: null, name: '年增率上升 4 個百分點', branch: 'rise', sev: 0, w: 0.3, tags: ['up'], effects: [{ attr: 'aiUsage', dRead: 4 }] },
-        { key: 'upBig', publicKey: null, name: '年增率上升 12 個百分點', branch: 'rise', sev: 1, w: 0.15, tags: ['up'], effects: [{ attr: 'aiUsage', dRead: 12 }] },
-        { key: 'flat', publicKey: null, name: '年增率持平', branch: 'flat', w: 0.1, tags: ['flat'], effects: [{ attr: 'aiUsage', dRead: 0 }] },
-        { key: 'downSmall', publicKey: null, name: '年增率下降 4 個百分點', branch: 'fall', sev: 0, w: 0.32, tags: ['down'], effects: [{ attr: 'aiUsage', dRead: -4 }] },
-        { key: 'downBig', publicKey: null, name: '年增率下降 12 個百分點', branch: 'fall', sev: 1, w: 0.13, tags: ['down'], effects: [{ attr: 'aiUsage', dRead: -12 }] } ],
+        { key: 'upBig', publicKey: null, name: '年增率上升 12 個百分點', label: '年增率升 12 點', branch: 'rise', sev: 1, w: 0.15, tags: ['up'], effects: [{ attr: 'aiUsage', dRead: 12 }] },
+        { key: 'upSmall', publicKey: null, name: '年增率上升 4 個百分點', label: '年增率升 4 點', branch: 'rise', sev: 0, w: 0.3, tags: ['up'], effects: [{ attr: 'aiUsage', dRead: 4 }] },
+        { key: 'flat', publicKey: null, name: '年增率持平', label: '年增率持平', branch: 'flat', w: 0.1, tags: ['flat'], effects: [{ attr: 'aiUsage', dRead: 0 }] },
+        { key: 'downSmall', publicKey: null, name: '年增率下降 4 個百分點', label: '年增率降 4 點', branch: 'fall', sev: 0, w: 0.32, tags: ['down'], effects: [{ attr: 'aiUsage', dRead: -4 }] },
+        { key: 'downBig', publicKey: null, name: '年增率下降 12 個百分點', label: '年增率降 12 點', branch: 'fall', sev: 1, w: 0.13, tags: ['down'], effects: [{ attr: 'aiUsage', dRead: -12 }] } ],
       cond: [
         { layer: 'L3', target: 'upBig', read: { state: 'buildout' }, anchor: { lo: { x: -0.2, situ: 'S14（2023-12-14：聯準會暗示降息，低波動）；buildout 讀數 -5' }, hi: { x: 0.92, situ: 'S01（2026-11-18：現在，模型起點）；buildout 讀數 107' }, or: 1.8 }, mech: '雲端廠擴建急時，晶圓訂單一次跳得多' },
         { layer: 'L3', target: 'downBig', read: { state: 'aiHeat' }, anchor: { lo: { x: -0.3425, situ: 'S09（2022-10-12：美元與殖利率高點；晶片出口管制剛宣布）；aiHeat 讀數 -13.7' }, hi: { x: 0.51, situ: 'S21（2025-10-29：輝達市值創高，AI 題材重燃（決議日前））；aiHeat 讀數 20.4' }, or: 0.5 }, mech: '題材熱時客戶拉貨積極，營收少有大幅下滑' } ] },
@@ -3148,6 +3339,7 @@ const WORLD3 = {
       pWhy: '事件規格第 4 版（裁定 250、258–263）：新事件，說明在事件規格第 4 版該事件的 desc。pSrcOut：填 scenario；依賴集合未重算（交核對）',
       pSrcOut: 'scenario',
       desc: '當事方：輝達。每季公布營收與下一季營收指引；收場是下一季營收指引相對本季營收的成長（公告值）。世界裡沒有輝達營收的狀態，收場帶只對外的公開量 reading（同 bojDecision 的做法，〔待定〕，交 Astra），效果推 AI 需求與題材熱度',
+      label: '輝達財報與財測',
       blurb: '輝達公布季度財報與財測，是 AI 晶片需求最受矚目的風向球。',
       dates: ['2027-02-24', '2027-05-26', '2027-08-25', '2027-11-17'],
       dateSrc: [{ dates: ['2027-02-24', '2027-05-26', '2027-08-25', '2027-11-17'], doc: '事件規格第 4 版（裁定 262）：日期是具名日期假設 nvdaQuarterlyRule，不是公司公布的日程；規則與過去的實際日期見 knownAtAssume.nvdaQuarterlyRule.rule' }],
@@ -3155,10 +3347,10 @@ const WORLD3 = {
       timeAssume: 'usAfterClose',
       expect: { kind: 'judgement', what: '每季公布營收與下一季營收指引；收場是下一季營收指引相對本季營收的成長（公告值）', grade: 'judgement', src: 'own' },
       outcomes: [
-        { key: 'raise', publicKey: null, name: '指引季增 10%', branch: 'raise', sev: 0, w: 0.45, tags: ['up'], reading: { qty: 'nvdaGuideQoQ', unit: '%', before: null, after: 10 }, effects: [{ attr: 'aiUsage', d: 8 }, { attr: 'aiHeat', d: 10, noMod: true }] },
-        { key: 'raiseBig', publicKey: null, name: '指引季增 20%', branch: 'raise', sev: 1, w: 0.15, tags: ['up'], reading: { qty: 'nvdaGuideQoQ', unit: '%', before: null, after: 20 }, effects: [{ attr: 'aiUsage', d: 15 }, { attr: 'aiHeat', d: 20, noMod: true }] },
-        { key: 'flat', publicKey: null, name: '指引季增 0%', branch: 'flat', w: 0.25, tags: ['flat'], reading: { qty: 'nvdaGuideQoQ', unit: '%', before: null, after: 0 }, effects: [] },
-        { key: 'cut', publicKey: null, name: '指引季減 10%', branch: 'cut', w: 0.15, tags: ['down'], reading: { qty: 'nvdaGuideQoQ', unit: '%', before: null, after: -10 }, effects: [{ attr: 'aiUsage', d: -10 }, { attr: 'aiHeat', d: -15, noMod: true }] } ],
+        { key: 'raiseBig', publicKey: null, name: '指引季增 20%', label: '指引季增 20%', branch: 'raise', sev: 1, w: 0.15, tags: ['up'], reading: { qty: 'nvdaGuideQoQ', unit: '%', before: null, after: 20 }, effects: [{ attr: 'aiUsage', d: 15 }, { attr: 'aiHeat', d: 20, noMod: true }] },
+        { key: 'raise', publicKey: null, name: '指引季增 10%', label: '指引季增 10%', branch: 'raise', sev: 0, w: 0.45, tags: ['up'], reading: { qty: 'nvdaGuideQoQ', unit: '%', before: null, after: 10 }, effects: [{ attr: 'aiUsage', d: 8 }, { attr: 'aiHeat', d: 10, noMod: true }] },
+        { key: 'flat', publicKey: null, name: '指引季增 0%', label: '指引季增 0%', branch: 'flat', w: 0.25, tags: ['flat'], reading: { qty: 'nvdaGuideQoQ', unit: '%', before: null, after: 0 }, effects: [] },
+        { key: 'cut', publicKey: null, name: '指引季減 10%', label: '指引季減 10%', branch: 'cut', w: 0.15, tags: ['down'], reading: { qty: 'nvdaGuideQoQ', unit: '%', before: null, after: -10 }, effects: [{ attr: 'aiUsage', d: -10 }, { attr: 'aiHeat', d: -15, noMod: true }] } ],
       cond: [
         { layer: 'L2', target: 'cut', read: { state: 'aiHeat' }, anchor: { lo: { x: -0.3425, situ: 'S09（2022-10-12：美元與殖利率高點；晶片出口管制剛宣布）；aiHeat 讀數 -13.7' }, hi: { x: 0.51, situ: 'S21（2025-10-29：輝達市值創高，AI 題材重燃（決議日前））；aiHeat 讀數 20.4' }, or: 0.6 }, mech: '題材熱時客戶拉貨積極，指引少下修' },
         { layer: 'L3', target: 'raiseBig', read: { state: 'buildout' }, anchor: { lo: { x: -0.2, situ: 'S14（2023-12-14：聯準會暗示降息，低波動）；buildout 讀數 -5' }, hi: { x: 0.92, situ: 'S01（2026-11-18：現在，模型起點）；buildout 讀數 107' }, or: 2 }, mech: '雲端廠擴建急時，輝達的指引一次跳得多' } ] },
@@ -3168,6 +3360,7 @@ const WORLD3 = {
       pWhy: '事件規格第 4 版（裁定 250、258–263）：新事件，說明在事件規格第 4 版該事件的 desc。pSrcOut：填 scenario；依賴集合未重算（交核對）',
       pSrcOut: 'scenario',
       desc: '當事方：微軟、Alphabet、亞馬遜、Meta。每季財報公布資本支出；收場是四家合計資本支出年增率對上一季的變動（公告值，百分點）。這就是 buildout 的定期公布；buildout 的 lagRelease 改指到這個事件（取代裁定 212 的 usQuarterly10Q 假設）。權重〔判斷、對稱、無依據〕：沒有歷史分布可依，不傾斜；資本支出的方向來自表（起點 buildout 的推力 B＝0.80），不是權重',
+      label: '四大雲端廠資本支出',
       blurb: '四大雲端廠公布季度資本支出，透露 AI 投資還在加速還是放緩。',
       dates: ['2027-02-04', '2027-04-29', '2027-07-29', '2027-10-28'],
       dateSrc: [{ dates: ['2027-02-04', '2027-04-29', '2027-07-29', '2027-10-28'], doc: '事件規格第 4 版（裁定 262）：日期是具名日期假設 hyperscalerCapexRule，不是公司公布的日程；規則與過去的實際日期見 knownAtAssume.hyperscalerCapexRule.rule' }],
@@ -3177,11 +3370,11 @@ const WORLD3 = {
       observedPeriodSrc: { src: 'own', grade: '判斷', why: '每季財報公布的是上一個日曆季的資本支出；公布日是具名假設（裁定 262）' },
       expect: { kind: 'judgement', what: '每季財報公布資本支出；收場是四家合計資本支出年增率對上一季的變動（公告值，百分點）', grade: 'judgement', src: 'own' },
       outcomes: [
-        { key: 'upBig', publicKey: null, name: '年增率上升 15 個百分點', branch: 'rise', sev: 1, w: 0.135, tags: ['up'], effects: [{ attr: 'buildout', dRead: 15 }] },
-        { key: 'flat', publicKey: null, name: '年增率持平（0 個百分點）', branch: 'flat', w: 0.1, tags: ['flat'], effects: [{ attr: 'buildout', dRead: 0 }] },
-        { key: 'up', publicKey: null, name: '年增率上升 5 個百分點', branch: 'rise', sev: 0, w: 0.315, tags: ['up'], effects: [{ attr: 'buildout', dRead: 5 }] },
-        { key: 'down', publicKey: null, name: '年增率下降 5 個百分點', branch: 'fall', sev: 0, w: 0.315, tags: ['down'], effects: [{ attr: 'buildout', dRead: -5 }] },
-        { key: 'downBig', publicKey: null, name: '年增率下降 15 個百分點', branch: 'fall', sev: 1, w: 0.135, tags: ['down'], effects: [{ attr: 'buildout', dRead: -15 }] } ],
+        { key: 'upBig', publicKey: null, name: '年增率上升 15 個百分點', label: '年增率升 15 點', branch: 'rise', sev: 1, w: 0.135, tags: ['up'], effects: [{ attr: 'buildout', dRead: 15 }] },
+        { key: 'up', publicKey: null, name: '年增率上升 5 個百分點', label: '年增率升 5 點', branch: 'rise', sev: 0, w: 0.315, tags: ['up'], effects: [{ attr: 'buildout', dRead: 5 }] },
+        { key: 'flat', publicKey: null, name: '年增率持平（0 個百分點）', label: '年增率持平', branch: 'flat', w: 0.1, tags: ['flat'], effects: [{ attr: 'buildout', dRead: 0 }] },
+        { key: 'down', publicKey: null, name: '年增率下降 5 個百分點', label: '年增率降 5 點', branch: 'fall', sev: 0, w: 0.315, tags: ['down'], effects: [{ attr: 'buildout', dRead: -5 }] },
+        { key: 'downBig', publicKey: null, name: '年增率下降 15 個百分點', label: '年增率降 15 點', branch: 'fall', sev: 1, w: 0.135, tags: ['down'], effects: [{ attr: 'buildout', dRead: -15 }] } ],
       cond: [
         { layer: 'L3', target: 'upBig', read: { state: 'aiUsage' }, anchor: { lo: { x: -0.4, situ: 'S14（2023-12-14：聯準會暗示降息，低波動）；aiUsage 讀數 0' }, hi: { x: 0.718, situ: 'S01（2026-11-18：現在，模型起點）；aiUsage 讀數 55.9' }, or: 2 }, mech: '需求越強，資本支出一次加速越多' },
         { layer: 'L3', target: 'downBig', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 0.666667, situ: 'S07（2020-03-16：新冠疫情，聯準會降到零利率）；strain 讀數 8.9' }, or: 2 }, mech: '融資條件緊時，資本支出一次減速越多' } ] },
@@ -3191,6 +3384,7 @@ const WORLD3 = {
       pWhy: '事件規格第 4 版（裁定 250、258–263）：新事件，說明在事件規格第 4 版該事件的 desc。pSrcOut：填 scenario；依賴集合未重算（交核對）',
       pSrcOut: 'scenario',
       desc: '當事方：台積電。每季法說公布下一季營收指引；收場是下一季營收指引中值相對本季的成長（公告值）。世界裡沒有台積電季度指引的狀態，帶只對外的 reading（〔待定〕，交 Astra），效果推 AI 需求',
+      label: '台積電季度法說',
       blurb: '台積電召開季度法說會，對下一季的展望左右半導體類股。',
       dates: ['2027-01-21', '2027-04-15', '2027-07-15', '2027-10-21'],
       dateSrc: [{ dates: ['2027-01-21', '2027-04-15', '2027-07-15', '2027-10-21'], doc: '事件規格第 4 版（裁定 262）：日期是具名日期假設 tsmcCallRule，不是公司公布的日程；規則與過去的實際日期見 knownAtAssume.tsmcCallRule.rule' }],
@@ -3198,10 +3392,10 @@ const WORLD3 = {
       timeAssume: 'tsmcCallDay',
       expect: { kind: 'judgement', what: '每季法說公布下一季營收指引；收場是下一季營收指引中值相對本季的成長（公告值）', grade: 'judgement', src: 'own' },
       outcomes: [
-        { key: 'raise', publicKey: null, name: '指引季增 5%', branch: 'raise', sev: 0, w: 0.4, tags: ['up'], reading: { qty: 'tsmcGuideQoQ', unit: '%', before: null, after: 5 }, effects: [{ attr: 'aiUsage', d: 5 }] },
-        { key: 'raiseBig', publicKey: null, name: '指引季增 10%', branch: 'raise', sev: 1, w: 0.15, tags: ['up'], reading: { qty: 'tsmcGuideQoQ', unit: '%', before: null, after: 10 }, effects: [{ attr: 'aiUsage', d: 10 }] },
-        { key: 'flat', publicKey: null, name: '指引季增 0%', branch: 'flat', w: 0.3, tags: ['flat'], reading: { qty: 'tsmcGuideQoQ', unit: '%', before: null, after: 0 }, effects: [] },
-        { key: 'cut', publicKey: null, name: '指引季減 5%', branch: 'cut', w: 0.15, tags: ['down'], reading: { qty: 'tsmcGuideQoQ', unit: '%', before: null, after: -5 }, effects: [{ attr: 'aiUsage', d: -8 }] } ],
+        { key: 'raiseBig', publicKey: null, name: '指引季增 10%', label: '指引季增 10%', branch: 'raise', sev: 1, w: 0.15, tags: ['up'], reading: { qty: 'tsmcGuideQoQ', unit: '%', before: null, after: 10 }, effects: [{ attr: 'aiUsage', d: 10 }] },
+        { key: 'raise', publicKey: null, name: '指引季增 5%', label: '指引季增 5%', branch: 'raise', sev: 0, w: 0.4, tags: ['up'], reading: { qty: 'tsmcGuideQoQ', unit: '%', before: null, after: 5 }, effects: [{ attr: 'aiUsage', d: 5 }] },
+        { key: 'flat', publicKey: null, name: '指引季增 0%', label: '指引季增 0%', branch: 'flat', w: 0.3, tags: ['flat'], reading: { qty: 'tsmcGuideQoQ', unit: '%', before: null, after: 0 }, effects: [] },
+        { key: 'cut', publicKey: null, name: '指引季減 5%', label: '指引季減 5%', branch: 'cut', w: 0.15, tags: ['down'], reading: { qty: 'tsmcGuideQoQ', unit: '%', before: null, after: -5 }, effects: [{ attr: 'aiUsage', d: -8 }] } ],
       cond: [
         { layer: 'L2', target: 'cut', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 1.5 }, mech: '市場動盪時客戶收緊預算，指引更常下修' },
         { layer: 'L3', target: 'raiseBig', read: { state: 'buildout' }, anchor: { lo: { x: -0.2, situ: 'S14（2023-12-14：聯準會暗示降息，低波動）；buildout 讀數 -5' }, hi: { x: 0.92, situ: 'S01（2026-11-18：現在，模型起點）；buildout 讀數 107' }, or: 1.8 }, mech: '雲端廠擴建急時，台積電指引一次跳得多' } ] },
@@ -3213,11 +3407,12 @@ const WORLD3 = {
       knownAtWhy: '公司公告、財測或月營收公布即公開',
       pSrcOut: 'scenario',
       desc: '當事方：台積電、輝達與其他 AI 晶片供應商、它們的客戶。排定的財報、法說、月營收以外的訂單轉弱消息（客戶砍單、供應鏈調查、產業報導；排定公告由 nvdaEarnings、tsmcQuarterly、tsmcMonthly 表示）；收場看小幅下修、大幅下修（庫存調整），或一次性因素',
+      label: 'AI 晶片訂單轉弱',
       blurb: 'AI 晶片訂單在財報之外傳出轉弱，供應鏈股價承壓。',
       outcomes: [
-        { key: 'soft', publicKey: null, name: '小幅下修', branch: 'cut', sev: 0, w: 0.5, tags: ['down'], effects: [{ attr: 'aiUsage', d: -8 }] },
-        { key: 'deep', publicKey: null, name: '大幅下修（庫存調整）', branch: 'cut', sev: 1, w: 0.2, tags: ['down'], effects: [{ attr: 'aiUsage', d: -20 }] },
-        { key: 'oneOff', publicKey: null, name: '一次性因素，隔季回升', branch: 'oneOff', w: 0.3, tags: ['flat'], effects: [] } ],
+        { key: 'oneOff', publicKey: null, name: '一次性因素，隔季回升', label: '一次性因素，隔季回升', branch: 'oneOff', w: 0.3, tags: ['flat'], effects: [] },
+        { key: 'soft', publicKey: null, name: '小幅下修', label: '小幅下修', branch: 'cut', sev: 0, w: 0.5, tags: ['down'], effects: [{ attr: 'aiUsage', d: -8 }] },
+        { key: 'deep', publicKey: null, name: '大幅下修（庫存調整）', label: '大幅下修，庫存調整', branch: 'cut', sev: 1, w: 0.2, tags: ['down'], effects: [{ attr: 'aiUsage', d: -20 }] } ],
       cond: [
         { layer: 'L1', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 1.5 }, mech: '市場動盪時客戶收緊預算，供應商更常下修' },
         { layer: 'L3', target: 'deep', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 0.666667, situ: 'S07（2020-03-16：新冠疫情，聯準會降到零利率）；strain 讀數 8.9' }, or: 2, src: 'alessandriMumtaz', data: '金融壓力高時，不確定性衝擊使產出下降約六倍（原文 roughly six times larger：−0.17% 對 −0.025%）；方向來自這份，大小是判斷', grade: '未核' }, mech: '資金壓力高時客戶一起砍單，下修更深' } ] },
@@ -3229,11 +3424,12 @@ const WORLD3 = {
       knownAtWhy: '財報或公司公告公開',
       pSrcOut: 'scenario',
       desc: '當事方：微軟、Alphabet、亞馬遜、Meta。財報以外的加碼公告（新資料中心計畫、合資、長期算力合約；財報裡的資本支出由 cloudCapex 表示）；收場看上修、大幅上修，或上修但市場質疑回報',
+      label: '雲端廠加碼 AI 投資',
       blurb: '大型雲端廠在財報之外加碼 AI 投資，算力需求的題材再度升溫。',
       outcomes: [
-        { key: 'raise', publicKey: null, name: '上修', branch: 'raise', sev: 0, w: 0.6, tags: ['up'], effects: [{ attr: 'buildout', d: 15 }] },
-        { key: 'raiseBig', publicKey: null, name: '大幅上修（年增再加速）', branch: 'raise', sev: 1, w: 0.2, tags: ['up'], effects: [{ attr: 'buildout', d: 30 }] },
-        { key: 'doubted', publicKey: null, name: '上修但市場質疑回報', branch: 'doubt', w: 0.2, tags: ['flat'], effects: [{ attr: 'buildout', d: 15 }, { attr: 'aiHeat', d: -10, noMod: true }] } ],
+        { key: 'raiseBig', publicKey: null, name: '大幅上修（年增再加速）', label: '大幅上修，年增再加速', branch: 'raise', sev: 1, w: 0.2, tags: ['up'], effects: [{ attr: 'buildout', d: 30 }] },
+        { key: 'raise', publicKey: null, name: '上修', label: '上修', branch: 'raise', sev: 0, w: 0.6, tags: ['up'], effects: [{ attr: 'buildout', d: 15 }] },
+        { key: 'doubted', publicKey: null, name: '上修但市場質疑回報', label: '上修但市場質疑回報', branch: 'doubt', w: 0.2, tags: ['flat'], effects: [{ attr: 'buildout', d: 15 }, { attr: 'aiHeat', d: -10, noMod: true }] } ],
       cond: [
         { layer: 'L1', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 0.7 }, mech: '市場動盪時管理層較少在財報上修支出指引' },
         { layer: 'L2', target: 'doubt', read: { state: 'aiHeat' }, anchor: { lo: { x: -0.3425, situ: 'S09（2022-10-12：美元與殖利率高點；晶片出口管制剛宣布）；aiHeat 讀數 -13.7' }, hi: { x: 0.51, situ: 'S21（2025-10-29：輝達市值創高，AI 題材重燃（決議日前））；aiHeat 讀數 20.4' }, or: 0.5 }, mech: '題材熱時市場獎勵加碼；題材冷時同樣的上修被當成燒錢' },
@@ -3247,10 +3443,11 @@ const WORLD3 = {
       knownAtWhy: '設這個旗標的條件本身就是公司或主管機關的公告，公告當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：台積電與主管機關；原因不限（地震、颱風、大停電、缺水、封鎖、檢疫、攻擊）。先進製程或封裝出貨連續中斷五個交易日以上、佔全球一半以上；收場只分中斷一到三週，或一個月以上。恢復另由 shipResume 表示',
+      label: '台灣晶片出貨中斷',
       blurb: '台灣先進晶片出貨中斷，下游科技業面臨缺料。',
       outcomes: [
-        { key: 'short', publicKey: null, name: '中斷一到三週後復工', branch: 'halt', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'aiUsage', d: -10 }, { attr: 'gpuRent', d: 25 }, { flag: 'fShipBlock', v: true }] },
-        { key: 'long', publicKey: null, name: '中斷一個月以上', branch: 'halt', sev: 1, w: 0.3, tags: ['down'], effects: [{ attr: 'aiUsage', d: -25 }, { attr: 'gpuRent', d: 45 }, { flag: 'fShipBlock', v: true }] } ],
+        { key: 'short', publicKey: null, name: '中斷一到三週後復工', label: '中斷一到三週', branch: 'halt', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'aiUsage', d: -10 }, { attr: 'gpuRent', d: 25 }, { flag: 'fShipBlock', v: true }] },
+        { key: 'long', publicKey: null, name: '中斷一個月以上', label: '中斷一個月以上', branch: 'halt', sev: 1, w: 0.3, tags: ['down'], effects: [{ attr: 'aiUsage', d: -25 }, { attr: 'gpuRent', d: 45 }, { flag: 'fShipBlock', v: true }] } ],
       cond: [
         { layer: 'L3', target: 'long', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 0.666667, situ: 'S07（2020-03-16：新冠疫情，聯準會降到零利率）；strain 讀數 8.9' }, or: 1.5, src: 'alessandriMumtaz', data: '金融壓力高時，不確定性衝擊使產出下降約六倍（原文 roughly six times larger：−0.17% 對 −0.025%）；方向來自這份，大小是判斷', grade: '未核' }, mech: '資金與保險緊時，修復與替代產能更慢' } ] },
     { id: 'shipResume', name: '先進晶片出貨恢復', kind: 'random', group: 'ai', system: 4, rate: 0.4, max: 2,
@@ -3263,11 +3460,12 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；消息在發生日之後第一個開盤前已知',
       pSrcOut: 'scenario',
       desc: '當事方：台積電、主管機關與航運。出貨中斷之後的恢復；收場看全面恢復、部分恢復，或恢復後再中斷。新事件（裁定 250 第 1 條：限制解除、重建；也補 docs/world-states.md §2.1 第 4 條「出貨有沒有恢復」沒有讀數的缺口的一部分）',
+      label: '晶片出貨恢復',
       blurb: '先進晶片恢復出貨，科技供應鏈的缺料壓力逐步紓解。',
       outcomes: [
-        { key: 'full', publicKey: null, name: '全面恢復', branch: 'full', w: 0.6, tags: ['up'], effects: [{ attr: 'gpuRent', d: -30 }, { attr: 'aiUsage', d: 15 }] },
-        { key: 'partial', publicKey: null, name: '部分恢復', branch: 'partial', w: 0.3, tags: ['up'], effects: [{ attr: 'gpuRent', d: -15 }, { attr: 'aiUsage', d: 5 }] },
-        { key: 'relapse', publicKey: null, name: '恢復後再中斷', branch: 'relapse', w: 0.1, tags: ['down'], effects: [{ attr: 'gpuRent', d: 15 }] } ],
+        { key: 'full', publicKey: null, name: '全面恢復', label: '全面恢復', branch: 'full', w: 0.6, tags: ['up'], effects: [{ attr: 'gpuRent', d: -30 }, { attr: 'aiUsage', d: 15 }] },
+        { key: 'partial', publicKey: null, name: '部分恢復', label: '部分恢復', branch: 'partial', w: 0.3, tags: ['up'], effects: [{ attr: 'gpuRent', d: -15 }, { attr: 'aiUsage', d: 5 }] },
+        { key: 'relapse', publicKey: null, name: '恢復後再中斷', label: '恢復後再中斷', branch: 'relapse', w: 0.1, tags: ['down'], effects: [{ attr: 'gpuRent', d: 15 }] } ],
       cond: [
         { layer: 'L1', read: { mem: 'shockRun' }, anchor: { lo: { x: 0.03, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；記憶 shockRun 的折現和照記憶定義手算，x＝0.03' }, hi: { x: 1, situ: 'S07（2020-03-16：新冠疫情，聯準會降到零利率）；記憶 shockRun 的折現和照記憶定義手算，x＝1' }, or: 9 }, mech: '中斷剛發生時復工與替代出貨的消息密集，過去越久越少' },
         { layer: 'L1', read: { mem: 'conflictRun' }, anchor: { lo: { x: -0.9, situ: 'S06（2018-12-24：升息加縮表，聖誕前夕股市谷底）；記憶 conflictRun 的折現和照記憶定義手算，x＝-0.9' }, hi: { x: 1, situ: 'S10（2024-08-05：日圓套利平倉，VIX 單日暴衝；6 月仁愛礁有人受傷）；記憶 conflictRun 的折現和照記憶定義手算，x＝1' }, or: 0.5 }, mech: '東亞仍在連續升級時，封鎖類的中斷較慢解除' } ] },
@@ -3281,13 +3479,14 @@ const WORLD3 = {
       knownAtWhy: '事件規格第 4 版寫明 knownAtRule：nextUsOpen',
       pSrcOut: 'scenario',
       desc: '當事方：台積電、台灣政府、客戶與海外廠（美國、日本、德國的新廠）。台海衝突中島內晶片設施遭攻擊、出貨中斷之後，先進晶片的供給怎麼部分恢復；收場看未受損產線部分復工、分段恢復到可觀比例、海外產能加速補位，或遲遲無法復工。只在 shipHaltStrait.strike 之後開（裁定 299）；恢復幅度明顯小於 shipResume（實體損毀不會全面恢復）；fShipBlock 照定義不退場。L1 讀記憶 conflictRun（錨點 S06、S10 是登記過的處境，和 shipResume、armedClash 相同）；其餘層沒有條件，由表帶。管轄易手（fStraitChange）之後不開，和 shipResume 相同',
+      label: '攻擊後晶片產能恢復',
       blurb: '台灣晶片設施遭攻擊後開始恢復產能，供應能補回多少是關鍵。',
       outcomes: [
-        { key: 'partialRestart', publicKey: null, name: '未受損的產線部分復工出貨（產能優先分配給少數客戶或政府指定的用途也算）', branch: 'restart', sev: 0, w: 0.35, tags: ['up'], effects: [{ attr: 'gpuRent', d: -8 }, { attr: 'aiUsage', d: 5 }] },
-        { key: 'staged', publicKey: null, name: '分段恢復到可觀比例', branch: 'restart', sev: 1, w: 0.15, tags: ['up'], effects: [{ attr: 'gpuRent', d: -15 }, { attr: 'aiUsage', d: 5 }] },
-        { key: 'overseas', publicKey: null, name: '海外與其他來源產能補位（含美日德新廠與非台積電的代工）', branch: 'overseas', w: 0.25, tags: ['up'], effects: [{ attr: 'gpuRent', d: -4 }, { attr: 'buildout', d: 5 }] },
-        { key: 'stalled', publicKey: null, name: '遲遲無法復工，或重建以年計、期間內供給仍遠低於攻擊前', branch: 'stalled', w: 0.2, tags: ['flat'], effects: [] },
-        { key: 'relapse', publicKey: null, name: '復工嘗試失敗或再度中斷（第一次抽到也算）', branch: 'relapse', w: 0.05, tags: ['down'], effects: [{ attr: 'gpuRent', d: 8 }] } ],
+        { key: 'staged', publicKey: null, name: '分段恢復到可觀比例', label: '分段恢復到可觀比例', branch: 'restart', sev: 1, w: 0.15, tags: ['up'], effects: [{ attr: 'gpuRent', d: -15 }, { attr: 'aiUsage', d: 5 }] },
+        { key: 'partialRestart', publicKey: null, name: '未受損的產線部分復工出貨（產能優先分配給少數客戶或政府指定的用途也算）', label: '未受損產線部分復工', branch: 'restart', sev: 0, w: 0.35, tags: ['up'], effects: [{ attr: 'gpuRent', d: -8 }, { attr: 'aiUsage', d: 5 }] },
+        { key: 'overseas', publicKey: null, name: '海外與其他來源產能補位（含美日德新廠與非台積電的代工）', label: '海外產能補位', branch: 'overseas', w: 0.25, tags: ['up'], effects: [{ attr: 'gpuRent', d: -4 }, { attr: 'buildout', d: 5 }] },
+        { key: 'stalled', publicKey: null, name: '遲遲無法復工，或重建以年計、期間內供給仍遠低於攻擊前', label: '遲遲無法復工', branch: 'stalled', w: 0.2, tags: ['flat'], effects: [] },
+        { key: 'relapse', publicKey: null, name: '復工嘗試失敗或再度中斷（第一次抽到也算）', label: '復工失敗或再中斷', branch: 'relapse', w: 0.05, tags: ['down'], effects: [{ attr: 'gpuRent', d: 8 }] } ],
       cond: [
         { layer: 'L1', read: { mem: 'conflictRun' }, anchor: { lo: { x: -0.9, situ: 'S06（2018-12-24：升息加縮表，聖誕前夕股市谷底）；記憶 conflictRun 的折現和照記憶定義手算，x＝-0.9' }, hi: { x: 1, situ: 'S10（2024-08-05：日圓套利平倉，VIX 單日暴衝；6 月仁愛礁有人受傷）；記憶 conflictRun 的折現和照記憶定義手算，x＝1' }, or: 0.5 }, mech: '東亞仍在連續升級時，受損設施的修復與復工都更少（停火之後才是收拾期）' } ] },
     { id: 'aiResume', name: 'AI 事故之後解除暫停', kind: 'random', group: 'ai', system: 4, rate: 2, max: 1,
@@ -3300,11 +3499,12 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；消息在發生日之後第一個開盤前已知',
       pSrcOut: 'scenario',
       desc: '當事方：主管機關、AI 開發商與使用者。AI 系統失控事故與緊急限制之後，主管機關解除暫停或放寬限制；收場看補上防護後全面恢復、有條件部分恢復，或限制延長成長期規範。新事件（無背景 Sonnet 審查 B.5：義大利 2023 年禁令約一個月解除、波音 737 MAX 停飛後復飛）',
+      label: 'AI 事故後解除暫停',
       blurb: 'AI 事故後的暫停部署解除，AI 產業能否回到原本軌道受到關注。',
       outcomes: [
-        { key: 'resumed', publicKey: null, name: '補上防護後全面恢復部署', branch: 'resumed', w: 0.5, tags: ['up'], effects: [{ attr: 'aiUsage', d: 15 }] },
-        { key: 'partial', publicKey: null, name: '有條件部分恢復', branch: 'partial', w: 0.35, tags: ['up'], effects: [{ attr: 'aiUsage', d: 5 }] },
-        { key: 'extended', publicKey: null, name: '限制延長成長期規範', branch: 'extended', w: 0.15, tags: ['down'], effects: [{ attr: 'aiUsage', d: -5 }] } ],
+        { key: 'resumed', publicKey: null, name: '補上防護後全面恢復部署', label: '補防護後全面恢復', branch: 'resumed', w: 0.5, tags: ['up'], effects: [{ attr: 'aiUsage', d: 15 }] },
+        { key: 'partial', publicKey: null, name: '有條件部分恢復', label: '有條件部分恢復', branch: 'partial', w: 0.35, tags: ['up'], effects: [{ attr: 'aiUsage', d: 5 }] },
+        { key: 'extended', publicKey: null, name: '限制延長成長期規範', label: '限制延長成長期規範', branch: 'extended', w: 0.15, tags: ['down'], effects: [{ attr: 'aiUsage', d: -5 }] } ],
       cond: [
         { layer: 'L2', target: 'extended', read: { state: 'threat' }, anchor: { lo: { x: -0.0989, situ: 'S28（2021-11-08：低利率下的題材與新上市熱潮）；threat 讀數 80.22' }, hi: { x: 1, situ: 'S22（2022-03-08：俄烏戰爭後，油價衝高）；threat 讀數 318.93' }, or: 0.6 }, mech: '地緣競爭激烈時各國較快恢復部署，不願長期自我設限' } ] },
     // Seq 4 (b), scenario pack scnScience, system 4.
@@ -3318,13 +3518,14 @@ const WORLD3 = {
       knownAtWhy: '商轉公告即公開',
       pSrcOut: 'scenario',
       desc: '當事方：新型能源、通用機器人或軌道算力的開發商與客戶。商業合約、量產交貨或併網發電；收場看跨過門檻、多項同時跨過，或宣布後延期',
+      label: '實體技術跨過商轉門檻',
       blurb: '機器人、自駕等實體技術逼近商轉門檻，能否真的跨過決定相關題材的熱度。',
       scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
-        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
-        { key: 'crossed', publicKey: null, name: '跨過商轉門檻', branch: 'cross', sev: 0, w: 0.6, tags: ['up'], effects: [{ attr: 'buildout', d: 15 }, { flag: 'fBreakthrough', v: true }, { attr: 'aiHeat', d: 20, noMod: true }] },
-        { key: 'crossedBig', publicKey: null, name: '多項同時跨過，訂單湧入', branch: 'cross', sev: 1, w: 0.15, tags: ['up'], effects: [{ attr: 'buildout', d: 30 }, { flag: 'fBreakthrough', v: true }, { attr: 'aiHeat', d: 30, noMod: true }] },
-        { key: 'delayed', publicKey: null, name: '宣布後延期，或過度宣傳後退潮', branch: 'delayed', w: 0.25, tags: ['flat'], effects: [] } ],
+        { key: 'crossedBig', publicKey: null, name: '多項同時跨過，訂單湧入', label: '多項跨過，訂單湧入', branch: 'cross', sev: 1, w: 0.15, tags: ['up'], effects: [{ attr: 'buildout', d: 30 }, { flag: 'fBreakthrough', v: true }, { attr: 'aiHeat', d: 30, noMod: true }] },
+        { key: 'crossed', publicKey: null, name: '跨過商轉門檻', label: '跨過商轉門檻', branch: 'cross', sev: 0, w: 0.6, tags: ['up'], effects: [{ attr: 'buildout', d: 15 }, { flag: 'fBreakthrough', v: true }, { attr: 'aiHeat', d: 20, noMod: true }] },
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', label: '虛驚一場', branch: 'none', tags: ['flat'], effects: [] },
+        { key: 'delayed', publicKey: null, name: '宣布後延期，或過度宣傳後退潮', label: '延期或宣傳後退潮', branch: 'delayed', w: 0.25, tags: ['flat'], effects: [] } ],
       cond: [
         { layer: 'L2', target: 'delayed', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 2 }, mech: '市場動盪時客戶與資金方延後簽約' },
         { layer: 'L3', target: 'crossedBig', read: { state: 'aiHeat' }, anchor: { lo: { x: -0.3425, situ: 'S09（2022-10-12：美元與殖利率高點；晶片出口管制剛宣布）；aiHeat 讀數 -13.7' }, hi: { x: 0.51, situ: 'S21（2025-10-29：輝達市值創高，AI 題材重燃（決議日前））；aiHeat 讀數 20.4' }, or: 1.8 }, mech: '題材熱時資金追進，多個專案同時推進' } ] },
@@ -3338,13 +3539,14 @@ const WORLD3 = {
       knownAtWhy: '事故由公司、主管機關或媒體公開',
       pSrcOut: 'scenario',
       desc: '當事方：一個高階 AI 系統的開發商、使用者與主管機關。沒有授權下造成大規模實體或金融損害，主管機關緊急限制；收場分三級：事故受控、多國暫停高階模型、無法完全關閉',
+      label: 'AI 系統失控事故',
       blurb: 'AI 系統發生失控事故，監管收緊，AI 類股面臨重新定價。',
       scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
-        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
-        { key: 'contained', publicKey: null, name: '事故造成損害但受控，主管機關限制後補上防護', branch: 'accident', sev: 0, w: 0.55, tags: ['down'], effects: [{ attr: 'aiUsage', d: -10 }, { flag: 'fAiLoss', v: true }, { attr: 'vol', d: 15, noMod: true }] },
-        { key: 'severe', publicKey: null, name: '多國緊急暫停高階模型部署', branch: 'accident', sev: 1, w: 0.35, tags: ['down'], effects: [{ attr: 'aiUsage', d: -30 }, { flag: 'fAiLoss', v: true }, { attr: 'vol', d: 40, noMod: true }] },
-        { key: 'uncontained', publicKey: null, name: '無法完全關閉', branch: 'accident', sev: 2, w: 0.1, tags: ['down'], effects: [{ attr: 'aiUsage', d: -50 }, { flag: 'fAiLoss', v: true }, { attr: 'vol', d: 60, noMod: true }] } ],
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', label: '虛驚一場', branch: 'none', tags: ['flat'], effects: [] },
+        { key: 'contained', publicKey: null, name: '事故造成損害但受控，主管機關限制後補上防護', label: '損害受控，補上防護', branch: 'accident', sev: 0, w: 0.55, tags: ['down'], effects: [{ attr: 'aiUsage', d: -10 }, { flag: 'fAiLoss', v: true }, { attr: 'vol', d: 15, noMod: true }] },
+        { key: 'severe', publicKey: null, name: '多國緊急暫停高階模型部署', label: '多國緊急暫停高階模型', branch: 'accident', sev: 1, w: 0.35, tags: ['down'], effects: [{ attr: 'aiUsage', d: -30 }, { flag: 'fAiLoss', v: true }, { attr: 'vol', d: 40, noMod: true }] },
+        { key: 'uncontained', publicKey: null, name: '無法完全關閉', label: '無法完全關閉', branch: 'accident', sev: 2, w: 0.1, tags: ['down'], effects: [{ attr: 'aiUsage', d: -50 }, { flag: 'fAiLoss', v: true }, { attr: 'vol', d: 60, noMod: true }] } ],
       cond: [
         { layer: 'L3', target: 'severe', read: { state: 'aiHeat' }, anchor: { lo: { x: -0.3425, situ: 'S09（2022-10-12：美元與殖利率高點；晶片出口管制剛宣布）；aiHeat 讀數 -13.7' }, hi: { x: 0.51, situ: 'S21（2025-10-29：輝達市值創高，AI 題材重燃（決議日前））；aiHeat 讀數 20.4' }, or: 1.5 }, mech: '題材熱、部署越廣，同樣的事故牽連越大' } ] },
     { id: 'forcedSelling', name: '追繳與被迫拆倉', kind: 'random', group: 'credit', system: 5, rate: 0.2, max: 99,
@@ -3355,11 +3557,12 @@ const WORLD3 = {
       knownAtWhy: '拆倉的價格衝擊當天可見；部位多大事後才知道',
       pSrcOut: 'scenario',
       desc: '當事方：以保證金或回購融資的槓桿基金、券商客戶與自營部位。追繳、被迫賣出；收場看有序去槓桿、連鎖平倉，或有人接手',
+      label: '追繳與被迫拆倉',
       blurb: '槓桿部位遭到追繳，被迫拆倉的賣壓讓價格短時間急跌。',
       outcomes: [
-        { key: 'orderly', publicKey: null, name: '有序去槓桿，數日內平息', branch: 'deleverage', sev: 0, w: 0.6, tags: ['down'], effects: [{ attr: 'leverage', d: -20 }], funding: { terms: [], background: [{ quantityId: 'vixClose', unit: '點', src: 'data_vix' }, { quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '以保證金或回購融資的槓桿基金與券商客戶', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', ifState: 'vix < 25', maxDays: null, src: 'own' } } },
-        { key: 'cascade', publicKey: null, name: '連鎖平倉', branch: 'deleverage', sev: 1, w: 0.3, tags: ['down'], effects: [{ attr: 'leverage', d: -40 }, { clock: 'strain', d: 1 }], funding: { terms: [], background: [{ quantityId: 'vixClose', unit: '點', src: 'data_vix' }, { quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '以保證金或回購融資的槓桿基金與券商客戶', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', ifState: 'vix < 25', maxDays: null, src: 'own' } } },
-        { key: 'absorbed', publicKey: null, name: '大戶或同業接手部位', branch: 'absorbed', w: 0.1, tags: ['flat'], effects: [{ attr: 'leverage', d: -10 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '被追繳的槓桿基金（部位由大戶或同業承接）', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } } ],
+        { key: 'absorbed', publicKey: null, name: '大戶或同業接手部位', label: '大戶或同業接手', branch: 'absorbed', w: 0.1, tags: ['flat'], effects: [{ attr: 'leverage', d: -10 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '被追繳的槓桿基金（部位由大戶或同業承接）', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
+        { key: 'orderly', publicKey: null, name: '有序去槓桿，數日內平息', label: '有序去槓桿，數日平息', branch: 'deleverage', sev: 0, w: 0.6, tags: ['down'], effects: [{ attr: 'leverage', d: -20 }], funding: { terms: [], background: [{ quantityId: 'vixClose', unit: '點', src: 'data_vix' }, { quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '以保證金或回購融資的槓桿基金與券商客戶', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', ifState: 'vix < 25', maxDays: null, src: 'own' } } },
+        { key: 'cascade', publicKey: null, name: '連鎖平倉', label: '連鎖平倉', branch: 'deleverage', sev: 1, w: 0.3, tags: ['down'], effects: [{ attr: 'leverage', d: -40 }, { clock: 'strain', d: 1 }], funding: { terms: [], background: [{ quantityId: 'vixClose', unit: '點', src: 'data_vix' }, { quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '以保證金或回購融資的槓桿基金與券商客戶', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', ifState: 'vix < 25', maxDays: null, src: 'own' } } } ],
       cond: [
         { layer: 'L3', target: 'cascade', read: { state: 'aiHeat' }, anchor: { lo: { x: -0.3425, situ: 'S09（2022-10-12：美元與殖利率高點；晶片出口管制剛宣布）；aiHeat 讀數 -13.7' }, hi: { x: 0.51, situ: 'S21（2025-10-29：輝達市值創高，AI 題材重燃（決議日前））；aiHeat 讀數 20.4' }, or: 1.8 }, mech: '題材熱時部位擠在同一邊，追繳更容易變成連鎖（2024-08 套利與 AI 部位同時平倉）' } ] },
     { id: 'bankRun', name: '金融機構擠兌或倒閉', kind: 'random', group: 'credit', system: 5, rate: 0.12, max: 3,
@@ -3370,11 +3573,12 @@ const WORLD3 = {
       knownAtWhy: '主管機關接管或公司公告後公開',
       pSrcOut: 'scenario',
       desc: '當事方：銀行或類銀行機構（含交易所、貨幣基金）、存款人、主管機關。擠兌、倒閉或接管；收場看單一機構被接管、多家連鎖，或公告收購注資而未倒',
+      label: '金融機構擠兌或倒閉',
       blurb: '金融機構出現擠兌或倒閉，市場擔心風險在金融體系內擴散。',
       outcomes: [
-        { key: 'contained', publicKey: null, name: '單一機構被接管，存款保障', branch: 'run', sev: 0, w: 0.55, tags: ['down'], effects: [{ clock: 'strain', d: 1 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '銀行與類銀行機構的短期負債（存款、貨幣基金、交易所客戶資產）', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', maxDays: null, src: 'own' } } },
-        { key: 'systemic', publicKey: null, name: '多家連鎖', branch: 'run', sev: 1, w: 0.2, tags: ['down'], effects: [{ clock: 'strain', d: 2 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '銀行與類銀行機構的短期負債（存款、貨幣基金、交易所客戶資產）', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', maxDays: null, src: 'own' } } },
-        { key: 'saved', publicKey: null, name: '公告收購或注資，未倒', branch: 'saved', w: 0.25, tags: ['flat'], effects: [], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '被收購或注資那一家機構的存款人與短期債權人', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } } ],
+        { key: 'saved', publicKey: null, name: '公告收購或注資，未倒', label: '收購或注資，未倒', branch: 'saved', w: 0.25, tags: ['flat'], effects: [], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '被收購或注資那一家機構的存款人與短期債權人', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
+        { key: 'contained', publicKey: null, name: '單一機構被接管，存款保障', label: '單一機構被接管', branch: 'run', sev: 0, w: 0.55, tags: ['down'], effects: [{ clock: 'strain', d: 1 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '銀行與類銀行機構的短期負債（存款、貨幣基金、交易所客戶資產）', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', maxDays: null, src: 'own' } } },
+        { key: 'systemic', publicKey: null, name: '多家連鎖', label: '多家連鎖倒閉', branch: 'run', sev: 1, w: 0.2, tags: ['down'], effects: [{ clock: 'strain', d: 2 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '銀行與類銀行機構的短期負債（存款、貨幣基金、交易所客戶資產）', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', maxDays: null, src: 'own' } } } ],
       cond: [
         { layer: 'L2', target: 'saved', read: { mem: 'rescueRun' }, anchor: { lo: { x: 0.01, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；記憶 rescueRun 的折現和照記憶定義手算，x＝0.01' }, hi: { x: 0.99, situ: 'S27（2023-03-13：矽谷銀行倒閉後第一個交易日）；記憶 rescueRun 的折現和照記憶定義手算，x＝0.99' }, or: 2 }, mech: '剛有救援工具時，主管機關與同業更快接手（2023-03 的瑞士信貸）' },
         { layer: 'L3', target: 'systemic', read: { state: 'dollar' }, anchor: { lo: { x: -0.159, situ: 'S32（2025-06-30：美元走弱，資金流向非美市場）；dollar 讀數 96.82' }, hi: { x: 0.63, situ: 'S31（2022-09-27：英國公債危機，美元指數高點）；dollar 讀數 112.6' }, or: 1.8 }, mech: '美元緊時境外銀行的美元融資斷，擠兌更容易蔓延' } ] },
@@ -3386,11 +3590,12 @@ const WORLD3 = {
       knownAtWhy: '違約或重整申請公開',
       pSrcOut: 'scenario',
       desc: '當事方：大型企業、私募信用基金、放款銀行（含 AI 新雲端廠與資料中心的債）。指標性違約；收場看個案違約、擴散到同類資產，或被同業收購',
+      label: '指標性企業或私募違約',
       blurb: '指標性企業或私募信用發生違約，信用市場的信心受到考驗。',
       outcomes: [
-        { key: 'isolated', publicKey: null, name: '個案違約，損失可控', branch: 'default', sev: 0, w: 0.55, tags: ['down'], effects: [{ attr: 'leverage', d: -10 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '高收益債與私募信用的借款企業', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'creditReopen.reopen', maxDays: null, src: 'own' } } },
-        { key: 'spread', publicKey: null, name: '擴散到同類資產', branch: 'default', sev: 1, w: 0.35, tags: ['down'], effects: [{ attr: 'leverage', d: -20 }, { clock: 'strain', d: 1 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '高收益債與私募信用的借款企業', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'creditReopen.reopen', maxDays: null, src: 'own' } } },
-        { key: 'absorbed', publicKey: null, name: '被同業或大廠收購，或在政府、央行有條件支持下重整，風險受控', branch: 'absorbed', w: 0.1, tags: ['flat'], effects: [] } ],
+        { key: 'absorbed', publicKey: null, name: '被同業或大廠收購，或在政府、央行有條件支持下重整，風險受控', label: '被收購或重整，風險受控', branch: 'absorbed', w: 0.1, tags: ['flat'], effects: [] },
+        { key: 'isolated', publicKey: null, name: '個案違約，損失可控', label: '個案違約，損失可控', branch: 'default', sev: 0, w: 0.55, tags: ['down'], effects: [{ attr: 'leverage', d: -10 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '高收益債與私募信用的借款企業', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'creditReopen.reopen', maxDays: null, src: 'own' } } },
+        { key: 'spread', publicKey: null, name: '擴散到同類資產', label: '擴散到同類資產', branch: 'default', sev: 1, w: 0.35, tags: ['down'], effects: [{ attr: 'leverage', d: -20 }, { clock: 'strain', d: 1 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '高收益債與私募信用的借款企業', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'creditReopen.reopen', maxDays: null, src: 'own' } } } ],
       cond: [
         { layer: 'L3', target: 'spread', read: { mem: 'fedDir' }, anchor: { lo: { x: -0.88, situ: 'S26（2024-09-20：聯準會降息 50 基點後）；記憶 fedDir 的折現和照記憶定義手算，x＝-0.88' }, hi: { x: 1, situ: 'S08（2022-06-16：通膨高點，聯準會一次升 75 基點）；記憶 fedDir 的折現和照記憶定義手算，x＝1' }, or: 1.8 }, mech: '升息循環中再融資成本高，個案更容易擴散' } ] },
     { id: 'dollarSqueeze', name: '境外美元短缺', kind: 'random', group: 'credit', system: 5, rate: 0.12, max: 3,
@@ -3401,11 +3606,12 @@ const WORLD3 = {
       knownAtWhy: '換匯利差與美元指數當天可見',
       pSrcOut: 'scenario',
       desc: '當事方：境外銀行與企業、聯準會與各國央行。境外美元融資緊縮；收場看短缺、嚴重短缺，或換匯額度很快化解',
+      label: '境外美元短缺',
       blurb: '美國以外的美元資金吃緊，新興市場與全球資金面承受壓力。',
       outcomes: [
-        { key: 'squeeze', publicKey: null, name: '美元短缺', branch: 'squeeze', sev: 0, w: 0.5, tags: ['down'], effects: [{ attr: 'dollar', d: 15 }], funding: { terms: [], background: [{ quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外銀行與企業的美元融資', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'dollarSqueeze.swapLines', ifState: 'dxy < 100', maxDays: null, src: 'own' } } },
-        { key: 'squeezeBig', publicKey: null, name: '嚴重短缺，資金市場凍結', branch: 'squeeze', sev: 1, w: 0.3, tags: ['down'], effects: [{ attr: 'dollar', d: 30 }, { clock: 'strain', d: 1 }], funding: { terms: [], background: [{ quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外銀行與企業的美元融資', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'dollarSqueeze.swapLines', ifState: 'dxy < 100', maxDays: null, src: 'own' } } },
-        { key: 'swapLines', publicKey: null, name: '央行換匯額度很快化解', branch: 'backstop', w: 0.2, tags: ['flat'], effects: [{ attr: 'dollar', d: 5 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '經換匯額度取得美元的外國央行轄下銀行', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } } ],
+        { key: 'swapLines', publicKey: null, name: '央行換匯額度很快化解', label: '換匯額度很快化解', branch: 'backstop', w: 0.2, tags: ['flat'], effects: [{ attr: 'dollar', d: 5 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '經換匯額度取得美元的外國央行轄下銀行', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
+        { key: 'squeeze', publicKey: null, name: '美元短缺', label: '美元短缺', branch: 'squeeze', sev: 0, w: 0.5, tags: ['down'], effects: [{ attr: 'dollar', d: 15 }], funding: { terms: [], background: [{ quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外銀行與企業的美元融資', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'dollarSqueeze.swapLines', ifState: 'dxy < 100', maxDays: null, src: 'own' } } },
+        { key: 'squeezeBig', publicKey: null, name: '嚴重短缺，資金市場凍結', label: '嚴重短缺，資金凍結', branch: 'squeeze', sev: 1, w: 0.3, tags: ['down'], effects: [{ attr: 'dollar', d: 30 }, { clock: 'strain', d: 1 }], funding: { terms: [], background: [{ quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外銀行與企業的美元融資', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'dollarSqueeze.swapLines', ifState: 'dxy < 100', maxDays: null, src: 'own' } } } ],
       cond: [
         { layer: 'L2', target: 'backstop', read: { mem: 'rescueRun' }, anchor: { lo: { x: 0.01, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；記憶 rescueRun 的折現和照記憶定義手算，x＝0.01' }, hi: { x: 1, situ: 'S07（2020-03-16：新冠疫情，聯準會降到零利率）；記憶 rescueRun 的折現和照記憶定義手算，x＝1' }, or: 2 }, mech: '換匯額度剛開過，下一次化解更快' },
         { layer: 'L3', target: 'squeezeBig', read: { mem: 'fedDir' }, anchor: { lo: { x: -0.88, situ: 'S26（2024-09-20：聯準會降息 50 基點後）；記憶 fedDir 的折現和照記憶定義手算，x＝-0.88' }, hi: { x: 1, situ: 'S08（2022-06-16：通膨高點，聯準會一次升 75 基點）；記憶 fedDir 的折現和照記憶定義手算，x＝1' }, or: 1.8 }, mech: '升息循環中美元本來就緊，短缺更容易變嚴重' } ] },
@@ -3417,11 +3623,12 @@ const WORLD3 = {
       knownAtWhy: '美元指數當天收盤可見',
       pSrcOut: 'scenario',
       desc: '當事方：外匯市場與各國央行。美元指數明顯走強；收場看走強、急升，或很快回吐',
+      label: '美元明顯走強',
       blurb: '美元明顯走強，資金回流美國，非美資產與商品承壓。',
       outcomes: [
-        { key: 'rally', publicKey: null, name: '美元走強', branch: 'rally', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'dollar', d: 15 }], funding: { terms: [], background: [{ quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外銀行與企業的美元融資', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'dollarSqueeze.swapLines', ifState: 'dxy < 100', maxDays: null, src: 'own' } } },
-        { key: 'surge', publicKey: null, name: '美元急升（資金躲回美國資產）', branch: 'rally', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'dollar', d: 30 }, { attr: 'usDoubt', d: -5 }], funding: { terms: [], background: [{ quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外銀行與企業的美元融資', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'dollarSqueeze.swapLines', ifState: 'dxy < 100', maxDays: null, src: 'own' } } },
-        { key: 'faded', publicKey: null, name: '很快回吐（含外國央行干預匯市）', branch: 'faded', w: 0.15, tags: ['flat'], effects: [] } ],
+        { key: 'faded', publicKey: null, name: '很快回吐（含外國央行干預匯市）', label: '很快回吐', branch: 'faded', w: 0.15, tags: ['flat'], effects: [] },
+        { key: 'rally', publicKey: null, name: '美元走強', label: '美元走強', branch: 'rally', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'dollar', d: 15 }], funding: { terms: [], background: [{ quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外銀行與企業的美元融資', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'dollarSqueeze.swapLines', ifState: 'dxy < 100', maxDays: null, src: 'own' } } },
+        { key: 'surge', publicKey: null, name: '美元急升（資金躲回美國資產）', label: '美元急升', branch: 'rally', sev: 1, w: 0.15, tags: ['down'], effects: [{ attr: 'dollar', d: 30 }, { attr: 'usDoubt', d: -5 }], funding: { terms: [], background: [{ quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外銀行與企業的美元融資', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'dollarSqueeze.swapLines', ifState: 'dxy < 100', maxDays: null, src: 'own' } } } ],
       cond: [
         { layer: 'L1', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 1.8 }, mech: '市場恐慌時資金躲進美元' },
         { layer: 'L3', target: 'surge', read: { state: 'fedStance' }, anchor: { lo: { x: -0.333333, situ: 'S26（2024-09-20：聯準會降息 50 基點後）；fedStance 讀數 -50' }, hi: { x: 1, situ: 'S31（2022-09-27：英國公債危機，美元指數高點）；fedStance 讀數 150' }, or: 2 }, mech: '聯準會緊縮時美元一走強就急升（2022）' } ] },
@@ -3433,12 +3640,13 @@ const WORLD3 = {
       knownAtWhy: '美元指數當天收盤可見',
       pSrcOut: 'scenario',
       desc: '當事方：外匯市場與跨境資金。美元指數明顯走弱、資金回流非美市場；收場看走弱、急貶，或很快回吐',
+      label: '美元明顯走弱',
       blurb: '美元明顯走弱，資金流向美國以外的市場。',
       outcomes: [
-        { key: 'ease', publicKey: null, name: '美元走弱，資金回流', branch: 'ease', sev: 0, w: 0.7, tags: ['up'], effects: [{ attr: 'dollar', d: -15 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外借美元的企業與新興市場借款人（美元走弱減輕償債）', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
-        { key: 'slide', publicKey: null, name: '美元急貶', branch: 'ease', sev: 1, w: 0.1, tags: ['flat'], effects: [{ attr: 'dollar', d: -30 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外借美元的企業與新興市場借款人（美元急貶）', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
-        { key: 'sellAmerica', publicKey: null, name: '美元與美債同跌（對美國資產的信心流失）', branch: 'sellAmerica', w: 0.05, tags: ['down'], effects: [{ attr: 'dollar', d: -20 }, { attr: 'usDoubt', d: 20 }] },
-        { key: 'faded', publicKey: null, name: '很快回吐', branch: 'faded', w: 0.15, tags: ['flat'], effects: [] } ],
+        { key: 'faded', publicKey: null, name: '很快回吐', label: '很快回吐', branch: 'faded', w: 0.15, tags: ['flat'], effects: [] },
+        { key: 'ease', publicKey: null, name: '美元走弱，資金回流', label: '美元走弱，資金回流', branch: 'ease', sev: 0, w: 0.7, tags: ['up'], effects: [{ attr: 'dollar', d: -15 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外借美元的企業與新興市場借款人（美元走弱減輕償債）', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
+        { key: 'slide', publicKey: null, name: '美元急貶', label: '美元急貶', branch: 'ease', sev: 1, w: 0.1, tags: ['flat'], effects: [{ attr: 'dollar', d: -30 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '境外借美元的企業與新興市場借款人（美元急貶）', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
+        { key: 'sellAmerica', publicKey: null, name: '美元與美債同跌（對美國資產的信心流失）', label: '美元與美債同跌', branch: 'sellAmerica', w: 0.05, tags: ['down'], effects: [{ attr: 'dollar', d: -20 }, { attr: 'usDoubt', d: 20 }] } ],
       cond: [
         { layer: 'L1', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 0.6 }, mech: '市場恐慌時資金躲進美元，美元較少走弱' },
         { layer: 'L3', target: 'slide', read: { mem: 'fedDir' }, anchor: { lo: { x: -0.88, situ: 'S26（2024-09-20：聯準會降息 50 基點後）；記憶 fedDir 的折現和照記憶定義手算，x＝-0.88' }, hi: { x: 1, situ: 'S08（2022-06-16：通膨高點，聯準會一次升 75 基點）；記憶 fedDir 的折現和照記憶定義手算，x＝1' }, or: 0.5 }, mech: '降息循環中美元走弱更容易變急貶；升息循環中則少' } ] },
@@ -3450,10 +3658,11 @@ const WORLD3 = {
       knownAtWhy: '只改不公開的槓桿部位，紀錄不對外（裁定 111）',
       pSrcOut: 'scenario',
       desc: '當事方：套利與賣波動的槓桿部位。平靜期部位擴大；收場只分一般加碼與部位擁擠。紀錄永不公開（knownAtRule: null，照舊）',
+      label: '槓桿部位加碼',
       blurb: '市場槓桿部位持續累積，平靜之下的脆弱程度跟著升高。',
       outcomes: [
-        { key: 'build', publicKey: null, name: '槓桿加碼', branch: 'build', sev: 0, w: 0.7, tags: ['up'], effects: [{ attr: 'leverage', d: 15 }] },
-        { key: 'crowd', publicKey: null, name: '部位擁擠', branch: 'build', sev: 1, w: 0.3, tags: ['up'], effects: [{ attr: 'leverage', d: 30 }] } ],
+        { key: 'build', publicKey: null, name: '槓桿加碼', label: '槓桿加碼', branch: 'build', sev: 0, w: 0.7, tags: ['up'], effects: [{ attr: 'leverage', d: 15 }] },
+        { key: 'crowd', publicKey: null, name: '部位擁擠', label: '部位擁擠', branch: 'build', sev: 1, w: 0.3, tags: ['up'], effects: [{ attr: 'leverage', d: 30 }] } ],
       cond: [
         { layer: 'L3', target: 'crowd', read: { state: 'aiHeat' }, anchor: { lo: { x: -0.3425, situ: 'S09（2022-10-12：美元與殖利率高點；晶片出口管制剛宣布）；aiHeat 讀數 -13.7' }, hi: { x: 0.51, situ: 'S21（2025-10-29：輝達市值創高，AI 題材重燃（決議日前））；aiHeat 讀數 20.4' }, or: 1.8 }, mech: '題材熱時資金擠進同一批部位' } ] },
     // Seq 4 (b), scenario pack scnMoney, system 5.
@@ -3467,14 +3676,15 @@ const WORLD3 = {
       knownAtWhy: '拍賣結果與殖利率當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：美國財政部、公債交易商、聯準會。拍賣認購不佳或次級市場價差擴大；收場看市場自行消化、失序、嚴重失序，或聯準會買債迅速止血',
+      label: '美國公債市場承壓',
       blurb: '美國公債市場承壓，殖利率劇烈波動，牽動所有資產的定價基準。',
       scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
-        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
-        { key: 'absorbed', publicKey: null, name: '拍賣不佳但市場自行消化', branch: 'absorbed', w: 0.3, tags: ['flat'], effects: [] },
-        { key: 'disorder', publicKey: null, name: '公債市場失序', branch: 'disorder', sev: 0, w: 0.4, tags: ['down'], effects: [{ clock: 'strain', d: 1 }, { attr: 'dollar', d: -15 }, { attr: 'usDoubt', d: 15 }, { attr: 'vol', d: 30, noMod: true }], funding: { terms: [], background: [{ quantityId: 'vixClose', unit: '點', src: 'data_vix' }], subject: { who: '美國公債交易商與以公債作擔保的槓桿部位', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'treasuryDisorder.fedBuys', maxDays: null, src: 'own' } } },
-        { key: 'disorderBig', publicKey: null, name: '嚴重失序，連公債都賣不出去', branch: 'disorder', sev: 1, w: 0.15, tags: ['down'], effects: [{ clock: 'strain', d: 2 }, { attr: 'dollar', d: -30 }, { attr: 'usDoubt', d: 30 }, { attr: 'vol', d: 45, noMod: true }], funding: { terms: [], background: [{ quantityId: 'vixClose', unit: '點', src: 'data_vix' }], subject: { who: '美國公債交易商與以公債作擔保的槓桿部位', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'treasuryDisorder.fedBuys', maxDays: null, src: 'own' } } },
-        { key: 'fedBuys', publicKey: null, name: '聯準會買債迅速止血', branch: 'backstop', w: 0.15, tags: ['flat'], effects: [{ attr: 'dollar', d: -5 }, { attr: 'usDoubt', d: -5 }, { attr: 'vol', d: 10, noMod: true }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '公債交易商與以公債作擔保的槓桿部位（聯準會買債）', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } } ],
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', label: '虛驚一場', branch: 'none', tags: ['flat'], effects: [] },
+        { key: 'absorbed', publicKey: null, name: '拍賣不佳但市場自行消化', label: '拍賣不佳但自行消化', branch: 'absorbed', w: 0.3, tags: ['flat'], effects: [] },
+        { key: 'fedBuys', publicKey: null, name: '聯準會買債迅速止血', label: '聯準會買債止血', branch: 'backstop', w: 0.15, tags: ['flat'], effects: [{ attr: 'dollar', d: -5 }, { attr: 'usDoubt', d: -5 }, { attr: 'vol', d: 10, noMod: true }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '公債交易商與以公債作擔保的槓桿部位（聯準會買債）', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
+        { key: 'disorder', publicKey: null, name: '公債市場失序', label: '公債市場失序', branch: 'disorder', sev: 0, w: 0.4, tags: ['down'], effects: [{ clock: 'strain', d: 1 }, { attr: 'dollar', d: -15 }, { attr: 'usDoubt', d: 15 }, { attr: 'vol', d: 30, noMod: true }], funding: { terms: [], background: [{ quantityId: 'vixClose', unit: '點', src: 'data_vix' }], subject: { who: '美國公債交易商與以公債作擔保的槓桿部位', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'treasuryDisorder.fedBuys', maxDays: null, src: 'own' } } },
+        { key: 'disorderBig', publicKey: null, name: '嚴重失序，連公債都賣不出去', label: '嚴重失序，公債賣不出去', branch: 'disorder', sev: 1, w: 0.15, tags: ['down'], effects: [{ clock: 'strain', d: 2 }, { attr: 'dollar', d: -30 }, { attr: 'usDoubt', d: 30 }, { attr: 'vol', d: 45, noMod: true }], funding: { terms: [], background: [{ quantityId: 'vixClose', unit: '點', src: 'data_vix' }], subject: { who: '美國公債交易商與以公債作擔保的槓桿部位', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'treasuryDisorder.fedBuys', maxDays: null, src: 'own' } } } ],
       cond: [
         { layer: 'L2', target: 'backstop', read: { mem: 'rescueRun' }, anchor: { lo: { x: 0.01, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；記憶 rescueRun 的折現和照記憶定義手算，x＝0.01' }, hi: { x: 1, situ: 'S07（2020-03-16：新冠疫情，聯準會降到零利率）；記憶 rescueRun 的折現和照記憶定義手算，x＝1' }, or: 2 }, mech: '聯準會剛出手過，買債的工具與先例都在' },
         { layer: 'L3', target: 'disorderBig', read: { state: 'fedStance' }, anchor: { lo: { x: -0.333333, situ: 'S26（2024-09-20：聯準會降息 50 基點後）；fedStance 讀數 -50' }, hi: { x: 1, situ: 'S31（2022-09-27：英國公債危機，美元指數高點）；fedStance 讀數 150' }, or: 1.8 }, mech: '緊縮中縮表、交易商資產負債表緊，失序更嚴重' } ] },
@@ -3488,13 +3698,14 @@ const WORLD3 = {
       knownAtWhy: '脫鉤與贖回暫停當天公開',
       pSrcOut: 'scenario',
       desc: '當事方：市值前幾大的穩定幣發行商、持有人、準備資產的託管銀行。脫鉤、贖回暫停；收場看數日內恢復掛鉤、崩潰，或波及短期公債與銀行',
+      label: '大型穩定幣擠兌',
       blurb: '大型穩定幣遭到擠兌，壓力可能外溢到短期公債與銀行。',
       scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
-        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
-        { key: 'repeg', publicKey: null, name: '數日內恢復掛鉤', branch: 'repeg', w: 0.5, tags: ['flat'], effects: [], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '穩定幣持有人與準備資產的託管銀行', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
-        { key: 'collapse', publicKey: null, name: '崩潰', branch: 'collapse', sev: 0, w: 0.35, tags: ['down'], effects: [{ clock: 'strain', d: 1 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '銀行與類銀行機構的短期負債（存款、貨幣基金、交易所客戶資產）', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', maxDays: null, src: 'own' } } },
-        { key: 'contagion', publicKey: null, name: '波及短期公債與銀行', branch: 'collapse', sev: 1, w: 0.15, tags: ['down'], effects: [{ clock: 'strain', d: 2 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '銀行與類銀行機構的短期負債（存款、貨幣基金、交易所客戶資產）', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', maxDays: null, src: 'own' } } } ],
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', label: '虛驚一場', branch: 'none', tags: ['flat'], effects: [] },
+        { key: 'repeg', publicKey: null, name: '數日內恢復掛鉤', label: '數日內恢復掛鉤', branch: 'repeg', w: 0.5, tags: ['flat'], effects: [], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '穩定幣持有人與準備資產的託管銀行', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
+        { key: 'collapse', publicKey: null, name: '崩潰', label: '穩定幣崩潰', branch: 'collapse', sev: 0, w: 0.35, tags: ['down'], effects: [{ clock: 'strain', d: 1 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '銀行與類銀行機構的短期負債（存款、貨幣基金、交易所客戶資產）', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', maxDays: null, src: 'own' } } },
+        { key: 'contagion', publicKey: null, name: '波及短期公債與銀行', label: '波及短期公債與銀行', branch: 'collapse', sev: 1, w: 0.15, tags: ['down'], effects: [{ clock: 'strain', d: 2 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }], subject: { who: '銀行與類銀行機構的短期負債（存款、貨幣基金、交易所客戶資產）', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'emergencyEase.facility', maxDays: null, src: 'own' } } } ],
       cond: [
         { layer: 'L2', target: 'repeg', read: { mem: 'rescueRun' }, anchor: { lo: { x: 0.01, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；記憶 rescueRun 的折現和照記憶定義手算，x＝0.01' }, hi: { x: 0.99, situ: 'S27（2023-03-13：矽谷銀行倒閉後第一個交易日）；記憶 rescueRun 的折現和照記憶定義手算，x＝0.99' }, or: 2 }, mech: '剛有存款保障或救援時，準備資產的託管銀行被救，恢復掛鉤更容易（2023-03 USDC）' },
         { layer: 'L3', target: 'contagion', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 1, situ: 'S02（2008-10-10：雷曼倒閉後一個月，全球股市崩跌，聯準會 10-08 緊急降息）；strain 讀數 16' }, or: 2 }, mech: '資金壓力已高時，擠兌更容易波及其他短期資金市場' } ] },
@@ -3508,11 +3719,12 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；公告在發生日當天、收盤時點為準',
       pSrcOut: 'scenario',
       desc: '當事方：發債企業、信用市場投資人、聯準會的工具。救援之後發債窗口重開、利差收斂；收場看收斂、大幅收斂，或二次緊縮。新事件（裁定 250 第 1 條：資金回流）',
+      label: '信用市場重開',
       blurb: '資金壓力之後信用市場重新開放，企業恢復發債，風險情緒回溫。',
       outcomes: [
-        { key: 'reopen', publicKey: null, name: '發債窗口重開，利差收斂', branch: 'reopen', sev: 0, w: 0.5, tags: ['up'], effects: [{ clock: 'strain', d: -1 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '高收益債與私募信用的借款企業（發債窗口重開）', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
-        { key: 'reopenBig', publicKey: null, name: '利差大幅收斂', branch: 'reopen', sev: 1, w: 0.2, tags: ['up'], effects: [{ clock: 'strain', d: -2 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '高收益債與私募信用的借款企業（利差大幅收斂）', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
-        { key: 'relapse', publicKey: null, name: '二次緊縮', branch: 'relapse', w: 0.3, tags: ['down'], effects: [{ clock: 'strain', d: 1 }] } ],
+        { key: 'reopenBig', publicKey: null, name: '利差大幅收斂', label: '利差大幅收斂', branch: 'reopen', sev: 1, w: 0.2, tags: ['up'], effects: [{ clock: 'strain', d: -2 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '高收益債與私募信用的借款企業（利差大幅收斂）', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
+        { key: 'reopen', publicKey: null, name: '發債窗口重開，利差收斂', label: '發債窗口重開', branch: 'reopen', sev: 0, w: 0.5, tags: ['up'], effects: [{ clock: 'strain', d: -1 }], funding: { terms: [], background: [{ quantityId: 'hyOas', unit: '百分點', src: 'data_hyoas' }, { quantityId: 'dxyClose', unit: '點', src: 'data_dxy' }], subject: { who: '高收益債與私募信用的借款企業（發債窗口重開）', currency: 'USD', src: 'own' }, window: null, release: { maxDays: null, src: 'own' } } },
+        { key: 'relapse', publicKey: null, name: '二次緊縮', label: '二次緊縮', branch: 'relapse', w: 0.3, tags: ['down'], effects: [{ clock: 'strain', d: 1 }] } ],
       cond: [
         { layer: 'L1', read: { mem: 'rescueRun' }, anchor: { lo: { x: 0.01, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；記憶 rescueRun 的折現和照記憶定義手算，x＝0.01' }, hi: { x: 1, situ: 'S07（2020-03-16：新冠疫情，聯準會降到零利率）；記憶 rescueRun 的折現和照記憶定義手算，x＝1' }, or: 3 }, mech: '剛有央行或國會救援時，市場相信有人兜底，重開更快' },
         { layer: 'L2', target: 'relapse', read: { mem: 'fedDir' }, anchor: { lo: { x: -0.88, situ: 'S26（2024-09-20：聯準會降息 50 基點後）；記憶 fedDir 的折現和照記憶定義手算，x＝-0.88' }, hi: { x: 1, situ: 'S08（2022-06-16：通膨高點，聯準會一次升 75 基點）；記憶 fedDir 的折現和照記憶定義手算，x＝1' }, or: 2 }, mech: '聯準會仍在升息時，救援之後更容易二次緊縮' },
@@ -3525,12 +3737,13 @@ const WORLD3 = {
       knownAtWhy: '新事件：公開時點是事件規格第 4 版〈要定的事〉第 6 點的提議（判斷），不是查到的；公告在發生日當天、收盤時點為準',
       pSrcOut: 'scenario',
       desc: '當事方：美國國會、政府、財政部與信評機構。撥款到期、債務上限或信評審查；收場看最後一刻解決、政府停擺數週、主權降評，或技術性違約恐慌。新事件（過去十年漏掉的：2018–19、2025 停擺；2023 債務上限；2023、2025 降評）',
+      label: '美國財政僵局',
       blurb: '美國陷入撥款或債務上限僵局，政府停擺與評等調降的風險升高。',
       outcomes: [
-        { key: 'resolved', publicKey: null, name: '最後一刻解決', branch: 'resolved', w: 0.5, tags: ['flat'], effects: [] },
-        { key: 'shutdown', publicKey: null, name: '政府停擺數週', branch: 'shutdown', w: 0.3, tags: ['flat'], effects: [{ attr: 'usDoubt', d: 5 }, { attr: 'vol', d: 5, noMod: true }] },
-        { key: 'downgrade', publicKey: null, name: '主權評等被調降', branch: 'downgrade', sev: 0, w: 0.17, tags: ['down'], effects: [{ attr: 'dollar', d: -5 }, { attr: 'usDoubt', d: 10 }, { attr: 'vol', d: 10, noMod: true }] },
-        { key: 'techDefault', publicKey: null, name: '技術性違約恐慌', branch: 'downgrade', sev: 1, w: 0.03, tags: ['down'], effects: [{ attr: 'dollar', d: -15 }, { attr: 'usDoubt', d: 25 }, { attr: 'vol', d: 30, noMod: true }], funding: { terms: [], background: [{ quantityId: 'vixClose', unit: '點', src: 'data_vix' }], subject: { who: '美國公債交易商與以公債作擔保的槓桿部位', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'treasuryDisorder.fedBuys', maxDays: null, src: 'own' } } } ],
+        { key: 'resolved', publicKey: null, name: '最後一刻解決', label: '最後一刻解決', branch: 'resolved', w: 0.5, tags: ['flat'], effects: [] },
+        { key: 'shutdown', publicKey: null, name: '政府停擺數週', label: '政府停擺數週', branch: 'shutdown', w: 0.3, tags: ['flat'], effects: [{ attr: 'usDoubt', d: 5 }, { attr: 'vol', d: 5, noMod: true }] },
+        { key: 'downgrade', publicKey: null, name: '主權評等被調降', label: '主權評等被調降', branch: 'downgrade', sev: 0, w: 0.17, tags: ['down'], effects: [{ attr: 'dollar', d: -5 }, { attr: 'usDoubt', d: 10 }, { attr: 'vol', d: 10, noMod: true }] },
+        { key: 'techDefault', publicKey: null, name: '技術性違約恐慌', label: '技術性違約恐慌', branch: 'downgrade', sev: 1, w: 0.03, tags: ['down'], effects: [{ attr: 'dollar', d: -15 }, { attr: 'usDoubt', d: 25 }, { attr: 'vol', d: 30, noMod: true }], funding: { terms: [], background: [{ quantityId: 'vixClose', unit: '點', src: 'data_vix' }], subject: { who: '美國公債交易商與以公債作擔保的槓桿部位', currency: 'USD', src: 'own' }, window: null, release: { onEvent: 'treasuryDisorder.fedBuys', maxDays: null, src: 'own' } } } ],
       cond: [
         { layer: 'L2', target: 'resolved', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 2 }, mech: '市場大亂時國會被逼著在期限前解決（2011、2023）' },
         { layer: 'L3', target: 'techDefault', read: { state: 'fedStance' }, anchor: { lo: { x: -0.333333, situ: 'S26（2024-09-20：聯準會降息 50 基點後）；fedStance 讀數 -50' }, hi: { x: 1, situ: 'S31（2022-09-27：英國公債危機，美元指數高點）；fedStance 讀數 150' }, or: 1.5 }, mech: '利率高時付息負擔重，債務上限對峙更容易演成違約恐慌' } ] },
@@ -3542,10 +3755,11 @@ const WORLD3 = {
       knownAtWhy: 'VIX 收盤即公開',
       pSrcOut: 'scenario',
       desc: '當事方：美股與選擇權市場。VIX 單日漲五成以上；收場看暴衝後回落，或進入高波動期',
+      label: '單日恐慌',
       blurb: '市場出現單日恐慌，恐慌指數急升，股價大幅震盪。',
       outcomes: [
-        { key: 'spike', publicKey: null, name: '單日暴衝後回落', branch: 'spike', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'vol', d: 30 }] },
-        { key: 'regime', publicKey: null, name: '進入高波動期', branch: 'spike', sev: 1, w: 0.3, tags: ['down'], effects: [{ attr: 'vol', d: 50 }] } ],
+        { key: 'spike', publicKey: null, name: '單日暴衝後回落', label: '單日暴衝後回落', branch: 'spike', sev: 0, w: 0.7, tags: ['down'], effects: [{ attr: 'vol', d: 30 }] },
+        { key: 'regime', publicKey: null, name: '進入高波動期', label: '進入高波動期', branch: 'spike', sev: 1, w: 0.3, tags: ['down'], effects: [{ attr: 'vol', d: 50 }] } ],
       cond: [
         { layer: 'L1', read: { state: 'dollar' }, anchor: { lo: { x: -0.159, situ: 'S32（2025-06-30：美元走弱，資金流向非美市場）；dollar 讀數 96.82' }, hi: { x: 0.63, situ: 'S31（2022-09-27：英國公債危機，美元指數高點）；dollar 讀數 112.6' }, or: 1.5 }, mech: '美元強、境外美元緊時，市場更容易單日恐慌（2022）' },
         { layer: 'L3', target: 'regime', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 1, situ: 'S02（2008-10-10：雷曼倒閉後一個月，全球股市崩跌，聯準會 10-08 緊急降息）；strain 讀數 16' }, or: 2.5 }, mech: '資金壓力已高時，單日恐慌更容易變成一段高波動（2008、2020 對 2018-02、2024-08）' } ] },
@@ -3557,10 +3771,11 @@ const WORLD3 = {
       knownAtWhy: 'VIX 收盤即公開',
       pSrcOut: 'scenario',
       desc: '當事方：美股與選擇權市場。VIX 從 15 以上跌到 15 以下；收場看一般回穩，或進入很深的低波動期',
+      label: '市場進入低波動期',
       blurb: '市場進入低波動的平靜期，風險偏好回升。',
       outcomes: [
-        { key: 'calm', publicKey: null, name: '回穩', branch: 'calm', sev: 0, w: 0.7, tags: ['up'], effects: [{ attr: 'vol', d: -30 }] },
-        { key: 'deepCalm', publicKey: null, name: '很深的低波動期（VIX 12 以下）', branch: 'calm', sev: 1, w: 0.3, tags: ['up'], effects: [{ attr: 'vol', d: -50 }] } ],
+        { key: 'deepCalm', publicKey: null, name: '很深的低波動期（VIX 12 以下）', label: '很深的低波動期', branch: 'calm', sev: 1, w: 0.3, tags: ['up'], effects: [{ attr: 'vol', d: -50 }] },
+        { key: 'calm', publicKey: null, name: '回穩', label: '回穩', branch: 'calm', sev: 0, w: 0.7, tags: ['up'], effects: [{ attr: 'vol', d: -30 }] } ],
       cond: [
         { layer: 'L1', read: { state: 'dollar' }, anchor: { lo: { x: -0.159, situ: 'S32（2025-06-30：美元走弱，資金流向非美市場）；dollar 讀數 96.82' }, hi: { x: 0.63, situ: 'S31（2022-09-27：英國公債危機，美元指數高點）；dollar 讀數 112.6' }, or: 0.7 }, mech: '美元強、境外美元緊時，市場較難回穩' },
         { layer: 'L3', target: 'deepCalm', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 1, situ: 'S02（2008-10-10：雷曼倒閉後一個月，全球股市崩跌，聯準會 10-08 緊急降息）；strain 讀數 16' }, or: 0.4 }, mech: '資金壓力還在時，回穩只到一般水準，很難掉到極低' } ] },
@@ -3572,11 +3787,12 @@ const WORLD3 = {
       knownAtWhy: '疑慮由公開報導或分析引發',
       pSrcOut: 'scenario',
       desc: '當事方：AI 類股的投資人、分析師與公司。對 AI 投資回報出現普遍疑慮；收場看疑慮、重挫，或被下一份財報化解',
+      label: 'AI 獲利疑慮浮現',
       blurb: '市場對 AI 能否賺錢產生疑慮，AI 類股相對走弱。',
       outcomes: [
-        { key: 'doubt', publicKey: null, name: '疑慮，AI 類股相對走弱', branch: 'doubt', sev: 0, w: 0.55, tags: ['down'], effects: [{ attr: 'aiHeat', d: -15 }] },
-        { key: 'rout', publicKey: null, name: '重挫', branch: 'doubt', sev: 1, w: 0.2, tags: ['down'], effects: [{ attr: 'aiHeat', d: -35 }] },
-        { key: 'dispelled', publicKey: null, name: '被財報化解', branch: 'dispelled', w: 0.25, tags: ['flat'], effects: [] } ],
+        { key: 'dispelled', publicKey: null, name: '被財報化解', label: '被財報化解', branch: 'dispelled', w: 0.25, tags: ['flat'], effects: [] },
+        { key: 'doubt', publicKey: null, name: '疑慮，AI 類股相對走弱', label: '疑慮升溫，AI 類股走弱', branch: 'doubt', sev: 0, w: 0.55, tags: ['down'], effects: [{ attr: 'aiHeat', d: -15 }] },
+        { key: 'rout', publicKey: null, name: '重挫', label: 'AI 類股重挫', branch: 'doubt', sev: 1, w: 0.2, tags: ['down'], effects: [{ attr: 'aiHeat', d: -35 }] } ],
       cond: [
         { layer: 'L3', target: 'rout', read: { state: 'vol' }, anchor: { lo: { x: -0.28, situ: 'S12（2017-11-24：低波動期，VIX 跌破 10）；vol 讀數 9.67' }, hi: { x: 1, situ: 'S11（2025-04-08：對等關稅後的拋售，公債市場失序）；vol 讀數 52.33' }, or: 2 }, mech: '整體市場恐慌時，題材股的疑慮變成重挫' } ] },
     { id: 'aiRally', name: 'AI 題材重燃', kind: 'random', group: 'mood', system: 6, rate: 1.3, max: 99,
@@ -3587,11 +3803,12 @@ const WORLD3 = {
       knownAtWhy: '由公開消息引發',
       pSrcOut: 'scenario',
       desc: '當事方：AI 類股的投資人與公司。AI 類股相對大盤明顯上漲；收場看重燃、狂熱，或很快熄火',
+      label: 'AI 題材重燃',
       blurb: 'AI 題材重新點燃，資金湧回 AI 相關類股。',
       outcomes: [
-        { key: 'rally', publicKey: null, name: '重燃，AI 類股相對走強', branch: 'rally', sev: 0, w: 0.55, tags: ['up'], effects: [{ attr: 'aiHeat', d: 15 }] },
-        { key: 'meltUp', publicKey: null, name: '狂熱', branch: 'rally', sev: 1, w: 0.2, tags: ['up'], effects: [{ attr: 'aiHeat', d: 35 }] },
-        { key: 'fizzled', publicKey: null, name: '很快熄火', branch: 'fizzled', w: 0.25, tags: ['flat'], effects: [] } ],
+        { key: 'meltUp', publicKey: null, name: '狂熱', label: '狂熱', branch: 'rally', sev: 1, w: 0.2, tags: ['up'], effects: [{ attr: 'aiHeat', d: 35 }] },
+        { key: 'rally', publicKey: null, name: '重燃，AI 類股相對走強', label: 'AI 類股相對走強', branch: 'rally', sev: 0, w: 0.55, tags: ['up'], effects: [{ attr: 'aiHeat', d: 15 }] },
+        { key: 'fizzled', publicKey: null, name: '很快熄火', label: '很快熄火', branch: 'fizzled', w: 0.25, tags: ['flat'], effects: [] } ],
       cond: [
         { layer: 'L3', target: 'meltUp', read: { state: 'strain' }, anchor: { lo: { x: 0, situ: 'S17（2024-05-23：聯合利劍 2024A 演習；輝達財報前）；strain 讀數 3.1' }, hi: { x: 1, situ: 'S02（2008-10-10：雷曼倒閉後一個月，全球股市崩跌，聯準會 10-08 緊急降息）；strain 讀數 16' }, or: 0.5 }, mech: '資金壓力高時漲勢很難變成狂熱' } ] },
     // Seq 4 (b), scenario pack scnSociety, system 6.
@@ -3605,14 +3822,15 @@ const WORLD3 = {
       knownAtWhy: '掛牌後的股價當天收盤可見',
       pSrcOut: 'scenario',
       desc: '當事方：一家估值千億美元以上的 AI 公司、承銷商與投資人。上市或上市計畫；收場看大漲（上市窗口重開）、守住發行價、跌破或延後，或撤回上市。id 沿用（舊名「大型 AI 公司上市失利」改成情勢的名稱）',
+      label: '大型 AI 公司上市',
       blurb: '大型 AI 公司上市，掛牌表現成為市場對 AI 熱度的溫度計。',
       scenarioStart: { freqKnob: 'scnFreq', p0: 0.5, noneKey: 'none' },
       outcomes: [
-        { key: 'none', publicKey: null, name: '虛驚／沒有成真', branch: 'none', tags: ['flat'], effects: [] },
-        { key: 'success', publicKey: null, name: '上市大漲，窗口重開', branch: 'success', w: 0.35, tags: ['up'], effects: [{ attr: 'aiHeat', d: 15 }] },
-        { key: 'steady', publicKey: null, name: '守住發行價', branch: 'steady', w: 0.25, tags: ['flat'], effects: [] },
-        { key: 'flop', publicKey: null, name: '跌破發行價三成或延後', branch: 'flop', sev: 0, w: 0.3, tags: ['down'], effects: [{ attr: 'vol', d: 10 }, { attr: 'aiHeat', d: -20 }] },
-        { key: 'collapse', publicKey: null, name: '撤回上市，折價募資或裁員', branch: 'flop', sev: 1, w: 0.1, tags: ['down'], effects: [{ attr: 'vol', d: 15 }, { attr: 'aiHeat', d: -35 }] } ],
+        { key: 'success', publicKey: null, name: '上市大漲，窗口重開', label: '上市大漲，窗口重開', branch: 'success', w: 0.35, tags: ['up'], effects: [{ attr: 'aiHeat', d: 15 }] },
+        { key: 'none', publicKey: null, name: '虛驚／沒有成真', label: '虛驚一場', branch: 'none', tags: ['flat'], effects: [] },
+        { key: 'steady', publicKey: null, name: '守住發行價', label: '守住發行價', branch: 'steady', w: 0.25, tags: ['flat'], effects: [] },
+        { key: 'flop', publicKey: null, name: '跌破發行價三成或延後', label: '跌破發行價三成或延後', branch: 'flop', sev: 0, w: 0.3, tags: ['down'], effects: [{ attr: 'vol', d: 10 }, { attr: 'aiHeat', d: -20 }] },
+        { key: 'collapse', publicKey: null, name: '撤回上市，折價募資或裁員', label: '撤回上市或折價募資', branch: 'flop', sev: 1, w: 0.1, tags: ['down'], effects: [{ attr: 'vol', d: 15 }, { attr: 'aiHeat', d: -35 }] } ],
       cond: [
         { layer: 'L2', target: 'success', read: { state: 'aiHeat' }, anchor: { lo: { x: -0.3425, situ: 'S09（2022-10-12：美元與殖利率高點；晶片出口管制剛宣布）；aiHeat 讀數 -13.7' }, hi: { x: 0.51, situ: 'S21（2025-10-29：輝達市值創高，AI 題材重燃（決議日前））；aiHeat 讀數 20.4' }, or: 3 }, mech: '題材熱時新股搶手，上市大漲' },
         { layer: 'L3', target: 'collapse', read: { state: 'aiHeat' }, anchor: { lo: { x: -0.3425, situ: 'S09（2022-10-12：美元與殖利率高點；晶片出口管制剛宣布）；aiHeat 讀數 -13.7' }, hi: { x: 0.51, situ: 'S21（2025-10-29：輝達市值創高，AI 題材重燃（決議日前））；aiHeat 讀數 20.4' }, or: 0.5 }, mech: '題材熱時撤回上市的少' } ] } ],
@@ -3786,7 +4004,7 @@ const WORLD3_GENERATED = {
     "dollarRally": {"discloses":["dollar"]},
     "dollarEase": {"discloses":["dollar"]},
     "leverageBuild": {"discloses":[]},
-    "treasuryDisorder": {"discloses":["strain","dollar","vol"]},
+    "treasuryDisorder": {"discloses":["dollar","vol","strain"]},
     "stablecoinRun": {"discloses":["strain"]},
     "creditReopen": {"discloses":["strain"]},
     "usFiscalStandoff": {"discloses":["vol","dollar"]},
@@ -3839,15 +4057,21 @@ const TIERLV={within:0,system:1,order:2};
 const TYPE_NAME={ind:'實體經濟',front:'前沿硬體',macro:'總經',cb:'央行',earn:'財報',ai:'AI 產業',credit:'信用與資金',policy:'政策法規',geo:'地緣',tw:'台灣',energy:'能源商品',war:'安全與衝突',dis:'自然與基礎設施',sci:'科學與工程',fin:'貨幣、信用與貿易',corp:'企業與社會'};
 const WF={
   format:FMT, file:FMT===3?'world3.js':'world2.js', start:W.start, end:W.end, events:W.events,
-  ev:{ name:e=>e.name, kind:e=>e.kind, date:e=>e.kind==='scheduled'&&e.dates?e.dates[0]:null, group:e=>IS3?(W.groups&&W.groups[e.group]?W.groups[e.group].name:e.group||''):e.src||'', types:e=>IS3?(e.group?[e.group]:[]):e.types||[],
+  // ruling 329 (2): the page shows the short name label, the full name only when there is none; rawName keeps the full name for maintenance
+  ev:{ name:e=>e.label||e.name, rawName:e=>e.name, kind:e=>e.kind, date:e=>e.kind==='scheduled'&&e.dates?e.dates[0]:null, group:e=>IS3?(W.groups&&W.groups[e.group]?W.groups[e.group].name:e.group||''):e.src||'', types:e=>IS3?(e.group?[e.group]:[]):e.types||[],
        pack:e=>e.pack||null, trigger:e=>FMT===2&&!!e.trigger, grade:e=>e.grade, psrc:e=>e.psrc||'', expect:e=>e.expect?e.expect.what||'':'', desc:e=>e.desc||'' },
-  out:{ name:o=>o.name, rest:o=>FMT===2&&!!o.rest, level:o=>o.level, dir:o=>o.dir||null, w:o=>o.w, trig:o=>FMT===2?o.trig:undefined, effects:o=>o.effects||[] },
+  out:{ name:o=>o.label||o.name, rawName:o=>o.name, rest:o=>FMT===2&&!!o.rest, level:o=>o.level, dir:o=>o.dir||null, w:o=>o.w, trig:o=>FMT===2?o.trig:undefined, effects:o=>o.effects||[] },
   clock:id=>W.clocks[id], attr:id=>W.attrs[id], isClock:id=>!!W.clocks[id],
   clocks:Object.keys(W.clocks).map(id=>({id,name:W.clocks[id].name,levels:W.clocks[id].levels||[],desc:W.clocks[id].levelDesc||null,story:/^z_/.test(id)})),
   attrs:Object.keys(W.attrs).map(id=>({id,name:W.attrs[id].name,rest:W.attrs[id].rest,pull:W.attrs[id].pull||0,segNames:W.attrs[id].segNames||null,cuts:W.attrs[id].cuts||null})),
   // a world3 landing names its family (rise, even, press, fall); the page's index is the family's order in W.families (0 rise .. 3 fall, as world2's fam)
   landings:W.landings.map(l=>({id:l.id,name:l.name,tier:l.tier,lv:TIERLV[l.tier],fam:IS3?(W.families&&W.families[l.family]&&W.families[l.family].order!==undefined?W.families[l.family].order:null):l.fam===undefined?null:l.fam,d:l.d||''})),
-  packs:Object.keys(W.knobs).filter(k=>/^pack_/.test(k)&&W.knobs[k].flag).map(k=>({knob:k,id:k.slice(5),name:W.knobs[k].name.replace(/^特殊劇本：/,'')})),
+  // world2: the pack_* switches. world3 (ruling 327): every flag knob is a scenario switch; its reader name is the knob's own name without the '劇本開關：' prefix
+  packs:IS3?Object.keys(W.knobs).filter(k=>W.knobs[k].flag).map(k=>({knob:k,id:k,name:W.knobs[k].name.replace(/^劇本開關：/,'')}))
+    :Object.keys(W.knobs).filter(k=>/^pack_/.test(k)&&W.knobs[k].flag).map(k=>({knob:k,id:k.slice(5),name:W.knobs[k].name.replace(/^特殊劇本：/,'')})),
+  // world3: the frequency knob the scenario events read (scenarioStart.freqKnob) with its options as the world file names them; null when there is none
+  freq:(()=>{ if(!IS3) return null; const e=W.events.find(x=>x.scenarioStart&&x.scenarioStart.freqKnob), k=e&&e.scenarioStart.freqKnob, q=k&&W.knobs[k];
+    return q&&Array.isArray(q.options)?{knob:k,name:q.name,options:q.options.map(o=>({v:o.value,name:o.label}))}:null; })(),
   hasBoost:'special_boost' in W.knobs,
   typeName:t=>IS3&&W.groups&&W.groups[t]?W.groups[t].name:TYPE_NAME[t]||t, gradeName:g=>gradeText(g),
   // six core instruments of the old page: [key of data.js HIST, display name (filled from the market catalog below, ruling 105), market id]
@@ -3897,7 +4121,10 @@ function walker3(seed,knobs,fork){ let S=w3.start(W,knobs,k=>u01(fork&&fork.afte
   const dseed=()=>fork?(decided>=fork.after?fork.seed:fork.prefix):seed;
   function settle(){ const S0=S, a=w3.advance(W,S,knobs,k=>u01(ds,k));
     for(const r of a.records){ if(r.type!=='decide'||r.out<0) continue; before.push(S0); rec.push(Object.assign({},r,{auto:true,sched:false,ch:null})); }
-    S=a.state; q=a.pending.type==='decide'?a.pending:null; }
+    S=a.state; q=a.pending.type==='decide'?a.pending:null;
+    // the page, the dice, preview, choose and the run code index a decision by outcome (j); the engine may order the choices otherwise (a scenarioStart
+    // event lists its none outcome last), so put them in outcome order here, 'nothing today' (j -1) last
+    if(q) q=Object.assign({},q,{choices:q.choices.slice().sort((x,y)=>(x.j<0)-(y.j<0)||x.j-y.j)}); }
   settle();
   return {rec,state:()=>S,
     pending:()=>q,   // the engine's pending item {type:'decide', ev, inst, day, date, knownAt, choices:[{j,name,key,branch,sev,p,base,shift,why,tags,effects}], ...} or null at the path end
@@ -3914,20 +4141,35 @@ function finish3(S,knobs,seed){ const draw=k=>u01(seed,k), outs=[], sig=[]; cons
   const l=w3.landing(W,S); return {landing:l?l.id:null,outs,sig}; }
 // how the world3 reasons read: the engine's own parts of the log-odds (docs/world-format.md 9.3; spec-w4a-conditional 11), grouped, not recomputed
 function explainView3(e,ch){ const part=(w,k)=>w.filter(x=>x.kind===k);
-  const rows=ch.filter(c=>c.j>=0).map(c=>{ const w=c.why||[]; return {name:c.name,key:c.key===undefined?null:c.key,branch:c.branch===undefined?null:c.branch,sev:c.sev===undefined?null:c.sev,base:c.base,shift:c.shift,x:fmtShift(c.shift),
+  const rows=ch.filter(c=>c.j>=0).map(c=>{ const w=c.why||[], oc=e.outcomes[c.j]; return {name:oc?WF.out.name(oc):c.name,rawName:c.name,key:c.key===undefined?null:c.key,branch:c.branch===undefined?null:c.branch,sev:c.sev===undefined?null:c.sev,base:c.base,shift:c.shift,x:fmtShift(c.shift),
     cross:w.filter(x=>x.kind===undefined),table:part(w,'table'),cond:part(w,'cond'),clip:part(w,'clip'),pp:part(w,'pp'),why:w,p:c.p}; });
   return {grade:WF.ev.grade(e),gradeName:WF.gradeName(WF.ev.grade(e)),psrc:WF.ev.psrc(e),trig:false,rows,sum:null,norm:true,v3:true}; }
 // the names of a world3 record (a recovery is '~rx.<clock>': it is not in W.events)
 const RXN=r=>r.kind==='relax'||String(r.ev).slice(0,4)==='~rx.';
-const recEv=r=>RXN(r)?W.clocks[r.state].name+'（自行回復）':evById[r.ev].name;
-const recOut=r=>RXN(r)?lvName(r.state,r.from)+'→'+lvName(r.state,r.to):evById[r.ev].outcomes[r.out].name;
-const srcOf=r=>'w3:'+r.ev+'.'+(r.key===undefined?'null':r.key);   // the label of this record's price effect in the price engine's ledger (ruling 320)
+const recEv=r=>RXN(r)?W.clocks[r.state].name+'（自行回復）':WF.ev.name(evById[r.ev]);
+const recOut=r=>RXN(r)?lvName(r.state,r.from)+'→'+lvName(r.state,r.to):WF.out.name(evById[r.ev].outcomes[r.out]);
+const srcOf=r=>'w3:'+r.ev+'.'+(r.key===undefined?'null':r.key)+'#'+r.day;   // '#day' keeps each occurrence a source of its own (the market side shifts a source once)   // the label of this record's price effect in the price engine's ledger (ruling 320)
 
 // ---------- prices: only through the market reading layer (rulings 86, 90): Astra's MarketPath (astra/path-market/market.js, embedded as it is by build2.py
 // after the release rules, market-clock.js, release-shift.js and kline2.js). The engine simulates this path's prices once per decided prefix (script = the
 // decisions so far); MarketPath turns that P into quotes, daily bars, weekly and monthly bars and per-day breakdowns. A view is built per cut-off date and
 // rebuilt whenever the prefix changes (touched()). Nothing here computes a price: it only picks rows and sums the layer's own log % parts for a stretch.
-const MK=MarketPath.create({eng,world:W2,firms:DATA.firms.firms,kline:Kline.create(KLINE2DATA),data:MARKET_DATA,releaseClock:globalThis.MarketReleaseClock});
+// ruling 331 (2): one injected effect, many markets. The engine puts it on the UTC date of its public instant; each market then moves it to its own first
+// regular session that can still react, by Astra's StatePricing.reactionSlot(availableAt, sessions), through the release clock MarketPath shifts by
+// (astra/path-market/release-shift.js), so it is moved once and only by the market side. Regular hours (local time) of the markets the page prices; a market not
+// listed (fx, commodity, crypto) is not shifted. Holidays are the price calendar's (PDATES).
+const SESSION_HOURS={us:['America/New_York','09:30','16:00'],tw:['Asia/Taipei','09:00','13:30'],jp:['Asia/Tokyo','09:00','15:30'],kr:['Asia/Seoul','09:00','15:30'],
+  cn:['Asia/Shanghai','09:30','15:00'],hk:['Asia/Hong_Kong','09:30','16:00'],eu:['Europe/Berlin','09:00','17:30']};
+const utcOf=(date,hm,tz)=>{ const g=Date.parse(date+'T'+hm+':00Z'), p=new Intl.DateTimeFormat('en-US',{timeZone:tz,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).formatToParts(new Date(g)),
+  v=k=>+p.find(x=>x.type===k).value, off=Date.UTC(v('year'),v('month')-1,v('day'),v('hour'),v('minute'))-g; return new Date(g-off).toISOString().slice(0,16)+'Z'; };
+const SESSIONS={}; const sessionsOf=m=>SESSIONS[m]||(SESSIONS[m]=SESSION_HOURS[m]?PDATES.map(d=>({openAt:utcOf(d,SESSION_HOURS[m][1],SESSION_HOURS[m][0]),closeAt:utcOf(d,SESSION_HOURS[m][2],SESSION_HOURS[m][0])})):null);
+// the market side's function when the page embeds astra/publication/state-pricing.cjs; the same three lines otherwise
+const reactionSlot=(globalThis.StatePricing&&globalThis.StatePricing.reactionSlot)||((a,ss)=>{ const t=Date.parse(a), i=ss.findIndex(x=>t<=Date.parse(x.closeAt)); return i<0?null:{session:i,phase:t<=Date.parse(ss[i].openAt)?'open':'intraday'}; });
+const AVAIL=new Map();   // src -> public instant of the injected effects of the paths priced so far
+const slotDay=(availableAt,market)=>{ const ss=sessionsOf(market); if(!ss) return null; const r=reactionSlot(availableAt,ss); return r?r.session:null; };
+const CLOCK=IS3?{version:globalThis.MarketReleaseClock.version,ruleFor:id=>globalThis.MarketReleaseClock.ruleFor(id),
+  firstDayIndex:(ev,day,market)=>{ if(String(ev).slice(0,3)!=='w3:') return globalThis.MarketReleaseClock.firstDayIndex(ev,day,market); const a=AVAIL.get(ev); if(!a) return null; const k=slotDay(a,market); return k===null?null:Math.max(day,k); }}:globalThis.MarketReleaseClock;
+const MK=MarketPath.create({eng,world:W2,firms:DATA.firms.firms,kline:Kline.create(KLINE2DATA),data:MARKET_DATA,releaseClock:CLOCK});
 const KL=Kline.create(KLINE2DATA);
 for(const c of WF.core) c[1]=MK.search(c[2]).find(x=>x.id===c[2]).name;   // display names of the core six: the market catalog's (ruling 105)   // only to group the embedded history (data.js) into weeks and months the same way the layer groups the path
 const CUTOFF=MARKET_DATA.cutoff;
@@ -3949,8 +4191,9 @@ const knownOf=r=>{ const e=evById[r.ev]; if(!e) return null;
   const rule=e.knownAtRule, A=rule!==undefined&&rule!==null&&W.knownAtAssume?W.knownAtAssume[rule]:null; return A&&A.byDate&&A.byDate[DATES[r.day]]||null; };
 const priceDay=d=>{ const i=PDATES.findIndex(x=>x>=d); return i; };   // -1 when no trading day is left
 function injectOf(rec){ const out=[]; for(const r of rec){ if(RXN(r)) continue; const row=PRICE_ROWS.by.get(r.ev+'|'+keyStr(r.key)); if(!row) continue; const k=knownOf(r); if(!k) continue; const day=priceDay(k.slice(0,10)); if(day<0) continue;
-    out.push({day,ev:row.ev,out:row.out,mult:row.mult,src:srcOf(r)}); } return out; }
-function pricePath(seed,knobs,rec){ const P=IS3?eng.simulate(W2,{seed,knobs:{},script:[],inject:injectOf(rec)}):eng.simulate(W,{seed,knobs,script:rec}), V=new Map();
+    out.push({day,ev:row.ev,out:row.out,mult:row.mult,src:srcOf(r),availableAt:k}); } return out; }
+function pricePath(seed,knobs,rec){ const inj=IS3?injectOf(rec):null, P=IS3?eng.simulate(W2,{seed,knobs:{},script:[],inject:inj}):eng.simulate(W,{seed,knobs,script:rec}), V=new Map();
+  if(IS3) for(const x of inj){ AVAIL.set(x.src,x.availableAt); P.rec.push({ev:x.src,inst:0,day:x.day,out:0,p:1}); }   // the market side shifts by P.rec (one row per injected source)
   const view=(through,prov)=>{ const k=String(through)+'|'+!!prov; if(!V.has(k)) V.set(k,MK.forPath(P,through===undefined?{}:{through,provisional:!!prov})); return V.get(k); };
   return {P,halts:P.halts,view}; }
 
@@ -4010,9 +4253,9 @@ function play(o){ const seed=o.seed|0, knobs=Object.assign({},o.knobs||{}), stop
     pending:()=>{ const q=C.pending(); if(!q) return null; const e=evById[q.ev], r=alert?restOf(e):-1;
       // world3: one row per outcome with the engine's own fields (key, branch, sev, base, shift, why and its table, cond, clip, pp parts, tags); fields only world2
       // options have get safe values (trig null, rest false, level null, mods from the table shift and the condition items, price [])
-      if(IS3) return {ev:e.id,day:q.day,date:DATES[q.day],stage:stageOfDate(DATES[q.day]),name:WF.ev.name(e),group:WF.ev.group(e),types:WF.ev.types(e).map(WF.typeName),pack:null,alert:false,
-        grade:WF.ev.grade(e),gradeName:WF.gradeName(WF.ev.grade(e)),psrc:WF.ev.psrc(e),expect:WF.ev.expect(e),desc:WF.ev.desc(e),occursAt:q.occursAt||null,knownAt:q.knownAt||null,
-        options:q.choices.map((c,j)=>{ const w=c.why||[], part=k=>w.filter(x=>x.kind===k), cd=part('cond').filter(x=>x.add); return {j,name:c.name,key:c.key===undefined?null:c.key,branch:c.branch===undefined?null:c.branch,sev:c.sev===undefined?null:c.sev,
+      if(IS3) return {ev:e.id,day:q.day,date:DATES[q.day],stage:stageOfDate(DATES[q.day]),name:WF.ev.name(e),rawName:WF.ev.rawName(e),group:WF.ev.group(e),types:WF.ev.types(e).map(WF.typeName),pack:null,alert:false,
+        grade:WF.ev.grade(e),gradeName:WF.gradeName(WF.ev.grade(e)),psrc:WF.ev.psrc(e),expect:WF.ev.expect(e),desc:WF.ev.desc(e),blurb:e.blurb||'',scenarioDay:q.scenarioDay===undefined?null:q.scenarioDay,pNone:q.pNone===undefined?null:q.pNone,occursAt:q.occursAt||null,knownAt:q.knownAt||null,
+        options:q.choices.map((c,j)=>{ const w=c.why||[], part=k=>w.filter(x=>x.kind===k), cd=part('cond').filter(x=>x.add), oc=c.j>=0?e.outcomes[c.j]:null; return {j,name:oc?WF.out.name(oc):c.name,rawName:c.name,key:c.key===undefined?null:c.key,branch:c.branch===undefined?null:c.branch,sev:c.sev===undefined?null:c.sev,
           p:c.p,cp:c.p,off:false,level:null,w:c.base,base:c.base,shift:c.shift,trig:null,rest:false,tags:c.tags||[],
           mods:(c.shift?[{name:'情勢表',x:fmtShift(c.shift)}]:[]).concat(cd.map(x=>({name:x.mech||('條件 '+(x.read||'')),x:fmtShift(x.add)}))),
           delta:delta(C.state(),C.preview(j)),price:[],why:w,table:part('table'),cond:part('cond'),clip:part('clip'),pp:part('pp')}; }),
@@ -4164,7 +4407,7 @@ function reportOf(G,C,pv,upto,knobs,seed,v){ const done=!C.pending(), L=C.landin
   const ov=done&&L?overview({knobs,N:1000,seed:1}):null, row=ov?ov.rows.find(x=>x.id===L.id):null;
   return {done,landing:L?{id:L.id,name:L.name,lv:L.lv,fam:L.fam}:null,seed,code:G.code(),n:dec.length,cnt,l10,low:dec.filter(r=>r.p<0.25).length,
     startShare:row?{p:row.p,N:ov.N,seed:ov.seed}:null,ending:done?G.ending():null,cols:cols.map(c=>c.name),stages,clocks,cutoff:CUTOFF,date:upto>0?DATES[upto-1]:CUTOFF}; }
-const test={walker:IS3?walker3:walker,pathStats,pricePath,injectOf,simulate:(seed,knobs)=>eng.simulate(W,{seed,knobs,light:true}),scriptState:(seed,knobs,rec)=>eng.simulate(W,{seed,knobs,light:true,script:rec}).state,probs:(ev,S,knobs)=>eng.probs(W,evById[ev],S,knobs).p};
+const test={slotDay,walker:IS3?walker3:walker,pathStats,pricePath,injectOf,simulate:(seed,knobs)=>eng.simulate(W,{seed,knobs,light:true}),scriptState:(seed,knobs,rec)=>eng.simulate(W,{seed,knobs,light:true,script:rec}).state,probs:(ev,S,knobs)=>eng.probs(W,evById[ev],S,knobs).p};
 return {WF,STAGES,T,dates:{first:DATES[0],last:DATES[T-1],end:W.end,cutoff:CUTOFF,year:Y1},search:q=>MK.search(q),gaps:GAPS,gradeText,extraNote:EXTRA_NOTE,play,load,overview,diff,reverse,openPath,test,landings:WF.landings,version:eng.version,worldFile:WF.file,format:FMT,nEvents:W.events.length,nLandings:Object.keys(landingById).length,
   world3:{on:IS3,defN:IS3?DEFN3:null,priceMapRows:PRICE_ROWS.n,priceMapMapped:PRICE_ROWS.mapped}};
 })();
@@ -4282,12 +4525,6 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
   var sg = function (p, d) { return (p >= 0 ? '+' : '−') + Math.abs(p).toFixed(d == null ? 1 : d) + '%'; };
   var md = function (d) { return d.slice(5).replace('-', '/'); };
   var esc = function (t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
-  // The line under an event's headline is the world file's blurb (one sentence written for the reader). Until the adapter passes it on, the
-  // description stands in: it is written for the people who maintain the world, so the page shows only its plain sentences
-  // (pieces with internal names, rulings or weights are left out)
-  var INNER = /權重|裁定|引擎|統籌|歸一|world|docs|FRED|新事件|[a-z]+[A-Z][a-z]|buildout|max \d|§|〔/;
-  function plain(d) { if (!d) return ''; var s = String(d).split(/(?<=[。；])/).filter(function (x) { return !INNER.test(x); }).join('').replace(/[；，、\s]+$/, '');
-    if ((s.match(/（/g) || []).length !== (s.match(/）/g) || []).length) s = s.replace(/）$/, ''); return s && !/[。）]$/.test(s) ? s + '。' : s; }
   var pct = function (p) { var r = Math.round(p * 100); return (r === 0 && p > 0 ? '<1' : r) + '%'; };
   var story = function (s) { return String(s).indexOf('劇情狀態') === 0; };
 
@@ -4298,11 +4535,12 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
   function sync() { LOG = G.log(); pendC = null; }
   function begin(g) { clearTimeout(autoT); autoT = null; G = g || A2.play({ seed: seed, knobs: knobs, stop: null }); sync(); revealed = false; shown = null; lastQ = prevSt = null; cgShown = false; hl = null; ranged = null; }
   var done = function () { return G.done() && !revealed; };
+  var played = function () { return LOG.some(function (x) { return !x.auto; }); };
   function Q(ids) { var o = {}; ids.forEach(function (id) { try { var q = G.quotes([id])[0]; o[id] = { v: q.close, chg: q.sinceAnchor, name: q.name }; } catch (e) { } }); return o; }
   var vis = function () { return FOCUS.map(function (f) { return f[0]; }).concat(pins); };
   function pend() { if (pendC) return pendC; var q = G.pending(); if (!q) return null;
-    return pendC = { note: q.blurb || plain(q.desc) || (typeof EVNOTE !== 'undefined' && EVNOTE[q.ev]) || '', date: q.date, stage: q.stage, name: q.name, types: q.types, grade: q.gradeName || '', psrc: q.psrc, expect: q.expect,
-      options: q.options.map(function (o) { return { name: o.name, p: o.cp, delta: (o.delta || []).filter(function (d) { return !story(d); }), price: o.price, off: !!o.off, rest: !!o.rest, mods: o.mods || [] }; }) }; }
+    return pendC = { note: q.blurb || (typeof EVNOTE !== 'undefined' && EVNOTE[q.ev]) || '', date: q.date, stage: q.stage, name: q.label || q.name, types: q.types, grade: q.gradeName || '', psrc: q.psrc, expect: q.expect,
+      options: q.options.map(function (o) { return { tags: o.tags || [], sev: o.sev, name: o.label || o.name, raw: o.name, p: o.cp, delta: (o.delta || []).filter(function (d) { return !story(d); }), price: o.price, off: !!o.off, rest: !!o.rest, mods: o.mods || [] }; }) }; }
   // landing shares from here: the start uses the adapter's overview (1000 runs), later steps its forecast (300 runs); both are kept by the adapter
   var fc = function () { return LOG.length ? G.forecast(300) : A2.overview({ knobs: knobs, N: 1000, seed: 1 }); };
   var lands = function (f) { return f.rows.filter(function (r) { return r.n > 0; }); };
@@ -4456,13 +4694,14 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
     if (ev) ev.options.forEach(function (o) { o.delta.forEach(function (d) { var m = /^(.+) [^ ]+→/.exec(d); if (m) hot[m[1]] = 1; }); });
     var rows = st.clocks.filter(function (c) { return !c.story && !story(c.name); }).map(function (c) {
       var p = prev ? prev.clocks.filter(function (x) { return x.name === c.name; })[0] : null, ch = prev && (!p || p.v !== c.v);
-      return { c: c, ch: ch, hot: hot[c.name], html: '<div class="ck' + (ch ? ' chg' : hot[c.name] ? ' hot' : '') + '"><span>' + esc(c.name) + '</span><span class="pips">' + c.levels.map(function (_, j) { return '<i class="' + (j === c.v ? 'on' : '') + '"></i>'; }).join('') + '</span><span class="lv">' + (ch && p ? '<s>' + esc(p.levels[p.v]) + '</s>' : '') + esc(c.levels[c.v] !== undefined ? c.levels[c.v] : c.v) + '</span></div>' };
+      var hc = 'h' + Math.min(3, Math.floor(4 * c.v / Math.max(1, c.levels.length)));   // how far up its scale the state stands, in four steps
+      return { c: c, ch: ch, hot: hot[c.name], html: '<div class="ck' + (ch ? ' chg' : hot[c.name] ? ' hot' : '') + '"><span>' + esc(c.name) + '</span><span class="pips">' + c.levels.map(function (_, j) { return '<i class="' + (j === c.v ? 'on ' + hc : '') + '"></i>'; }).join('') + '</span><span class="lv ' + hc + '">' + (ch && p ? '<s>' + esc(p.levels[p.v]) + '</s>' : '') + esc(c.levels[c.v] !== undefined ? c.levels[c.v] : c.v) + '</span></div>' };
     });
     var top = rows.filter(function (r) { return r.ch || r.hot; }), rest = rows.filter(function (r) { return !(r.ch || r.hot); }), show = fold ? top.concat(rest.slice(0, Math.max(0, 6 - top.length))) : rows;
     var nch = rows.filter(function (r) { return r.ch; }).length;
     return '<aside class="rail world"><h2>世界現況<span>' + (prev ? (nch ? '這一步動了 ' + nch + ' 項' : '這一步沒有變動') : ev && top.length ? '虛線＝這一則可能動到' : '') + '</span></h2><div class="cks">' + show.map(function (r) { return r.html; }).join('') + '</div>' +
       '<button class="fold" data-fold="1">' + (fold ? '全部 ' + rows.length + ' 項 ▸' : '只看重點 ▴') + '</button>' +
-      (fold ? '' : '<h2 style="margin-top:10px">長期傾向</h2>' + (st.attrs || []).map(function (a) { return '<div class="attr"><span>' + esc(a.name) + '</span><i><u style="left:' + a.v + '%"></u></i><span class="n">' + Math.round(a.v) + '</span></div>'; }).join('')) + '</aside>';
+      (fold ? '' : '<h2 style="margin-top:10px">長期傾向</h2>' + (st.attrs || []).map(function (a) { return '<div class="attr"><span>' + esc(a.name) + '</span><i><u class="h' + Math.max(0, Math.min(3, Math.floor(a.v / 25))) + '" style="left:' + Math.max(0, Math.min(100, a.v)) + '%"></u></i><span class="n">' + Math.round(a.v) + '</span></div>'; }).join('')) + '</aside>';
   }
   function chips(o) {   // the three largest price factors of an outcome, as direction marks
     var a = (o.price || []).map(function (s) { var m = /因子 (.+?) ([+−])([\d.]+)/.exec(s); return m ? [m[1], m[2] === '+' ? 1 : -1, +m[3]] : null; }).filter(Boolean).sort(function (x, y) { return y[2] - x[2]; }).slice(0, 3);
@@ -4478,11 +4717,24 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
       '<h4 class="endh">把這一局帶到這裡的事件</h4><ol class="chain">' + E.chain.map(function (c) { return '<li><span class="n">' + c.date.replace(/-/g, '/') + '</span>　<b>' + esc(c.ev) + '</b>：' + esc(c.out) + '　<span class="n">' + esc(pct(c.p)) + '</span></li>'; }).join('') + '</ol>' +
       '<div class="act">' + (kind ? '<button class="next" data-cg="1">' + (E.lv ? '結局演出' : '年底場景') + '</button>' : '') + '<button class="roll" data-focal="run">看這一局的報告</button><button class="ghost" data-back="1"><kbd>←</kbd>退一步</button><button class="ghost" data-reset="1">同一局從頭再走</button><button class="ghost" data-new="1">開新的一局</button></div></article>';
   }
+  // Outcome colours. The world file tags each outcome as better, unchanged or worse (and some as a rescue), with a degree inside a kind of outcome:
+  // that is ordered data with a middle, so the scale is diverging (blue = better, grey = unchanged, orange = worse), deeper for the stronger degree.
+  // "Nothing happened" is a pale grey. A world without tags gets one ink hue, dark to light in the listed order.
+  var SIDE = { up: ['ou', '變好'], rescue: ['ou', '救援'], down: ['od', '變差'], flat: [null, '持平'] };
+  function colour(opts) {
+    var tagged = opts.some(function (o) { return o.tags && o.tags.length; }), groups = {}, live = opts.filter(function (o) { return !o.rest; }), n = 0;
+    opts.forEach(function (o) { o.side = ''; if (o.rest) { o.oc = 'var(--orest)'; o.ot = 'var(--ink)'; return; }
+      if (!tagged) { var k = live.length > 1 ? n / (live.length - 1) : 0; n++; o.oc = 'color-mix(in oklab, var(--oa) ' + Math.round(100 - 100 * k) + '%, var(--ob))'; o.ot = k > .5 ? 'var(--ink)' : 'var(--paper)'; return; }
+      var s = SIDE[(o.tags || [])[0]] || SIDE.flat; o.side = s[1]; if (!s[0]) { o.oc = 'var(--oflat)'; o.ot = 'var(--ink)'; return; } (groups[s[0]] = groups[s[0]] || []).push(o); });
+    Object.keys(groups).forEach(function (h) { var g = groups[h].slice().sort(function (a, b) { return (a.sev || 0) - (b.sev || 0); });   // weaker degree first: lighter
+      g.forEach(function (o, i) { var k = g.length > 1 ? i / (g.length - 1) : .7; o.oc = 'color-mix(in oklab, var(--' + h + '2) ' + Math.round(100 * k) + '%, var(--' + h + '1))'; o.ot = k > .45 ? 'var(--paper)' : 'var(--ink)'; }); });
+  }
   function sheet() {
     if (done()) return endCard();
-    var e = revealed ? shown : pend(), r = revealed ? shown.rolled : null, cum = 0, on = e.options.filter(function (o) { return !o.off; });
-    var bar = on.map(function (o) { return '<i style="width:' + o.p * 100 + '%"></i>'; }).join('');
-    var ticks = '<span>0</span>' + on.slice(0, -1).map(function (o) { cum += o.p * 100; return '<span style="position:absolute;left:' + cum + '%;transform:translateX(-50%)">' + Math.round(cum) + '</span>'; }).join('') + '<span>100</span>';
+    var e = revealed ? shown : pend(), r = revealed ? shown.rolled : null, cum = 0, lastTick = 0, on = e.options.filter(function (o) { return !o.off; });
+    colour(e.options);
+    var bar = on.map(function (o) { return '<i style="width:' + o.p * 100 + '%;--oc:' + o.oc + '"></i>'; }).join('');
+    var ticks = '<span>0</span>' + on.slice(0, -1).map(function (o) { cum += o.p * 100; if (cum < 4 || cum > 96 || cum - lastTick < 4) return ''; lastTick = cum; return '<span style="position:absolute;left:' + cum + '%;transform:translateX(-50%)">' + Math.round(cum) + '</span>'; }).join('') + '<span>100</span>';
     var mods = e.options.filter(function (o) { return o.mods.length; }).map(function (o) { return '<p>' + esc(o.name) + '：' + o.mods.map(function (m) { return esc(m.name) + ' ' + esc(m.x); }).join('、') + '</p>'; }).join('');
     var why = (e.grade.indexOf('判斷') === 0 || !e.grade ? '' : '<p>有資料：' + esc(e.grade) + '。' + esc(e.psrc || '') + '</p>') + (e.expect ? '<p>預期：' + esc(e.expect) + '</p>' : '') + (mods ? '<p>目前的處境讓機率變了：</p>' + mods : '');
     return '<article class="sheet" id="sheet">' + (revealed ? '<div class="stamp">' + esc(r.out) + '<small>' + (r.dice ? '擲出 ' + r.dice : '自己選的') + '</small></div>' : '<div class="seal" id="seal">待決</div>') +
@@ -4490,7 +4742,7 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
       '<h3>' + esc(e.name) + '</h3>' + (e.note ? '<p class="lede">' + esc(e.note) + '</p>' : '') +
       '<div class="pbar">' + bar + '<span class="mark' + (r && r.dice ? ' on' : '') + '" id="mark"' + (r && r.dice ? ' style="left:' + (r.dice - .5) + '%"' : '') + '><b id="markn">' + (r && r.dice ? r.dice : 0) + '</b></span></div><div class="pticks">' + ticks + '</div>' +
       e.options.map(function (o, j) {
-        return '<button class="opt' + (o.rest ? ' rest' : '') + (revealed ? (j === r.j ? ' won' : ' lost') : o.off ? ' lost' : '') + '" data-opt="' + j + '"' + (o.off && !revealed ? ' disabled' : '') + ' title="點這一列：直接選這個結果"><span class="k">' + (j + 1) + '</span><span class="t">' + esc(o.name) + '</span><span class="p">' + (o.off ? '—' : Math.round(o.p * 100) + '%') + '</span><span class="c"><span>' + (o.delta.length ? o.delta.map(function (d) { return esc(d).replace(/→(.+)$/, ' → <b>$1</b>'); }).join('；') : '世界現況不變') + '</span>' + chips(o) + '</span></button>';
+        return '<button class="opt' + (o.rest ? ' rest' : '') + (revealed ? (j === r.j ? ' won' : ' lost') : o.off ? ' lost' : '') + '" data-opt="' + j + '" style="--oc:' + o.oc + ';--ot:' + o.ot + '"' + (o.off && !revealed ? ' disabled' : '') + ' title="點這一列：直接選這個結果"><span class="k"' + (o.side ? ' title="' + o.side + '"' : '') + '>' + (j + 1) + '</span><span class="t">' + esc(o.name) + '</span><span class="p">' + (o.off ? '—' : esc(pct(o.p))) + '</span><span class="c"><span>' + (o.delta.length ? o.delta.map(function (d) { return esc(d).replace(/→(.+)$/, ' → <b>$1</b>'); }).join('；') : '世界現況不變') + '</span>' + chips(o) + '</span></button>';
       }).join('') +
       '<div class="act">' + (revealed ? '<button class="next' + (autoT ? ' auto' : '') + '" data-next="1"><kbd>Enter</kbd>下一則</button>' : '<button class="roll" data-roll="1"><kbd>空白鍵</kbd>擲骰</button>') + (LOG.length ? '<button class="ghost" data-back="1"><kbd>←</kbd>退一步</button>' : '') + '<span class="ffs"><button class="ghost" data-ff="stage">擲完這一季</button><button class="ghost" data-ff="end">一路擲到年底</button></span></div>' +
       (why ? '<details class="why"><summary>這幾個機率怎麼來的</summary>' + why + '</details>' : '') + '</article>';
@@ -4573,7 +4825,8 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
     if (busy || revealed || G.done() || focal !== 'now') return; var e = pend(); if (j !== undefined && (!e.options[j] || e.options[j].off)) return; busy = true;
     lastQ = Q(vis()); prevSt = G.state();
     if (j === undefined) G.roll(); else G.choose(j);
-    var L = G.last() || {}; sync(); var out = L.out !== undefined ? L.out : LOG[LOG.length - 1].out, k = e.options.findIndex(function (o) { return o.name === out; });
+    var L = G.last() || {}; sync(); var out = L.out !== undefined ? L.out : LOG[LOG.length - 1].out, k = e.options.findIndex(function (o) { return o.raw === out; });
+    if (j === undefined && k >= 0) out = e.options[k].name; else if (j !== undefined) out = e.options[j].name;
     e.rolled = { out: out, dice: j === undefined ? L.dice : null, j: j !== undefined ? j : k }; shown = e;
     if (e.rolled.dice) { var mk = $('#mark'); mk.classList.add('on'); mk.getBoundingClientRect(); mk.style.left = (e.rolled.dice - .5) + '%';
       await tween(900, function (x) { $('#markn').textContent = Math.max(1, Math.round(e.rolled.dice * x)); }); await wait(220); }
@@ -4615,8 +4868,8 @@ const EVNOTE={"apec":"11/18–19 深圳；川普、習近平、普丁出席；�
     else if (d.pick) { pick = !pick; if (focal !== 'now') focal = 'now'; redraw(); }
     else if (d.grp) { pgrp = d.grp; pq = ''; redraw(); }
     else if (t.id === 'assume') { popOpen = !popOpen; packPop(); }
-    else if (d.freq) { var fq = A2.WF.freq; if (LOG.length && !confirm('換假設會讓這一局從頭開始。要換嗎？')) return; knobs[fq.knob] = +d.freq; begin(); render(); river(); }
-    else if (d.pack) { if (LOG.length && !confirm('換假設會讓這一局從頭開始。要換嗎？')) return; if (knobs[d.pack]) delete knobs[d.pack]; else knobs[d.pack] = 1; begin(); render(); river(); }
+    else if (d.freq) { var fq = A2.WF.freq; if (played() && !confirm('換假設會讓這一局從頭開始。要換嗎？')) return; knobs[fq.knob] = +d.freq; begin(); render(); river(); }
+    else if (d.pack) { if (played() && !confirm('換假設會讓這一局從頭開始。要換嗎？')) return; if (knobs[d.pack]) delete knobs[d.pack]; else knobs[d.pack] = 1; begin(); render(); river(); }
     else if (t.id === 'bmain') { focal !== 'now' ? setFocal('now') : done() ? setFocal('run') : revealed ? next() : decide(); }
     else if (t.id === 'bmore') setFocal(focal === 'all' ? 'run' : 'all');
   });
