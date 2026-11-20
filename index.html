@@ -108,6 +108,8 @@ body.us .up{color:var(--dn)} body.us .dn{color:var(--up)} body.us .opt .c b.up{c
 .ghost{border:1px solid var(--prule);background:none;color:var(--ink2);padding:8px 14px;border-radius:2px;font-size:13.5px} .ghost kbd{border-color:var(--ink2)} .ghost[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
 .evabout{margin:-8px 0 16px;font:13.5px/1.7 var(--sans);color:var(--ink2);max-width:40em} .evabout summary{cursor:pointer;color:var(--ink);width:fit-content} .evabout dl{margin:8px 0 0;padding:10px 14px;border-left:2px solid var(--prule)} .evabout dt{font:700 12px var(--sans);letter-spacing:.12em;color:var(--ink2);margin-top:10px} .evabout dt:first-child{margin-top:0} .evabout dd{margin:2px 0 0;color:var(--ink)}
 .why{margin-top:12px;font-size:13px;color:var(--ink2)} .why summary{cursor:pointer;color:var(--ink)} .why p{margin:6px 0 0} .why .slot{border:1px dashed var(--prule);padding:6px 10px;margin-top:8px}
+.wait{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:color-mix(in srgb,var(--desk) 86%,transparent);color:var(--txt);font:700 14px var(--sans);letter-spacing:.4em} .wait[hidden]{display:none} .wait span{padding-left:.4em}
+.wring{width:54px;height:54px;will-change:transform;animation:wspin 1.1s linear infinite} .wring circle{fill:none;stroke-width:4} .wring .bg{stroke:var(--rule)} .wring .fg{stroke:var(--lamp);stroke-linecap:round} @keyframes wspin{to{transform:rotate(360deg)}}
 .toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--c12);color:var(--c10);font-size:13.5px;padding:8px 16px;border-radius:999px;pointer-events:none;opacity:0;transition:opacity .25s;z-index:9} .toast.on{opacity:1}
 /* market */
 table{border-collapse:collapse;width:100%;font-size:13.5px}
@@ -221,6 +223,7 @@ tr.stg td{background:var(--desk2);font:500 11.5px var(--serif);letter-spacing:.3
 <div class="pop" id="stoppop" role="dialog" aria-label="關注焦點" hidden></div>
 <div class="pop" id="packpop" role="dialog" aria-label="換假設：特殊劇本" hidden></div>
 <div class="toast" id="toast"></div>
+<div class="wait" id="wait" role="status" aria-live="polite" hidden><svg class="wring" viewBox="0 0 36 36" aria-hidden="true"><circle class="bg" cx="18" cy="18" r="14"/><circle class="fg" cx="18" cy="18" r="14" stroke-dasharray="24 64"/></svg><span>結算中</span></div>
 
 <section class="about">
   <details><summary>說明與資料來源</summary>
@@ -3998,7 +4001,7 @@ const CGX={
 Object.assign(CGK,{nuclearUse:'nuke',eastAsiaWar:'war',straitChange:'isle',aiLossOfControl:'rogue',physicalLeap:'sun',supplyCut:'chain',creditCrisis:'domino',aiBust:'bubble',rescueRebound:'vee',stagflationSqueeze:'gauge',aiBoom:'grid',tightSupply:'slots',rateGrind:'sand',capexCut:'crane',cheapCompute:'tags',tradeWall:'gate',recessionDrift:'sand',rotation:'shift',steadyGrowth:'ship'});
 const NAMEZH={"hsi":"恒生","JPY=X":"美元兌日圓","KRW=X":"美元兌韓元","CNY=X":"美元兌人民幣","EURUSD=X":"歐元兌美元","TWD=X":"美元兌新台幣","EWT":"台灣 ETF（紐約）","EWY":"韓國 ETF（紐約）","EWJ":"日本 ETF（紐約）","MCHI":"中國 ETF（紐約）","SMH":"半導體 ETF","IGV":"軟體 ETF","XLK":"硬體與設備 ETF","XLC":"通訊與媒體平台 ETF","XLY":"非必需消費 ETF","XLF":"金融 ETF","XLE":"能源 ETF","XLV":"醫療 ETF","XLP":"必需消費 ETF","XLU":"公用事業 ETF","XLI":"工業 ETF","ITA":"航太與國防 ETF","XLB":"原物料 ETF","BZ=F":"布蘭特原油期貨","GC=F":"黃金期貨","BTC-USD":"比特幣","SI=F":"白銀期貨","PL=F":"鉑期貨","PA=F":"鈀期貨","HG=F":"銅期貨","ALI=F":"鋁期貨","NG=F":"天然氣期貨","ZC=F":"玉米期貨","ZW=F":"小麥期貨","ZS=F":"黃豆期貨","KC=F":"咖啡期貨","SB=F":"糖期貨","LIT":"鋰與電池材料基金","URA":"鈾礦基金","DX-Y.NYB":"美元指數","S_twel":"台灣電子八檔等權組合","S_krsm":"韓國半導體兩檔等權組合","S_jpsm":"日本半導體設備兩檔等權組合","spx":"標普 500","ndq":"那斯達克綜合","sox":"費城半導體","twii":"台股加權","n225":"日經 225","ks11":"韓國綜合","csi":"上證綜合","stoxx":"歐元區 STOXX 50"};
 const PAGE_SOURCES=[{"t": "Correlates of War，Militarized Interstate Disputes（MID）資料集 5.0", "u": "https://correlatesofwar.org/data-sets/mids/"}, {"t": "Iacoviello，AI 地緣政治風險指數（AI-GPR）月資料", "u": "https://www.matteoiacoviello.com/ai_gpr_files/ai_gpr_data_monthly.csv"}, {"t": "美國勞工統計局（BLS），就業情勢報告，2026 年 10 月", "u": "https://www.bls.gov/news.release/archives/empsit_11062026.htm"}, {"t": "美國勞工統計局（BLS），消費者物價指數報告，2026 年 10 月", "u": "https://www.bls.gov/news.release/archives/cpi_11102026.htm"}, {"t": "聯準會，FOMC 聲明新聞稿，2026 年 9 月 16 日", "u": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm"}, {"t": "聯準會，FOMC 聲明新聞稿，2026 年 10 月 28 日", "u": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20261028a.htm"}, {"t": "聯準會，〈How does the Federal Reserve affect inflation and employment?〉", "u": "https://www.federalreserve.gov/faqs/money_12856.htm"}, {"t": "台積電，月營收報告", "u": "https://investor.tsmc.com/english/monthly-revenue"}, {"t": "Silicon Data，H100 GPU 租用價格指數", "u": "https://www.silicondata.com/products/silicon-index/h100"}, {"t": "FINRA，融資餘額統計（Margin Statistics）", "u": "https://www.finra.org/rules-guidance/key-topics/margin-accounts/margin-statistics"}, {"t": "聖路易聯準銀行 FRED，美國失業率（UNRATE）", "u": "https://fred.stlouisfed.org/series/UNRATE"}, {"t": "聖路易聯準銀行 FRED，美國城市消費者物價指數（CPIAUCNS）", "u": "https://fred.stlouisfed.org/series/CPIAUCNS"}, {"t": "聯準會，FOMC 會議日程", "u": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"}, {"t": "紐約聯準銀行，ACM 美國公債期限溢酬", "u": "https://www.newyorkfed.org/research/data_indicators/term-premia-tabs"}, {"t": "紐約證券交易所，交易時間與休市日曆", "u": "https://www.nyse.com/markets/hours-calendars"}, {"t": "聯準會，FOMC 聲明新聞稿的發布時間", "u": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20251210a.htm"}, {"t": "ICE，布蘭特原油期貨契約規格", "u": "https://www.ice.com/products/219/Brent-Crude-Futures"}, {"t": "ICE，美元指數期貨契約規格", "u": "https://www.ice.com/products/194/US-Dollar-Index-Futures"}, {"t": "證券交易法第 36 條（全國法規資料庫）", "u": "https://law.moj.gov.tw/LawClass/LawSingle.aspx?pcode=G0400001&flno=36"}];
-const PAGE_VERSION={"n": 40, "date": "2026-11-20"};
+const PAGE_VERSION={"n": 41, "date": "2026-11-20"};
 // Page layer of index2.html ("river" structure): one chart (real bars, this run's bars, the "now" line, quantile bands of the runs from here, landing shares)
 // and three focal lengths (now / this run / all outcomes). It only shows view data from the adapter (A2) and never calls the engine.
 // Charting: TradingView Lightweight Charts 5.3.0 (Apache-2.0); indicator maths: technicalindicators 3.1.0 (MIT).
@@ -4489,7 +4492,17 @@ const PAGE_VERSION={"n": 40, "date": "2026-11-20"};
     var r = A2.load(G.code(), stopArg()); if (r.err) { toast(r.err); return; } stopAuto(); G = r.g; sync(); revealed = false; shown = null; lastQ = prevSt = null; render(); river(); arrive(); }
   function closePack() { if (!popOpen) return; popOpen = false; var d = knDraft; knDraft = null; packPop(); if (!d || JSON.stringify(d) === JSON.stringify(knobs)) return;
     if (played() && !confirm('換假設會讓這一局從頭開始。要換嗎？')) return; knobs = d; begin(); render(); river(); }
+  // Work that holds the page for a while (rolling a long stretch, and the adapter's report at the year end, which it works out in one go): a layer with a
+  // turning ring goes over the page first and is given two frames to be drawn, then the work runs, then the layer goes. The ring turns by a transform
+  // only, which the browser keeps moving while the script is busy. warm: the run and position whose year-end report has been worked out already.
+  var waiting = false, warm = null, warmKey = function () { return LOG.length + '|' + seed + '|' + JSON.stringify(knobs); };
+  function heavy(fn) { var w = $('#wait'); if (waiting || !w) { fn(); return; } waiting = true; busy = true; w.hidden = false;
+    var go = function () { try { fn(); } finally { w.hidden = true; waiting = false; busy = false; } };
+    requestAnimationFrame(function () { requestAnimationFrame(function () { setTimeout(go, 30); }); }); }
+  function warmReport() { if (G.done()) { try { G.report(); } catch (e) { } warm = warmKey(); } }
   function render(prevState) {
+    // a finished run whose report has not been worked out yet: do that under the waiting layer, then draw
+    if (G && G.done() && !atHome && warm !== warmKey()) { if (!waiting) heavy(function () { warmReport(); render(prevState); river(); arrive(); }); else { warmReport(); } if (warm !== warmKey()) return; }
     document.querySelectorAll('[data-focal]').forEach(function (b) { if (b.closest('.focal')) b.setAttribute('aria-pressed', b.dataset.focal === focal); });
     $('#river').classList.toggle('wide', focal !== 'now');
     var ps = $('#pscroll'), st = ps ? ps.scrollTop : 0;
@@ -4533,8 +4546,9 @@ const PAGE_VERSION={"n": 40, "date": "2026-11-20"};
     var tw = ++twN; tween(700, function (x) { if (tw !== twN || !revealed || !rail.isConnected) return; var tmp = document.createElement('div'); tmp.innerHTML = market(x, true); var a = rail.querySelector('table'); if (a) a.innerHTML = tmp.querySelector('table').innerHTML; });
   }
   function playEnd() { var E = G.ending(), k = typeof CGK !== 'undefined' && CGK[E.id]; if (!k || typeof playCG === 'undefined') { toast('這個落點沒有演出。'); return; } var q = Q(['spx', 'sox', 'twii']); playCG(k, { title: E.name, stats: ['spx', 'sox', 'twii'].map(function (x) { return q[x].name + ' ' + sg(q[x].chg * 100, 0); }).join('　·　') }); }
-  function arrive() { if (atHome) return; if (done() && !cgShown) { cgShown = true; if (!document.hidden && !reduce) playEnd(); } }
-  function ff(kind) { if (busy || G.done()) return; stopAuto(); revealed = false; shown = null; var n0 = LOG.length; if (kind === 'end') G.rollEnd(); else G.rollStage(); sync(); lastQ = prevSt = null; render(); river(); toast('往前擲了 ' + (LOG.length - n0) + ' 則' + (G.done() ? '，到年底了' : '')); arrive(); }
+  function arrive() { if (atHome || (G.done() && warm !== warmKey())) return; if (done() && !cgShown) { cgShown = true; if (!document.hidden && !reduce) playEnd(); } }
+  function ff(kind) { if (busy || G.done()) return; stopAuto(); revealed = false; shown = null; var n0 = LOG.length;
+    heavy(function () { if (kind === 'end') G.rollEnd(); else G.rollStage(); sync(); lastQ = prevSt = null; warmReport(); render(); river(); toast('往前擲了 ' + (LOG.length - n0) + ' 則' + (G.done() ? '，到年底了' : '')); arrive(); }); }
   function next() { if (busy || !revealed) return; stopAuto(); revealed = false; shown = null; render(); river(); var s = $('#sheet'); if (s) s.classList.add('swap'); arrive(); }
   function back() { if (busy || !LOG.length) return; stopAuto(); revealed = false; shown = null; G.undo(); sync(); lastQ = prevSt = null; cgShown = false; render(); river(); }
   function setFocal(f) { stopAuto(); focal = f; hl = null; redraw(); river(); window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' }); }
